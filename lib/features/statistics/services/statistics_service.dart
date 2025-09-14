@@ -1,11 +1,13 @@
-// lib/features/statistics/services/statistics_service.dart
+// lib/features/statistics/services/statistics_service.dart - محدث
 
-import 'package:athkar_app/features/statistics/models/statistics_models.dart';
 import 'package:flutter/material.dart';
 import '../../../core/infrastructure/services/storage/storage_service.dart';
 import '../../../core/infrastructure/services/logging/logger_service.dart';
+import '../models/statistics_models.dart';
+import '../models/ranking_system.dart';
+import '../models/challenges_system.dart';
 
-/// خدمة الإحصائيات الموحدة
+/// خدمة الإحصائيات الموحدة - محدثة للتكامل مع المكونات الجديدة
 class StatisticsService extends ChangeNotifier {
   final StorageService _storage;
   final LoggerService _logger;
@@ -16,6 +18,9 @@ class StatisticsService extends ChangeNotifier {
   static const String _achievementsKey = 'statistics_achievements';
   static const String _goalsKey = 'statistics_goals';
   static const String _streakKey = 'statistics_streak';
+  static const String _heatmapKey = 'statistics_heatmap';
+  static const String _rankingKey = 'statistics_ranking';
+  static const String _challengesKey = 'statistics_challenges';
 
   // البيانات المحلية
   final Map<DateTime, DailyStatistics> _dailyStats = {};
@@ -23,16 +28,36 @@ class StatisticsService extends ChangeNotifier {
   final List<Achievement> _achievements = [];
   final List<StatisticsGoal> _activeGoals = [];
   
+  // بيانات Heat Map
+  final Map<DateTime, int> _activityHeatmapData = {};
+  
+  // الأنظمة المتكاملة
+  late final RankingSystem _rankingSystem;
+  late final ChallengesSystem _challengesSystem;
+  
   int _currentStreak = 0;
   int _longestStreak = 0;
   int _totalPoints = 0;
+  
+  // بيانات الترتيب
+  UserRank? _currentRank;
+  List<SpecialBadge> _unlockedBadges = [];
 
   StatisticsService({
     required StorageService storage,
     required LoggerService logger,
   })  : _storage = storage,
         _logger = logger {
+    _initializeSystems();
     _loadData();
+  }
+  
+  // ==================== تهيئة الأنظمة ====================
+  
+  void _initializeSystems() {
+    _rankingSystem = RankingSystem();
+    _challengesSystem = ChallengesSystem();
+    _updateRankingInfo();
   }
 
   // ==================== Getters ====================
@@ -40,12 +65,20 @@ class StatisticsService extends ChangeNotifier {
   int get currentStreak => _currentStreak;
   int get longestStreak => _longestStreak;
   int get totalPoints => _totalPoints;
+  UserRank? get currentRank => _currentRank;
+  List<SpecialBadge> get unlockedBadges => _unlockedBadges;
+  Map<DateTime, int> get activityHeatmapData => Map.unmodifiable(_activityHeatmapData);
   
   List<Achievement> get unlockedAchievements => 
       _achievements.where((a) => a.isUnlocked).toList();
   
   List<StatisticsGoal> get activeGoals => 
       _activeGoals.where((g) => !g.isExpired).toList();
+  
+  // الحصول على التحديات النشطة
+  List<Challenge> get activeDailyChallenges => _challengesSystem.getTodaysChallenges();
+  List<Challenge> get activeWeeklyChallenges => _challengesSystem.getWeeklyChallenges();
+  List<Challenge> get activeSpecialChallenges => _challengesSystem.getSpecialChallenges();
 
   // ==================== تسجيل الأنشطة ====================
 
@@ -77,8 +110,11 @@ class StatisticsService extends ChangeNotifier {
 
       await _addActivityRecord(record);
       await _updateDailyStats(record);
+      await _updateHeatmapData(record);
+      await _updateChallengesProgress(record);
       await _checkAchievements();
       await _updateGoalProgress(ActivityType.athkar, itemsCompleted);
+      _updateRankingInfo();
 
       _logger.info(
         message: '[StatisticsService] Athkar activity recorded',
@@ -121,8 +157,11 @@ class StatisticsService extends ChangeNotifier {
 
       await _addActivityRecord(record);
       await _updateDailyStats(record);
+      await _updateHeatmapData(record);
+      await _updateChallengesProgress(record);
       await _checkAchievements();
       await _updateGoalProgress(ActivityType.tasbih, count);
+      _updateRankingInfo();
 
       _logger.info(
         message: '[StatisticsService] Tasbih activity recorded',
@@ -140,6 +179,128 @@ class StatisticsService extends ChangeNotifier {
         error: e,
       );
     }
+  }
+  
+  // ==================== Heat Map Data ====================
+  
+  /// تحديث بيانات الخريطة الحرارية
+  Future<void> _updateHeatmapData(ActivityRecord record) async {
+    final date = _normalizeDate(record.timestamp);
+    final currentValue = _activityHeatmapData[date] ?? 0;
+    
+    // زيادة القيمة بناءً على نوع النشاط
+    int increment = 1;
+    if (record.type == ActivityType.athkar) {
+      increment = (record.data['itemsCompleted'] as int? ?? 1);
+    } else if (record.type == ActivityType.tasbih) {
+      increment = ((record.data['count'] as int? ?? 0) / 10).ceil();
+    }
+    
+    _activityHeatmapData[date] = currentValue + increment;
+    await _saveHeatmapData();
+  }
+  
+  /// الحصول على بيانات الخريطة الحرارية لفترة معينة
+  Map<DateTime, int> getHeatmapDataForPeriod({
+    required DateTime startDate,
+    required DateTime endDate,
+  }) {
+    final Map<DateTime, int> periodData = {};
+    final normalizedStart = _normalizeDate(startDate);
+    final normalizedEnd = _normalizeDate(endDate);
+    
+    _activityHeatmapData.forEach((date, value) {
+      if (!date.isBefore(normalizedStart) && !date.isAfter(normalizedEnd)) {
+        periodData[date] = value;
+      }
+    });
+    
+    return periodData;
+  }
+  
+  // ==================== Ranking System Integration ====================
+  
+  /// تحديث معلومات الترتيب
+  void _updateRankingInfo() {
+    _currentRank = _rankingSystem.getCurrentRank(_totalPoints);
+    _unlockedBadges = _rankingSystem.getUnlockedBadges(_getStatsForBadges());
+  }
+  
+  /// الحصول على التقدم للرتبة التالية
+  double getProgressToNextRank() {
+    return _rankingSystem.getProgressToNextRank(_totalPoints);
+  }
+  
+  /// الحصول على النقاط المتبقية للرتبة التالية
+  int getPointsToNextRank() {
+    return _rankingSystem.getPointsToNextRank(_totalPoints);
+  }
+  
+  /// الحصول على الرتبة التالية
+  UserRank? getNextRank() {
+    return _rankingSystem.getNextRank(_totalPoints);
+  }
+  
+  // معلومات للشارات
+  Map<String, dynamic> _getStatsForBadges() {
+    return {
+      'totalDays': _dailyStats.length,
+      'currentStreak': _currentStreak,
+      'longestStreak': _longestStreak,
+      'totalAthkar': _dailyStats.values.fold(0, (sum, stat) => sum + stat.athkarCompleted),
+      'totalTasbih': _dailyStats.values.fold(0, (sum, stat) => sum + stat.tasbihCount),
+      'totalPoints': _totalPoints,
+    };
+  }
+  
+  // ==================== Challenges System Integration ====================
+  
+  /// تحديث تقدم التحديات
+  Future<void> _updateChallengesProgress(ActivityRecord record) async {
+    final progress = <String, dynamic>{};
+    
+    if (record.type == ActivityType.athkar) {
+      progress['action'] = 'complete_athkar';
+      progress['category'] = record.data['categoryId'];
+      progress['completed'] = record.data['itemsCompleted'] == record.data['totalItems'];
+      progress['count'] = record.data['itemsCompleted'];
+    } else if (record.type == ActivityType.tasbih) {
+      progress['action'] = 'tasbih_count';
+      progress['dhikr'] = record.data['dhikrType'];
+      progress['count'] = record.data['count'];
+    }
+    
+    // تحديث التحديات اليومية
+    for (final challenge in activeDailyChallenges) {
+      await _challengesSystem.updateChallengeProgress(challenge.id, progress);
+    }
+    
+    // تحديث التحديات الأسبوعية
+    for (final challenge in activeWeeklyChallenges) {
+      await _challengesSystem.updateChallengeProgress(challenge.id, progress);
+    }
+    
+    // تحديث التحديات الخاصة
+    for (final challenge in activeSpecialChallenges) {
+      await _challengesSystem.updateChallengeProgress(challenge.id, progress);
+    }
+  }
+  
+  /// إنشاء تحدي مخصص
+  Challenge createCustomChallenge({
+    required String title,
+    required String description,
+    required Map<String, dynamic> requirements,
+    required int rewardPoints,
+    required Duration duration,
+  }) {
+    return _challengesSystem.createCustomChallenge(
+      title: title,
+      description: description,
+      requirements: requirements,
+      rewardPoints: rewardPoints,
+      duration: duration,
+    );
   }
 
   // ==================== الإحصائيات ====================
@@ -310,6 +471,9 @@ class StatisticsService extends ChangeNotifier {
           _achievements.add(unlockedAchievement);
           hasNewAchievement = true;
           
+          // منح نقاط إضافية للإنجاز
+          _totalPoints += 50; // نقاط مكافأة للإنجاز
+          
           _logger.info(
             message: '[StatisticsService] Achievement unlocked',
             data: {'achievement': achievement.title},
@@ -320,6 +484,7 @@ class StatisticsService extends ChangeNotifier {
     
     if (hasNewAchievement) {
       await _saveAchievements();
+      _updateRankingInfo(); // تحديث الرتبة بعد النقاط الجديدة
       notifyListeners();
     }
   }
@@ -463,6 +628,7 @@ class StatisticsService extends ChangeNotifier {
     );
     
     await _saveDailyStats();
+    _updateRankingInfo(); // تحديث الرتبة بعد النقاط الجديدة
   }
 
   List<Achievement> _getAchievementDefinitions() {
@@ -495,7 +661,24 @@ class StatisticsService extends ChangeNotifier {
         requiredPoints: 0,
         level: 2,
       ),
-      // المزيد من الإنجازات...
+      Achievement(
+        id: 'points_500',
+        title: 'جامع النقاط',
+        description: 'اجمع 500 نقطة',
+        iconAsset: 'assets/icons/achievements/points_500.png',
+        category: AchievementCategory.points,
+        requiredPoints: 500,
+        level: 2,
+      ),
+      Achievement(
+        id: 'rank_devoted',
+        title: 'الوصول للإخلاص',
+        description: 'اصل لرتبة المخلص',
+        iconAsset: 'assets/icons/achievements/rank_devoted.png',
+        category: AchievementCategory.special,
+        requiredPoints: 700,
+        level: 3,
+      ),
     ];
   }
 
@@ -508,6 +691,10 @@ class StatisticsService extends ChangeNotifier {
         return _dailyStats.values.any((s) => s.tasbihCount >= 100);
       case 'streak_7':
         return _currentStreak >= 7;
+      case 'points_500':
+        return _totalPoints >= 500;
+      case 'rank_devoted':
+        return _totalPoints >= 700;
       default:
         return false;
     }
@@ -563,6 +750,7 @@ class StatisticsService extends ChangeNotifier {
     await _loadAchievements();
     await _loadGoals();
     await _loadStreak();
+    await _loadHeatmapData();
   }
 
   Future<void> _loadDailyStats() async {
@@ -655,6 +843,39 @@ class StatisticsService extends ChangeNotifier {
   Future<void> _saveStreak() async {
     await _storage.setInt('${_streakKey}_current', _currentStreak);
     await _storage.setInt('${_streakKey}_longest', _longestStreak);
+  }
+  
+  Future<void> _loadHeatmapData() async {
+    try {
+      final data = _storage.getMap(_heatmapKey);
+      if (data != null) {
+        _activityHeatmapData.clear();
+        data.forEach((key, value) {
+          final date = DateTime.parse(key);
+          _activityHeatmapData[date] = value as int;
+        });
+      }
+    } catch (e) {
+      _logger.error(
+        message: '[StatisticsService] Error loading heatmap data',
+        error: e,
+      );
+    }
+  }
+  
+  Future<void> _saveHeatmapData() async {
+    try {
+      final data = <String, dynamic>{};
+      _activityHeatmapData.forEach((date, value) {
+        data[date.toIso8601String()] = value;
+      });
+      await _storage.setMap(_heatmapKey, data);
+    } catch (e) {
+      _logger.error(
+        message: '[StatisticsService] Error saving heatmap data',
+        error: e,
+      );
+    }
   }
 
   @override
