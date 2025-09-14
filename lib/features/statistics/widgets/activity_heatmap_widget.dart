@@ -584,7 +584,7 @@ class _ActivityHeatMapWidgetState extends State<ActivityHeatMapWidget>
     
     while (true) {
       final key = _dateKey(currentDate);
-      if (_processedData[key]?.value ?? 0 > 0) {
+      if ((_processedData[key]?.value ?? 0) > 0) {
         streak++;
         currentDate = currentDate.subtract(const Duration(days: 1));
       } else {
