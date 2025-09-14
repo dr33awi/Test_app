@@ -15,11 +15,12 @@ import '../widgets/tasbih_bead_widget.dart';
 import '../widgets/tasbih_counter_ring.dart';
 import '../widgets/tasbih_pattern_painter.dart';
 import '../widgets/dhikr_card.dart';
-// استيراد نظام الإحصائيات
+// استيراد نظام الإحصائيات الموحد
 import '../../statistics/screens/statistics_dashboard_screen.dart';
 import '../../statistics/services/statistics_service.dart';
+import '../../statistics/widgets/unified_stats_widget.dart';
 
-/// شاشة المسبحة الرقمية المحسنة مع نظام الإحصائيات
+/// شاشة المسبحة الرقمية المحسنة مع نظام الإحصائيات الموحد
 class TasbihScreen extends StatefulWidget {
   const TasbihScreen({super.key});
 
@@ -43,7 +44,6 @@ class _TasbihScreenState extends State<TasbihScreen>
   DhikrItem _currentDhikr = DefaultAdhkar.getAll().first; // الذكر الحالي
   
   // إحصائيات
-  TasbihStatistics? _statistics;
   bool _hasStatisticsService = false;
 
   @override
@@ -51,7 +51,6 @@ class _TasbihScreenState extends State<TasbihScreen>
     super.initState();
     _initializeServices();
     _setupAnimations();
-    _loadStatistics();
   }
 
   void _initializeServices() {
@@ -106,24 +105,10 @@ class _TasbihScreenState extends State<TasbihScreen>
     ).animate(_rotationController);
   }
 
-  Future<void> _loadStatistics() async {
-    if (!_hasStatisticsService) return;
-    
-    final stats = await _service.getTasbihStatistics();
-    if (mounted) {
-      setState(() {
-        _statistics = stats;
-      });
-    }
-  }
-
   @override
   void dispose() {
     // إنهاء الجلسة عند الخروج
     _service.endSession();
-    
-    // مزامنة مع نظام الإحصائيات
-    _service.syncWithStatisticsService();
     
     _beadController.dispose();
     _rippleController.dispose();
@@ -149,9 +134,27 @@ class _TasbihScreenState extends State<TasbihScreen>
                   // شريط التطبيق المخصص
                   _buildCustomAppBar(context),
                   
-                  // بطاقة الإحصائيات السريعة
-                  if (_hasStatisticsService && _statistics != null)
-                    _buildQuickStatsCard(),
+                  // استخدام UnifiedStatsWidget بدلاً من _buildQuickStatsCard
+                  if (_hasStatisticsService)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: ThemeConstants.space4,
+                        vertical: ThemeConstants.space2,
+                      ),
+                      child: UnifiedStatsWidget(
+                        isCompact: true,
+                        showDetailedStats: false,
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const StatisticsDashboardScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   
                   // محدد نوع الذكر
                   _buildDhikrSelector(),
@@ -249,7 +252,7 @@ class _TasbihScreenState extends State<TasbihScreen>
                       MaterialPageRoute(
                         builder: (context) => const StatisticsDashboardScreen(),
                       ),
-                    ).then((_) => _loadStatistics());
+                    );
                   },
                   borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
                   child: Container(
@@ -309,96 +312,6 @@ class _TasbihScreenState extends State<TasbihScreen>
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildQuickStatsCard() {
-    return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: ThemeConstants.space4,
-        vertical: ThemeConstants.space2,
-      ),
-      padding: const EdgeInsets.all(ThemeConstants.space3),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            ThemeConstants.primary.withValues(alpha: 0.1),
-            ThemeConstants.primaryLight.withValues(alpha: 0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
-        border: Border.all(
-          color: ThemeConstants.primary.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildMiniStat(
-            'اليوم',
-            '${_statistics?.todayCount ?? 0}',
-            Icons.today,
-            ThemeConstants.primary,
-          ),
-          Container(
-            width: 1,
-            height: 30,
-            color: context.dividerColor,
-          ),
-          _buildMiniStat(
-            'الإجمالي',
-            '${_statistics?.totalCount ?? 0}',
-            Icons.functions,
-            ThemeConstants.accent,
-          ),
-          Container(
-            width: 1,
-            height: 30,
-            color: context.dividerColor,
-          ),
-          _buildMiniStat(
-            'السلسلة',
-            '${_statistics?.currentStreak ?? 0}',
-            Icons.local_fire_department,
-            ThemeConstants.error,
-          ),
-          Container(
-            width: 1,
-            height: 30,
-            color: context.dividerColor,
-          ),
-          _buildMiniStat(
-            'المتوسط',
-            '${_statistics?.weeklyAverage.toInt() ?? 0}',
-            Icons.trending_up,
-            ThemeConstants.success,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMiniStat(String label, String value, IconData icon, Color color) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: color, size: 18),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: context.titleSmall?.copyWith(
-            color: color,
-            fontWeight: ThemeConstants.bold,
-          ),
-        ),
-        Text(
-          label,
-          style: context.labelSmall?.copyWith(
-            color: context.textSecondaryColor,
-            fontSize: 10,
-          ),
-        ),
-      ],
     );
   }
 
@@ -721,9 +634,6 @@ class _TasbihScreenState extends State<TasbihScreen>
     if (service.count % _currentDhikr.recommendedCount == 0) {
       HapticFeedback.mediumImpact();
       _showCompletionCelebration(_currentDhikr);
-      
-      // تحديث الإحصائيات عند إكمال جولة
-      _loadStatistics();
     }
     
     _logger.debug(
@@ -758,9 +668,6 @@ class _TasbihScreenState extends State<TasbihScreen>
         context.showSuccessSnackBar(
           'تم تصفير العداد',
         );
-        
-        // تحديث الإحصائيات
-        _loadStatistics();
       }
     });
   }

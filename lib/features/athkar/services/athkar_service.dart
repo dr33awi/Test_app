@@ -2,7 +2,6 @@
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/material.dart';
-import '../../../app/di/service_locator.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/infrastructure/services/logging/logger_service.dart';
 import '../../../core/infrastructure/services/storage/storage_service.dart';
@@ -509,8 +508,7 @@ class AthkarService {
       _logger.info(message: '[AthkarService] Syncing with statistics service');
       
       // هذه الدالة متاحة للاستخدام من الشاشات
-      // يمكن إضافة منطق المزامنة هنا إذا لزم الأمر
-      // حالياً فارغة للتوافق مع الكود الحالي
+      // التكامل الفعلي يتم عبر StatisticsIntegration
       
       _logger.info(message: '[AthkarService] Sync completed');
     } catch (e) {
@@ -531,19 +529,3 @@ class AthkarService {
     _logger.debug(message: '[AthkarService] Disposed');
   }
 }
-
-// تم حذف:
-// - searchAthkar() - غير مستخدم
-// - getStatistics() - مكرر مع StatisticsService
-// - clearAllData() - غير مستخدم
-// - resetToDefaults() - غير مستخدم
-// - SearchResult class - غير مستخدم
-// - AthkarStatistics class - مكرر
-// - CategoryStatistics class - مكرر
-// - NotificationValidationResult - يمكن نقله لملف منفصل إذا لزم
-// - validateScheduledNotifications() - غير مستخدم
-// - fixNotificationMismatch() - غير مستخدم
-// - recordCategoryCompletion() - تم النقل للـ integration
-// - recordPartialProgress() - تم النقل للـ integration
-// - getCategoryStatistics() - تم النقل للـ integration
-// - getAllCategoriesStatistics() - تم النقل للـ integration

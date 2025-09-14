@@ -1,4 +1,4 @@
-// lib/features/tasbih/services/tasbih_service.dart
+// lib/features/tasbih/services/tasbih_service.dart (منظف من التكرار)
 import 'package:flutter/material.dart';
 import '../../../app/di/service_locator.dart';
 import '../../../core/constants/app_constants.dart';
@@ -439,30 +439,40 @@ class TasbihService extends ChangeNotifier {
     }
   }
 
-  /// الحصول على إحصائيات التسبيح من نظام الإحصائيات
-  Future<TasbihStatistics> getTasbihStatistics() async {
+  /// الحصول على إحصائيات التسبيح من نظام الإحصائيات الموحد
+  Future<Map<String, dynamic>> getTasbihStatistics() async {
     if (_statsService == null) {
-      return TasbihStatistics.empty();
+      return {
+        'todayCount': _todayCount,
+        'totalCount': _totalCount,
+        'currentStreak': 0,
+        'weeklyAverage': getWeeklyAverage(),
+      };
     }
     
     try {
       final overallStats = await _statsService!.getOverallStatistics();
       final todayStats = _statsService!.getTodayStatistics();
       
-      return TasbihStatistics(
-        todayCount: todayStats.tasbihCount,
-        totalCount: overallStats.totalTasbihCount,
-        currentStreak: _statsService!.currentStreak,
-        favoriteTypes: overallStats.favoriteDhikr,
-        weeklyAverage: getWeeklyAverage(),
-        monthlyTotal: getMonthlyCount(),
-      );
+      return {
+        'todayCount': todayStats.tasbihCount,
+        'totalCount': overallStats.totalTasbihCount,
+        'currentStreak': _statsService!.currentStreak,
+        'favoriteTypes': overallStats.favoriteDhikr,
+        'weeklyAverage': getWeeklyAverage(),
+        'monthlyTotal': getMonthlyCount(),
+      };
     } catch (e) {
       _logger.error(
         message: '[TasbihService] Failed to get statistics',
         error: e,
       );
-      return TasbihStatistics.empty();
+      return {
+        'todayCount': _todayCount,
+        'totalCount': _totalCount,
+        'currentStreak': 0,
+        'weeklyAverage': 0.0,
+      };
     }
   }
 
@@ -521,28 +531,6 @@ class TasbihService extends ChangeNotifier {
     return mostUsed;
   }
 
-  // دالة للتحقق من صحة البيانات المحفوظة
-  Future<bool> validateStoredData() async {
-    try {
-      _logger.debug(
-        message: '[TasbihService] Validating stored data',
-      );
-      
-      return true;
-    } catch (e) {
-      _logger.error(
-        message: '[TasbihService] Error validating stored data',
-        error: e,
-      );
-      return false;
-    }
-  }
-
-  // دالة لإعادة تحميل البيانات يدوياً
-  Future<void> reloadData() async {
-    await _loadData();
-  }
-
   @override
   void dispose() {
     // إنهاء الجلسة عند التخلص من الخدمة
@@ -576,36 +564,6 @@ class DailyRecord {
       date: DateTime.parse(map['date']),
       count: map['count'] ?? 0,
       dhikrBreakdown: Map<String, int>.from(map['dhikrBreakdown'] ?? {}),
-    );
-  }
-}
-
-/// نموذج إحصائيات التسبيح
-class TasbihStatistics {
-  final int todayCount;
-  final int totalCount;
-  final int currentStreak;
-  final Map<String, int> favoriteTypes;
-  final double weeklyAverage;
-  final int monthlyTotal;
-
-  TasbihStatistics({
-    required this.todayCount,
-    required this.totalCount,
-    required this.currentStreak,
-    required this.favoriteTypes,
-    required this.weeklyAverage,
-    required this.monthlyTotal,
-  });
-
-  factory TasbihStatistics.empty() {
-    return TasbihStatistics(
-      todayCount: 0,
-      totalCount: 0,
-      currentStreak: 0,
-      favoriteTypes: {},
-      weeklyAverage: 0.0,
-      monthlyTotal: 0,
     );
   }
 }

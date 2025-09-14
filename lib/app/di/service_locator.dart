@@ -289,9 +289,10 @@ class ServiceLocator {
       debugPrint('ServiceLocator: DuaService registered successfully');
     }
     
-    // خدمة التسبيح
+    // خدمة التسبيح - يجب تسجيلها كـ Factory وليس Singleton
+    // لأنها تحتاج لإنشاء instance جديد في كل مرة
     if (!getIt.isRegistered<TasbihService>()) {
-      getIt.registerLazySingleton<TasbihService>(
+      getIt.registerFactory<TasbihService>(
         () => TasbihService(
           storage: getIt<StorageService>(),
           logger: getIt<LoggerService>(),
@@ -354,13 +355,9 @@ class ServiceLocator {
       debugPrint('ServiceLocator: StatisticsService registered successfully');
     }
 
-    // تهيئة التكامل مع الخدمات الأخرى
-    try {
-      StatisticsIntegration().initialize();
-      debugPrint('ServiceLocator: Statistics integration initialized successfully');
-    } catch (e) {
-      debugPrint('ServiceLocator: Error initializing statistics integration: $e');
-    }
+    // لا نحتاج لتهيئة StatisticsIntegration هنا
+    // سيتم استخدامها عند الحاجة في الخدمات التي تحتاجها
+    debugPrint('ServiceLocator: Statistics services ready for integration');
   }
 
   /// التحقق من تهيئة جميع الخدمات المطلوبة
