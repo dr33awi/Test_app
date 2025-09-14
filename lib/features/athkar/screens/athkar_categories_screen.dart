@@ -10,6 +10,10 @@ import '../services/athkar_service.dart';
 import '../models/athkar_model.dart';
 import '../widgets/athkar_category_card.dart';
 import 'notification_settings_screen.dart';
+// استيراد نظام الإحصائيات
+import '../../statistics/screens/statistics_dashboard_screen.dart';
+import '../../statistics/services/statistics_service.dart';
+import '../../statistics/models/statistics_models.dart';
 
 class AthkarCategoriesScreen extends StatefulWidget {
   const AthkarCategoriesScreen({super.key});
@@ -18,10 +22,12 @@ class AthkarCategoriesScreen extends StatefulWidget {
   State<AthkarCategoriesScreen> createState() => _AthkarCategoriesScreenState();
 }
 
-class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen> {
+class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen> 
+    with SingleTickerProviderStateMixin {
   late final AthkarService _service;
   late final PermissionService _permissionService;
   late final StorageService _storage;
+  StatisticsService? _statsService;
   
   late Future<List<AthkarCategory>> _futureCategories;
   bool _notificationsEnabled = false;
@@ -29,6 +35,14 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen> {
   // خريطة التقدم لكل فئة (categoryId -> percentage)
   final Map<String, int> _progressMap = {};
   bool _progressLoading = true;
+  
+  // إحصائيات اليوم
+  DailyStatistics? _todayStats;
+  int _currentStreak = 0;
+  
+  // للأنيميشن
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
@@ -37,13 +51,60 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen> {
     _permissionService = getIt<PermissionService>();
     _storage = getIt<StorageService>();
     
+    // تهيئة خدمة الإحصائيات إذا كانت متاحة
+    if (getIt.isRegistered<StatisticsService>()) {
+      _statsService = getIt<StatisticsService>();
+      _loadStatistics();
+    }
+    
+    // تهيئة الأنيميشن
+    _animationController = AnimationController(
+      duration: ThemeConstants.durationNormal,
+      vsync: this,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeIn,
+    );
+    
     _initialize();
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> _initialize() async {
     _futureCategories = _service.loadCategories();
     _checkNotificationPermission();
     await _loadProgress();
+    
+    // مزامنة مع نظام الإحصائيات
+    await _service.syncWithStatisticsService();
+  }
+
+  void _loadStatistics() {
+    if (_statsService != null) {
+      setState(() {
+        _todayStats = _statsService!.getTodayStatistics();
+        _currentStreak = _statsService!.currentStreak;
+      });
+      
+      // الاستماع للتغييرات
+      _statsService!.addListener(_onStatsChanged);
+    }
+  }
+  
+  void _onStatsChanged() {
+    if (mounted && _statsService != null) {
+      setState(() {
+        _todayStats = _statsService!.getTodayStatistics();
+        _currentStreak = _statsService!.currentStreak;
+      });
+    }
   }
 
   Future<void> _loadProgress() async {
@@ -109,6 +170,14 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen> {
       _futureCategories = _service.loadCategories();
     });
     await _loadProgress();
+    
+    // إعادة المزامنة مع الإحصائيات
+    await _service.syncWithStatisticsService();
+    
+    // إعادة تحميل الإحصائيات
+    if (_statsService != null) {
+      _loadStatistics();
+    }
   }
 
   @override
@@ -116,127 +185,132 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen> {
     return Scaffold(
       backgroundColor: context.backgroundColor,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Custom AppBar محسن
-            _buildCustomAppBar(context),
-            
-            // باقي المحتوى
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: _refreshData,
-                child: CustomScrollView(
-                  slivers: [
-                    // مساحة علوية
-                    const SliverPadding(
-                      padding: EdgeInsets.only(top: ThemeConstants.space2),
-                    ),
-                    
-                    // العنوان التوضيحي مع إحصائيات سريعة
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: ThemeConstants.space4,
-                          vertical: ThemeConstants.space2,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'اختر فئة الأذكار',
-                              style: context.titleLarge?.copyWith(
-                                fontWeight: ThemeConstants.bold,
-                                color: context.textPrimaryColor,
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Column(
+            children: [
+              // Custom AppBar محسن
+              _buildCustomAppBar(context),
+              
+              // باقي المحتوى
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: _refreshData,
+                  color: ThemeConstants.primary,
+                  child: CustomScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    slivers: [
+                      // مساحة علوية
+                      const SliverPadding(
+                        padding: EdgeInsets.only(top: ThemeConstants.space2),
+                      ),
+                      
+                      // العنوان التوضيحي مع إحصائيات سريعة
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: ThemeConstants.space4,
+                            vertical: ThemeConstants.space2,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'اختر فئة الأذكار',
+                                style: context.titleLarge?.copyWith(
+                                  fontWeight: ThemeConstants.bold,
+                                  color: context.textPrimaryColor,
+                                ),
                               ),
-                            ),
-                            ThemeConstants.space1.h,
-                            Text(
-                              'اقرأ الأذكار اليومية وحافظ على ذكر الله في كل وقت',
-                              style: context.bodyMedium?.copyWith(
-                                color: context.textSecondaryColor,
+                              ThemeConstants.space1.h,
+                              Text(
+                                'اقرأ الأذكار اليومية وحافظ على ذكر الله في كل وقت',
+                                style: context.bodyMedium?.copyWith(
+                                  color: context.textSecondaryColor,
+                                ),
                               ),
-                            ),
-                            
-                            // إحصائيات سريعة
-                            if (!_progressLoading && _progressMap.isNotEmpty) ...[
-                              ThemeConstants.space4.h,
-                              _buildQuickStats(),
+                              
+                              // إحصائيات سريعة
+                              if (!_progressLoading && _progressMap.isNotEmpty) ...[
+                                ThemeConstants.space4.h,
+                                _buildQuickStats(),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                    
-                    // قائمة الفئات
-                    FutureBuilder<List<AthkarCategory>>(
-                      future: _futureCategories,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return SliverFillRemaining(
-                            child: Center(
-                              child: AppLoading.page(
-                                message: 'جاري تحميل الأذكار...',
+                      
+                      // قائمة الفئات
+                      FutureBuilder<List<AthkarCategory>>(
+                        future: _futureCategories,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return SliverFillRemaining(
+                              child: Center(
+                                child: AppLoading.page(
+                                  message: 'جاري تحميل الأذكار...',
+                                ),
+                              ),
+                            );
+                          }
+                          
+                          if (snapshot.hasError) {
+                            return SliverFillRemaining(
+                              child: AppEmptyState.error(
+                                message: 'حدث خطأ في تحميل البيانات',
+                                onRetry: _refreshData,
+                              ),
+                            );
+                          }
+                          
+                          final categories = snapshot.data ?? [];
+                          
+                          if (categories.isEmpty) {
+                            return SliverFillRemaining(
+                              child: AppEmptyState.noData(
+                                message: 'لا توجد أذكار متاحة حالياً',
+                              ),
+                            );
+                          }
+                          
+                          return SliverPadding(
+                            padding: const EdgeInsets.all(ThemeConstants.space4),
+                            sliver: SliverGrid(
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                mainAxisSpacing: ThemeConstants.space4,
+                                crossAxisSpacing: ThemeConstants.space4,
+                                childAspectRatio: 0.8,
+                              ),
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  final category = categories[index];
+                                  final progress = _progressMap[category.id] ?? 0;
+                                  
+                                  return AthkarCategoryCardWithProgress(
+                                    category: category,
+                                    progress: progress,
+                                    isProgressLoading: _progressLoading,
+                                    onTap: () => _openCategoryDetails(category),
+                                  );
+                                },
+                                childCount: categories.length,
                               ),
                             ),
                           );
-                        }
-                        
-                        if (snapshot.hasError) {
-                          return SliverFillRemaining(
-                            child: AppEmptyState.error(
-                              message: 'حدث خطأ في تحميل البيانات',
-                              onRetry: _refreshData,
-                            ),
-                          );
-                        }
-                        
-                        final categories = snapshot.data ?? [];
-                        
-                        if (categories.isEmpty) {
-                          return SliverFillRemaining(
-                            child: AppEmptyState.noData(
-                              message: 'لا توجد أذكار متاحة حالياً',
-                            ),
-                          );
-                        }
-                        
-                        return SliverPadding(
-                          padding: const EdgeInsets.all(ThemeConstants.space4),
-                          sliver: SliverGrid(
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              mainAxisSpacing: ThemeConstants.space4,
-                              crossAxisSpacing: ThemeConstants.space4,
-                              childAspectRatio: 0.8,
-                            ),
-                            delegate: SliverChildBuilderDelegate(
-                              (context, index) {
-                                final category = categories[index];
-                                final progress = _progressMap[category.id] ?? 0;
-                                
-                                return AthkarCategoryCardWithProgress(
-                                  category: category,
-                                  progress: progress,
-                                  isProgressLoading: _progressLoading,
-                                  onTap: () => _openCategoryDetails(category),
-                                );
-                              },
-                              childCount: categories.length,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    
-                    // مساحة إضافية
-                    const SliverPadding(
-                      padding: EdgeInsets.only(bottom: ThemeConstants.space8),
-                    ),
-                  ],
+                        },
+                      ),
+                      
+                      // مساحة إضافية
+                      const SliverPadding(
+                        padding: EdgeInsets.only(bottom: ThemeConstants.space8),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -250,22 +324,185 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen> {
         ? _progressMap.values.reduce((a, b) => a + b) ~/ totalCategories 
         : 0;
 
-    return AppCard(
-      padding: const EdgeInsets.all(ThemeConstants.space4),
+    return Column(
+      children: [
+        // بطاقة الإحصائيات المحلية
+        AppCard(
+          padding: const EdgeInsets.all(ThemeConstants.space4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(ThemeConstants.space2),
+                    decoration: BoxDecoration(
+                      color: ThemeConstants.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                    ),
+                    child: const Icon(
+                      Icons.insights_rounded,
+                      color: ThemeConstants.primary,
+                      size: ThemeConstants.iconMd,
+                    ),
+                  ),
+                  ThemeConstants.space3.w,
+                  Text(
+                    'إحصائيات الأذكار',
+                    style: context.titleMedium?.copyWith(
+                      fontWeight: ThemeConstants.semiBold,
+                    ),
+                  ),
+                  const Spacer(),
+                  // زر الذهاب للإحصائيات التفصيلية
+                  if (_statsService != null)
+                    Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
+                      child: InkWell(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const StatisticsDashboardScreen(),
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: ThemeConstants.space3,
+                            vertical: ThemeConstants.space2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: ThemeConstants.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
+                            border: Border.all(
+                              color: ThemeConstants.primary.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'المزيد',
+                                style: context.labelMedium?.copyWith(
+                                  color: ThemeConstants.primary,
+                                  fontWeight: ThemeConstants.semiBold,
+                                ),
+                              ),
+                              ThemeConstants.space1.w,
+                              const Icon(
+                                Icons.arrow_forward,
+                                size: 16,
+                                color: ThemeConstants.primary,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              
+              ThemeConstants.space4.h,
+              
+              // الإحصائيات
+              Row(
+                children: [
+                  Expanded(
+                    child: _QuickStatItem(
+                      icon: Icons.check_circle_rounded,
+                      count: completedCategories,
+                      label: 'مكتملة',
+                      color: ThemeConstants.success,
+                    ),
+                  ),
+                  
+                  Container(
+                    width: 1,
+                    height: 40,
+                    color: context.dividerColor,
+                  ),
+                  
+                  Expanded(
+                    child: _QuickStatItem(
+                      icon: Icons.trending_up_rounded,
+                      count: inProgressCategories,
+                      label: 'قيد التقدم',
+                      color: ThemeConstants.warning,
+                    ),
+                  ),
+                  
+                  Container(
+                    width: 1,
+                    height: 40,
+                    color: context.dividerColor,
+                  ),
+                  
+                  Expanded(
+                    child: _QuickStatItem(
+                      icon: Icons.percent_rounded,
+                      count: averageProgress,
+                      label: 'متوسط التقدم',
+                      color: ThemeConstants.primary,
+                      isPercentage: true,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        
+        // إحصائيات اليوم من نظام الإحصائيات الموحد
+        if (_todayStats != null) ...[
+          ThemeConstants.space3.h,
+          _buildTodayStatsCard(),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildTodayStatsCard() {
+    return Container(
+      padding: const EdgeInsets.all(ThemeConstants.space3),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            ThemeConstants.primary.withValues(alpha: 0.1),
+            ThemeConstants.primaryLight.withValues(alpha: 0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+        border: Border.all(
+          color: ThemeConstants.primary.withValues(alpha: 0.2),
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // العنوان
           Row(
             children: [
-              const Icon(
-                Icons.insights_rounded,
-                color: ThemeConstants.primary,
-                size: ThemeConstants.iconMd,
+              Container(
+                padding: const EdgeInsets.all(ThemeConstants.space1),
+                decoration: BoxDecoration(
+                  color: ThemeConstants.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
+                ),
+                child: const Icon(
+                  Icons.today_rounded,
+                  size: 16,
+                  color: ThemeConstants.primary,
+                ),
               ),
               ThemeConstants.space2.w,
               Text(
-                'إحصائياتك',
-                style: context.titleMedium?.copyWith(
+                'إحصائيات اليوم',
+                style: context.labelLarge?.copyWith(
+                  color: ThemeConstants.primary,
                   fontWeight: ThemeConstants.semiBold,
                 ),
               ),
@@ -274,46 +511,54 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen> {
           
           ThemeConstants.space3.h,
           
+          // الإحصائيات
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Expanded(
-                child: _QuickStatItem(
-                  icon: Icons.check_circle_rounded,
-                  count: completedCategories,
-                  label: 'مكتملة',
-                  color: ThemeConstants.success,
-                ),
+              _MiniStatItem(
+                icon: Icons.menu_book,
+                value: '${_todayStats?.athkarCompleted ?? 0}',
+                label: 'أذكار',
+                color: ThemeConstants.primary,
               ),
               
               Container(
                 width: 1,
-                height: 40,
+                height: 30,
                 color: context.dividerColor,
               ),
               
-              Expanded(
-                child: _QuickStatItem(
-                  icon: Icons.trending_up_rounded,
-                  count: inProgressCategories,
-                  label: 'قيد التقدم',
-                  color: ThemeConstants.warning,
-                ),
+              _MiniStatItem(
+                icon: Icons.radio_button_checked,
+                value: '${_todayStats?.tasbihCount ?? 0}',
+                label: 'تسبيح',
+                color: ThemeConstants.accent,
               ),
               
               Container(
                 width: 1,
-                height: 40,
+                height: 30,
                 color: context.dividerColor,
               ),
               
-              Expanded(
-                child: _QuickStatItem(
-                  icon: Icons.percent_rounded,
-                  count: averageProgress,
-                  label: 'متوسط التقدم',
-                  color: ThemeConstants.primary,
-                  isPercentage: true,
-                ),
+              _MiniStatItem(
+                icon: Icons.local_fire_department,
+                value: '$_currentStreak',
+                label: 'سلسلة',
+                color: ThemeConstants.error,
+              ),
+              
+              Container(
+                width: 1,
+                height: 30,
+                color: context.dividerColor,
+              ),
+              
+              _MiniStatItem(
+                icon: Icons.star,
+                value: '${_todayStats?.totalPoints ?? 0}',
+                label: 'نقاط',
+                color: ThemeConstants.warning,
               ),
             ],
           ),
@@ -325,6 +570,16 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen> {
   Widget _buildCustomAppBar(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(ThemeConstants.space4),
+      decoration: BoxDecoration(
+        color: context.backgroundColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           // زر الرجوع
@@ -383,6 +638,48 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen> {
             ),
           ),
           
+          // زر الإحصائيات
+          if (_statsService != null)
+            Container(
+              margin: const EdgeInsets.only(left: ThemeConstants.space2),
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                child: InkWell(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const StatisticsDashboardScreen(),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                  child: Container(
+                    padding: const EdgeInsets.all(ThemeConstants.space2),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          ThemeConstants.primary.withValues(alpha: 0.1),
+                          ThemeConstants.primaryLight.withValues(alpha: 0.05),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                      border: Border.all(
+                        color: ThemeConstants.primary.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.analytics_rounded,
+                      color: ThemeConstants.primary,
+                      size: ThemeConstants.iconMd,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          
           // زر إعدادات الإشعارات
           Container(
             margin: const EdgeInsets.only(left: ThemeConstants.space2),
@@ -416,10 +713,31 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen> {
                       ),
                     ],
                   ),
-                  child: Icon(
-                    Icons.notifications_outlined,
-                    color: context.textPrimaryColor,
-                    size: ThemeConstants.iconMd,
+                  child: Stack(
+                    children: [
+                      Icon(
+                        Icons.notifications_outlined,
+                        color: context.textPrimaryColor,
+                        size: ThemeConstants.iconMd,
+                      ),
+                      if (_notificationsEnabled)
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: ThemeConstants.success,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: context.backgroundColor,
+                                width: 1,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
@@ -439,6 +757,11 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen> {
     ).then((_) {
       // إعادة تحميل التقدم عند العودة من صفحة التفاصيل
       _loadProgress();
+      
+      // تحديث الإحصائيات
+      if (_statsService != null) {
+        _loadStatistics();
+      }
     });
   }
 }
@@ -461,27 +784,89 @@ class _QuickStatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: ThemeConstants.space2),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(ThemeConstants.space2),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: ThemeConstants.iconSm,
+            ),
+          ),
+          ThemeConstants.space2.h,
+          AnimatedSwitcher(
+            duration: ThemeConstants.durationFast,
+            child: Text(
+              isPercentage ? '$count%' : '$count',
+              key: ValueKey('$count'),
+              style: context.titleMedium?.copyWith(
+                color: color,
+                fontWeight: ThemeConstants.bold,
+              ),
+            ),
+          ),
+          Text(
+            label,
+            style: context.labelSmall?.copyWith(
+              color: context.textSecondaryColor,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ويدجت عنصر إحصائيات صغير
+class _MiniStatItem extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+  final Color color;
+
+  const _MiniStatItem({
+    required this.icon,
+    required this.value,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
-          icon,
-          color: color,
-          size: ThemeConstants.iconSm,
+          icon, 
+          color: color, 
+          size: 20,
         ),
-        ThemeConstants.space1.h,
-        Text(
-          isPercentage ? '$count%' : '$count',
-          style: context.titleMedium?.copyWith(
-            color: color,
-            fontWeight: ThemeConstants.bold,
+        const SizedBox(height: 4),
+        AnimatedSwitcher(
+          duration: ThemeConstants.durationFast,
+          child: Text(
+            value,
+            key: ValueKey(value),
+            style: context.titleSmall?.copyWith(
+              color: color,
+              fontWeight: ThemeConstants.bold,
+            ),
           ),
         ),
         Text(
           label,
           style: context.labelSmall?.copyWith(
             color: context.textSecondaryColor,
+            fontSize: 10,
           ),
-          textAlign: TextAlign.center,
         ),
       ],
     );
@@ -505,143 +890,204 @@ class AthkarCategoryCardWithProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // البطاقة الأساسية
-        AthkarCategoryCard(
-          category: category,
-          onTap: onTap,
+    return Hero(
+      tag: 'category_${category.id}',
+      child: Material(
+        color: Colors.transparent,
+        child: Stack(
+          children: [
+            // البطاقة الأساسية
+            AthkarCategoryCard(
+              category: category,
+              onTap: onTap,
+            ),
+            
+            // مؤشر التقدم الدائري على اليسار
+            if (!isProgressLoading)
+              Positioned(
+                top: ThemeConstants.space3,
+                left: ThemeConstants.space3,
+                child: _buildProgressIndicator(context),
+              ),
+            
+            // مؤشر التحميل
+            if (isProgressLoading)
+              Positioned(
+                top: ThemeConstants.space3,
+                left: ThemeConstants.space3,
+                child: _buildLoadingIndicator(),
+              ),
+            
+            // شارة الإكمال
+            if (progress >= 100)
+              Positioned(
+                top: ThemeConstants.space2,
+                right: ThemeConstants.space2,
+                child: _buildCompletionBadge(context),
+              ),
+          ],
         ),
-        
-        // مؤشر التقدم الدائري على اليسار
-        if (!isProgressLoading)
-          Positioned(
-            top: ThemeConstants.space3,
-            left: ThemeConstants.space3,
-            child: Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // دائرة التقدم الخلفية
-                  SizedBox(
-                    width: 50,
-                    height: 50,
-                    child: CircularProgressIndicator(
-                      value: 1.0,
-                      strokeWidth: 4,
-                      backgroundColor: Colors.transparent,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Colors.white.withValues(alpha: 0.2),
-                      ),
-                    ),
-                  ),
-                  
-                  // دائرة التقدم الفعلية
-                  SizedBox(
-                    width: 50,
-                    height: 50,
-                    child: CircularProgressIndicator(
-                      value: progress / 100,
-                      strokeWidth: 4,
-                      backgroundColor: Colors.transparent,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        Colors.white,
-                      ),
-                    ),
-                  ),
-                  
-                  // النسبة المئوية
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '$progress%',
-                        style: context.titleMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: ThemeConstants.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                      if (progress > 0)
-                        Icon(
-                          _getProgressIcon(progress),
-                          color: Colors.white,
-                          size: 12,
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        
-        // مؤشر التحميل
-        if (isProgressLoading)
-          Positioned(
-            top: ThemeConstants.space3,
-            left: ThemeConstants.space3,
-            child: Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const Center(
-                child: SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-      ],
+      ),
     );
   }
 
-  Object _getProgressColor(int progress) {
+  Widget _buildProgressIndicator(BuildContext context) {
+    final effectiveColor = _getProgressColor(progress);
+    
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.3),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // دائرة التقدم الخلفية
+          SizedBox(
+            width: 50,
+            height: 50,
+            child: CircularProgressIndicator(
+              value: 1.0,
+              strokeWidth: 4,
+              backgroundColor: Colors.transparent,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Colors.white.withValues(alpha: 0.2),
+              ),
+            ),
+          ),
+          
+          // دائرة التقدم الفعلية
+          SizedBox(
+            width: 50,
+            height: 50,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: progress / 100),
+              duration: ThemeConstants.durationSlow,
+              curve: Curves.easeOutCubic,
+              builder: (context, value, child) {
+                return CircularProgressIndicator(
+                  value: value,
+                  strokeWidth: 4,
+                  backgroundColor: Colors.transparent,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    effectiveColor,
+                  ),
+                );
+              },
+            ),
+          ),
+          
+          // النسبة المئوية
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedSwitcher(
+                duration: ThemeConstants.durationFast,
+                child: Text(
+                  '$progress%',
+                  key: ValueKey('progress_$progress'),
+                  style: context.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: ThemeConstants.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              if (progress > 0)
+                Icon(
+                  _getProgressIcon(progress),
+                  color: Colors.white,
+                  size: 12,
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.3),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: const Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            strokeWidth: 3,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompletionBadge(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(ThemeConstants.space1),
+      decoration: BoxDecoration(
+        color: ThemeConstants.success,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: ThemeConstants.success.withValues(alpha: 0.4),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: const Icon(
+        Icons.check,
+        color: Colors.white,
+        size: 16,
+      ),
+    );
+  }
+
+  Color _getProgressColor(int progress) {
     if (progress >= 100) {
       return ThemeConstants.success;
+    } else if (progress >= 75) {
+      return Colors.lightGreen;
     } else if (progress >= 50) {
       return ThemeConstants.warning;
+    } else if (progress >= 25) {
+      return Colors.orange;
     } else if (progress > 0) {
       return ThemeConstants.info;
     } else {
-      return ThemeConstants.textSecondary;
+      return Colors.white.withValues(alpha: 0.5);
     }
   }
 
@@ -656,8 +1102,4 @@ class AthkarCategoryCardWithProgress extends StatelessWidget {
       return Icons.radio_button_unchecked_rounded;
     }
   }
-}
-
-extension on Object {
-  withValues({required double alpha}) {}
 }

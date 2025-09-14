@@ -1,7 +1,8 @@
-// lib/features/athkar/services/athkar_service.dart (محسن مع دعم حجم الخط)
+// lib/features/athkar/services/athkar_service.dart
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/material.dart';
+import '../../../app/di/service_locator.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/infrastructure/services/logging/logger_service.dart';
 import '../../../core/infrastructure/services/storage/storage_service.dart';
@@ -9,8 +10,10 @@ import '../../../core/infrastructure/services/notifications/notification_manager
 import '../../../core/infrastructure/services/notifications/models/notification_models.dart';
 import '../models/athkar_model.dart';
 import '../models/athkar_progress.dart';
+// استيراد نظام الإحصائيات
+import '../../statistics/services/statistics_service.dart';
 
-/// خدمة شاملة لإدارة الأذكار محسنة
+/// خدمة شاملة لإدارة الأذكار محسنة مع نظام الإحصائيات
 class AthkarService {
   final LoggerService _logger;
   final StorageService _storage;
@@ -22,7 +25,7 @@ class AthkarService {
   static const String _customTimesKey = 'athkar_custom_times_v2';
   static const String _settingsVersionKey = 'athkar_settings_version';
   static const String _lastSyncKey = 'athkar_last_sync';
-  static const String _fontSizeKey = 'athkar_font_size'; // NEW: مفتاح حجم الخط
+  static const String _fontSizeKey = 'athkar_font_size';
   
   // إصدار الإعدادات الحالي
   static const int _currentVersion = 2;
@@ -86,7 +89,7 @@ class AthkarService {
     await _storage.setString(_lastSyncKey, DateTime.now().toIso8601String());
   }
 
-  // ==================== إدارة حجم الخط (NEW) ====================
+  // ==================== إدارة حجم الخط ====================
 
   /// حفظ حجم الخط المختار
   Future<void> saveFontSize(double fontSize) async {
@@ -373,6 +376,214 @@ class AthkarService {
         error: e,
       );
       return 0;
+    }
+  }
+
+  // ==================== التكامل مع نظام الإحصائيات ====================
+  
+  /// تسجيل إكمال فئة أذكار في الإحصائيات
+  Future<void> recordCategoryCompletion({
+    required String categoryId,
+    required String categoryName,
+    required int totalItems,
+    required Duration sessionDuration,
+  }) async {
+    try {
+      // الحصول على خدمة الإحصائيات
+      if (getIt.isRegistered<StatisticsService>()) {
+        final statsService = getIt<StatisticsService>();
+        
+        await statsService.recordAthkarActivity(
+          categoryId: categoryId,
+          categoryName: categoryName,
+          itemsCompleted: totalItems,
+          totalItems: totalItems,
+          duration: sessionDuration,
+        );
+        
+        // حفظ آخر نشاط
+        await _saveLastActivityForCategory(categoryId);
+        
+        _logger.info(
+          message: '[AthkarService] Category completion recorded in statistics',
+          data: {
+            'categoryId': categoryId,
+            'categoryName': categoryName,
+            'items': totalItems,
+            'duration': sessionDuration.inSeconds,
+          },
+        );
+      }
+    } catch (e) {
+      _logger.error(
+        message: '[AthkarService] Failed to record category completion',
+        error: e,
+      );
+    }
+  }
+  
+  /// تسجيل تقدم جزئي في فئة أذكار
+  Future<void> recordPartialProgress({
+    required String categoryId,
+    required String categoryName,
+    required int itemsCompleted,
+    required int totalItems,
+    Duration? sessionDuration,
+  }) async {
+    try {
+      if (getIt.isRegistered<StatisticsService>()) {
+        final statsService = getIt<StatisticsService>();
+        
+        await statsService.recordAthkarActivity(
+          categoryId: categoryId,
+          categoryName: categoryName,
+          itemsCompleted: itemsCompleted,
+          totalItems: totalItems,
+          duration: sessionDuration ?? const Duration(minutes: 5),
+        );
+        
+        // حفظ آخر نشاط
+        await _saveLastActivityForCategory(categoryId);
+        
+        _logger.debug(
+          message: '[AthkarService] Partial progress recorded',
+          data: {
+            'categoryId': categoryId,
+            'completed': itemsCompleted,
+            'total': totalItems,
+          },
+        );
+      }
+    } catch (e) {
+      _logger.error(
+        message: '[AthkarService] Failed to record partial progress',
+        error: e,
+      );
+    }
+  }
+  
+  /// الحصول على إحصائيات فئة معينة
+  Future<CategoryStatistics> getCategoryStatistics(String categoryId) async {
+    try {
+      if (getIt.isRegistered<StatisticsService>()) {
+        final statsService = getIt<StatisticsService>();
+        
+        // الحصول على الإحصائيات العامة
+        final overallStats = await statsService.getOverallStatistics();
+        
+        // البحث عن إحصائيات الفئة المحددة في المفضلات
+        final frequency = overallStats.favoriteAthkar[categoryId] ?? 0;
+        
+        // الحصول على معلومات التقدم
+        final progress = await getCategoryCompletionPercentage(categoryId);
+        
+        // الحصول على آخر نشاط
+        final lastActivity = await _getLastActivityForCategory(categoryId);
+        
+        return CategoryStatistics(
+          categoryId: categoryId,
+          timesCompleted: frequency,
+          currentProgress: progress,
+          lastActivity: lastActivity,
+          totalPoints: frequency * 100, // نقاط تقديرية
+        );
+      }
+      
+      return CategoryStatistics.empty(categoryId);
+    } catch (e) {
+      _logger.error(
+        message: '[AthkarService] Failed to get category statistics',
+        error: e,
+      );
+      return CategoryStatistics.empty(categoryId);
+    }
+  }
+  
+  /// الحصول على آخر نشاط لفئة معينة
+  Future<DateTime?> _getLastActivityForCategory(String categoryId) async {
+    final key = 'last_activity_$categoryId';
+    final timestamp = _storage.getString(key);
+    
+    if (timestamp != null) {
+      try {
+        return DateTime.parse(timestamp);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }
+  
+  /// حفظ آخر نشاط لفئة معينة
+  Future<void> _saveLastActivityForCategory(String categoryId) async {
+    final key = 'last_activity_$categoryId';
+    await _storage.setString(key, DateTime.now().toIso8601String());
+  }
+  
+  /// الحصول على ملخص إحصائيات جميع الفئات
+  Future<Map<String, CategoryStatistics>> getAllCategoriesStatistics() async {
+    try {
+      final categories = await loadCategories();
+      final statsMap = <String, CategoryStatistics>{};
+      
+      for (final category in categories) {
+        final stats = await getCategoryStatistics(category.id);
+        statsMap[category.id] = stats;
+      }
+      
+      return statsMap;
+    } catch (e) {
+      _logger.error(
+        message: '[AthkarService] Failed to get all categories statistics',
+        error: e,
+      );
+      return {};
+    }
+  }
+  
+  /// مزامنة البيانات مع نظام الإحصائيات
+  Future<void> syncWithStatisticsService() async {
+    try {
+      _logger.info(message: '[AthkarService] Starting sync with statistics service');
+      
+      final categories = await loadCategories();
+      
+      for (final category in categories) {
+        final progress = await getCategoryCompletionPercentage(category.id);
+        
+        if (progress > 0) {
+          // حساب عدد الأذكار المكتملة
+          int completedItems = 0;
+          final key = 'athkar_progress_${category.id}';
+          final data = _storage.getMap(key);
+          
+          if (data != null) {
+            for (final item in category.athkar) {
+              final itemProgress = data['${item.id}'] as int? ?? 0;
+              if (itemProgress >= item.count) {
+                completedItems++;
+              }
+            }
+          }
+          
+          // تسجيل التقدم في الإحصائيات
+          if (completedItems > 0) {
+            await recordPartialProgress(
+              categoryId: category.id,
+              categoryName: category.title,
+              itemsCompleted: completedItems,
+              totalItems: category.athkar.length,
+            );
+          }
+        }
+      }
+      
+      _logger.info(message: '[AthkarService] Sync completed successfully');
+    } catch (e) {
+      _logger.error(
+        message: '[AthkarService] Sync failed',
+        error: e,
+      );
     }
   }
 
@@ -821,7 +1032,7 @@ class AthkarService {
       // مسح الكاش المحلي
       await _storage.remove(_categoriesKey);
 
-      // مسح حجم الخط (NEW)
+      // مسح حجم الخط
       await _storage.remove(_fontSizeKey);
 
       // مسح الكاش في الذاكرة
@@ -849,7 +1060,7 @@ class AthkarService {
       // مسح الإعدادات
       await _storage.remove(_reminderKey);
       await _storage.remove(_customTimesKey);
-      await _storage.remove(_fontSizeKey); // NEW
+      await _storage.remove(_fontSizeKey);
       
       // مسح الكاش
       _customTimesCache.clear();
@@ -924,4 +1135,33 @@ class AthkarStatistics {
     required this.averageProgress,
     this.lastSyncTime,
   });
+}
+
+/// نموذج إحصائيات الفئة
+class CategoryStatistics {
+  final String categoryId;
+  final int timesCompleted;
+  final int currentProgress;
+  final DateTime? lastActivity;
+  final int totalPoints;
+  
+  CategoryStatistics({
+    required this.categoryId,
+    required this.timesCompleted,
+    required this.currentProgress,
+    this.lastActivity,
+    required this.totalPoints,
+  });
+  
+  factory CategoryStatistics.empty(String categoryId) {
+    return CategoryStatistics(
+      categoryId: categoryId,
+      timesCompleted: 0,
+      currentProgress: 0,
+      lastActivity: null,
+      totalPoints: 0,
+    );
+  }
+  
+  bool get hasActivity => timesCompleted > 0 || currentProgress > 0;
 }

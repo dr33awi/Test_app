@@ -15,8 +15,11 @@ import '../widgets/tasbih_bead_widget.dart';
 import '../widgets/tasbih_counter_ring.dart';
 import '../widgets/tasbih_pattern_painter.dart';
 import '../widgets/dhikr_card.dart';
+// استيراد نظام الإحصائيات
+import '../../statistics/screens/statistics_dashboard_screen.dart';
+import '../../statistics/services/statistics_service.dart';
 
-/// شاشة المسبحة الرقمية المحسنة
+/// شاشة المسبحة الرقمية المحسنة مع نظام الإحصائيات
 class TasbihScreen extends StatefulWidget {
   const TasbihScreen({super.key});
 
@@ -38,12 +41,17 @@ class _TasbihScreenState extends State<TasbihScreen>
   // للتتبع والتفاعل
   bool _isPressed = false;
   DhikrItem _currentDhikr = DefaultAdhkar.getAll().first; // الذكر الحالي
+  
+  // إحصائيات
+  TasbihStatistics? _statistics;
+  bool _hasStatisticsService = false;
 
   @override
   void initState() {
     super.initState();
     _initializeServices();
     _setupAnimations();
+    _loadStatistics();
   }
 
   void _initializeServices() {
@@ -52,6 +60,12 @@ class _TasbihScreenState extends State<TasbihScreen>
       logger: getIt<LoggerService>(),
     );
     _logger = getIt<LoggerService>();
+    
+    // التحقق من وجود خدمة الإحصائيات
+    _hasStatisticsService = getIt.isRegistered<StatisticsService>();
+    
+    // بدء جلسة تسبيح
+    _service.startSession(_currentDhikr.text);
   }
 
   void _setupAnimations() {
@@ -92,8 +106,25 @@ class _TasbihScreenState extends State<TasbihScreen>
     ).animate(_rotationController);
   }
 
+  Future<void> _loadStatistics() async {
+    if (!_hasStatisticsService) return;
+    
+    final stats = await _service.getTasbihStatistics();
+    if (mounted) {
+      setState(() {
+        _statistics = stats;
+      });
+    }
+  }
+
   @override
   void dispose() {
+    // إنهاء الجلسة عند الخروج
+    _service.endSession();
+    
+    // مزامنة مع نظام الإحصائيات
+    _service.syncWithStatisticsService();
+    
     _beadController.dispose();
     _rippleController.dispose();
     _rotationController.dispose();
@@ -117,6 +148,10 @@ class _TasbihScreenState extends State<TasbihScreen>
                 children: [
                   // شريط التطبيق المخصص
                   _buildCustomAppBar(context),
+                  
+                  // بطاقة الإحصائيات السريعة
+                  if (_hasStatisticsService && _statistics != null)
+                    _buildQuickStatsCard(),
                   
                   // محدد نوع الذكر
                   _buildDhikrSelector(),
@@ -199,6 +234,48 @@ class _TasbihScreenState extends State<TasbihScreen>
             ),
           ),
           
+          // زر الإحصائيات
+          if (_hasStatisticsService)
+            Container(
+              margin: const EdgeInsets.only(left: ThemeConstants.space2),
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                child: InkWell(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const StatisticsDashboardScreen(),
+                      ),
+                    ).then((_) => _loadStatistics());
+                  },
+                  borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                  child: Container(
+                    padding: const EdgeInsets.all(ThemeConstants.space2),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          ThemeConstants.primary.withValues(alpha: 0.1),
+                          ThemeConstants.primaryLight.withValues(alpha: 0.05),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                      border: Border.all(
+                        color: ThemeConstants.primary.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.analytics_rounded,
+                      color: ThemeConstants.primary,
+                      size: ThemeConstants.iconMd,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          
           // زر تصفير العداد
           Consumer<TasbihService>(
             builder: (context, service, _) {
@@ -232,6 +309,96 @@ class _TasbihScreenState extends State<TasbihScreen>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildQuickStatsCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(
+        horizontal: ThemeConstants.space4,
+        vertical: ThemeConstants.space2,
+      ),
+      padding: const EdgeInsets.all(ThemeConstants.space3),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            ThemeConstants.primary.withValues(alpha: 0.1),
+            ThemeConstants.primaryLight.withValues(alpha: 0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+        border: Border.all(
+          color: ThemeConstants.primary.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildMiniStat(
+            'اليوم',
+            '${_statistics?.todayCount ?? 0}',
+            Icons.today,
+            ThemeConstants.primary,
+          ),
+          Container(
+            width: 1,
+            height: 30,
+            color: context.dividerColor,
+          ),
+          _buildMiniStat(
+            'الإجمالي',
+            '${_statistics?.totalCount ?? 0}',
+            Icons.functions,
+            ThemeConstants.accent,
+          ),
+          Container(
+            width: 1,
+            height: 30,
+            color: context.dividerColor,
+          ),
+          _buildMiniStat(
+            'السلسلة',
+            '${_statistics?.currentStreak ?? 0}',
+            Icons.local_fire_department,
+            ThemeConstants.error,
+          ),
+          Container(
+            width: 1,
+            height: 30,
+            color: context.dividerColor,
+          ),
+          _buildMiniStat(
+            'المتوسط',
+            '${_statistics?.weeklyAverage.toInt() ?? 0}',
+            Icons.trending_up,
+            ThemeConstants.success,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniStat(String label, String value, IconData icon, Color color) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: color, size: 18),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: context.titleSmall?.copyWith(
+            color: color,
+            fontWeight: ThemeConstants.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: context.labelSmall?.copyWith(
+            color: context.textSecondaryColor,
+            fontSize: 10,
+          ),
+        ),
+      ],
     );
   }
 
@@ -507,7 +674,7 @@ class _TasbihScreenState extends State<TasbihScreen>
           
           _buildInfoItem(
             'الإجمالي اليوم',
-            '${service.count}',
+            '${service.todayCount}',
             Icons.star,
             ThemeConstants.accent,
           ),
@@ -554,6 +721,9 @@ class _TasbihScreenState extends State<TasbihScreen>
     if (service.count % _currentDhikr.recommendedCount == 0) {
       HapticFeedback.mediumImpact();
       _showCompletionCelebration(_currentDhikr);
+      
+      // تحديث الإحصائيات عند إكمال جولة
+      _loadStatistics();
     }
     
     _logger.debug(
@@ -588,6 +758,9 @@ class _TasbihScreenState extends State<TasbihScreen>
         context.showSuccessSnackBar(
           'تم تصفير العداد',
         );
+        
+        // تحديث الإحصائيات
+        _loadStatistics();
       }
     });
   }
@@ -630,7 +803,7 @@ class _TasbihScreenState extends State<TasbihScreen>
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         colors: [ThemeConstants.primary, ThemeConstants.primaryLight],
                       ),
                       borderRadius: BorderRadius.circular(12),
@@ -765,13 +938,20 @@ class _TasbihScreenState extends State<TasbihScreen>
                   child: InkWell(
                     onTap: () {
                       setState(() {
+                        // إنهاء الجلسة السابقة
+                        _service.endSession();
+                        
+                        // تغيير الذكر
                         _currentDhikr = dhikr;
+                        
+                        // بدء جلسة جديدة
+                        _service.startSession(dhikr.text);
                       });
                       Navigator.pop(context);
                       HapticFeedback.mediumImpact();
-        context.showSuccessSnackBar(
-          'تم تغيير الذكر إلى: ${dhikr.text}',
-        );
+                      context.showSuccessSnackBar(
+                        'تم تغيير الذكر إلى: ${dhikr.text}',
+                      );
                     },
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
@@ -911,7 +1091,7 @@ class _TasbihScreenState extends State<TasbihScreen>
                     ),
                   ),
                 ),
-              )).toList(),
+              )),
             ],
           ),
         );

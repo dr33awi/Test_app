@@ -1,14 +1,19 @@
 // lib/features/tasbih/services/tasbih_service.dart
 import 'package:flutter/material.dart';
-
+import '../../../app/di/service_locator.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/infrastructure/services/logging/logger_service.dart';
 import '../../../core/infrastructure/services/storage/storage_service.dart';
+// استيراد نظام الإحصائيات
+import '../../statistics/services/statistics_service.dart';
+import '../../statistics/integration/statistics_integration.dart';
 
-/// خدمة إدارة المسبحة الرقمية المحسنة
+/// خدمة إدارة المسبحة الرقمية المحسنة مع نظام الإحصائيات
 class TasbihService extends ChangeNotifier {
   final StorageService _storage;
   final LoggerService _logger;
+  StatisticsService? _statsService;
+  StatisticsIntegration? _statsIntegration;
 
   int _count = 0;
   int _todayCount = 0;
@@ -18,13 +23,27 @@ class TasbihService extends ChangeNotifier {
   // إحصائيات متقدمة
   Map<String, int> _dhikrStats = {};
   List<DailyRecord> _history = [];
+  
+  // للتتبع الجلسة
+  DateTime? _sessionStartTime;
+  String? _currentDhikrType;
 
   TasbihService({
     required StorageService storage, 
     required LoggerService logger,
   }) : _storage = storage,
         _logger = logger {
+    _initializeStatistics();
     _loadData();
+  }
+
+  // تهيئة نظام الإحصائيات
+  void _initializeStatistics() {
+    if (getIt.isRegistered<StatisticsService>()) {
+      _statsService = getIt<StatisticsService>();
+      _statsIntegration = StatisticsIntegration();
+      _logger.info(message: '[TasbihService] Statistics integration initialized');
+    }
   }
 
   // Getters
@@ -125,8 +144,54 @@ class TasbihService extends ChangeNotifier {
     }
   }
 
+  // بدء جلسة تسبيح جديدة
+  void startSession(String dhikrType) {
+    _sessionStartTime = DateTime.now();
+    _currentDhikrType = dhikrType;
+    
+    // بدء الجلسة في نظام الإحصائيات
+    _statsIntegration?.startTasbihSession(dhikrType);
+    
+    _logger.debug(
+      message: '[TasbihService] Session started',
+      data: {'dhikrType': dhikrType},
+    );
+  }
+
+  // إنهاء جلسة التسبيح
+  Future<void> endSession() async {
+    if (_sessionStartTime == null || _currentDhikrType == null) return;
+    
+    final sessionCount = _count;
+    
+    // تسجيل في نظام الإحصائيات
+    if (_statsIntegration != null && sessionCount > 0) {
+      await _statsIntegration!.endTasbihSession(
+        dhikrType: _currentDhikrType!,
+        count: sessionCount,
+      );
+      
+      _logger.info(
+        message: '[TasbihService] Session ended and recorded in statistics',
+        data: {
+          'dhikrType': _currentDhikrType,
+          'count': sessionCount,
+          'duration': DateTime.now().difference(_sessionStartTime!).inSeconds,
+        },
+      );
+    }
+    
+    _sessionStartTime = null;
+    _currentDhikrType = null;
+  }
+
   Future<void> increment({String dhikrType = 'default'}) async {
     try {
+      // بدء جلسة جديدة إذا لم تكن موجودة
+      if (_sessionStartTime == null) {
+        startSession(dhikrType);
+      }
+      
       _count++;
       _todayCount++;
       _totalCount++;
@@ -143,6 +208,11 @@ class TasbihService extends ChangeNotifier {
         _storage.setInt('${AppConstants.tasbihCounterKey}_total', _totalCount),
         _storage.setMap('${AppConstants.tasbihCounterKey}_stats', _dhikrStats),
       ]);
+      
+      // تسجيل تسبيحة واحدة في الإحصائيات
+      if (_statsIntegration != null) {
+        await _statsIntegration!.recordSingleTasbih(dhikrType);
+      }
       
       _logger.debug(
         message: '[TasbihService] Incremented',
@@ -162,6 +232,9 @@ class TasbihService extends ChangeNotifier {
 
   Future<void> reset() async {
     try {
+      // إنهاء الجلسة الحالية قبل التصفير
+      await endSession();
+      
       _count = 0;
       notifyListeners();
       
@@ -184,6 +257,9 @@ class TasbihService extends ChangeNotifier {
       // حفظ سجل اليوم قبل التصفير
       await _saveDailyRecord();
       
+      // إنهاء الجلسة الحالية
+      await endSession();
+      
       _todayCount = 0;
       notifyListeners();
       
@@ -202,6 +278,9 @@ class TasbihService extends ChangeNotifier {
 
   Future<void> resetAll() async {
     try {
+      // إنهاء الجلسة الحالية
+      await endSession();
+      
       _count = 0;
       _todayCount = 0;
       _totalCount = 0;
@@ -232,6 +311,15 @@ class TasbihService extends ChangeNotifier {
   Future<void> _resetDailyCount() async {
     if (_todayCount > 0) {
       await _saveDailyRecord();
+      
+      // تسجيل في نظام الإحصائيات
+      if (_statsService != null && _todayCount > 0) {
+        await _statsService!.recordTasbihActivity(
+          dhikrType: getMostUsedDhikr(),
+          count: _todayCount,
+          duration: const Duration(hours: 1), // تقدير
+        );
+      }
     }
     _todayCount = 0;
   }
@@ -317,6 +405,67 @@ class TasbihService extends ChangeNotifier {
            date1.day == date2.day;
   }
 
+  // ==================== مزامنة مع نظام الإحصائيات ====================
+
+  /// مزامنة البيانات مع نظام الإحصائيات
+  Future<void> syncWithStatisticsService() async {
+    if (_statsService == null) return;
+    
+    try {
+      _logger.info(message: '[TasbihService] Starting sync with statistics service');
+      
+      // تسجيل التسابيح الحالية إذا كانت موجودة
+      if (_todayCount > 0) {
+        for (final entry in _dhikrStats.entries) {
+          if (entry.value > 0) {
+            await _statsService!.recordTasbihActivity(
+              dhikrType: entry.key,
+              count: entry.value,
+              duration: Duration(seconds: entry.value * 2), // تقدير: 2 ثانية لكل تسبيحة
+            );
+          }
+        }
+      }
+      
+      _logger.info(
+        message: '[TasbihService] Sync completed successfully',
+        data: {'todayCount': _todayCount, 'dhikrTypes': _dhikrStats.length},
+      );
+    } catch (e) {
+      _logger.error(
+        message: '[TasbihService] Sync failed',
+        error: e,
+      );
+    }
+  }
+
+  /// الحصول على إحصائيات التسبيح من نظام الإحصائيات
+  Future<TasbihStatistics> getTasbihStatistics() async {
+    if (_statsService == null) {
+      return TasbihStatistics.empty();
+    }
+    
+    try {
+      final overallStats = await _statsService!.getOverallStatistics();
+      final todayStats = _statsService!.getTodayStatistics();
+      
+      return TasbihStatistics(
+        todayCount: todayStats.tasbihCount,
+        totalCount: overallStats.totalTasbihCount,
+        currentStreak: _statsService!.currentStreak,
+        favoriteTypes: overallStats.favoriteDhikr,
+        weeklyAverage: getWeeklyAverage(),
+        monthlyTotal: getMonthlyCount(),
+      );
+    } catch (e) {
+      _logger.error(
+        message: '[TasbihService] Failed to get statistics',
+        error: e,
+      );
+      return TasbihStatistics.empty();
+    }
+  }
+
   // إحصائيات متقدمة
   int getWeeklyCount() {
     final weekAgo = DateTime.now().subtract(const Duration(days: 7));
@@ -339,6 +488,14 @@ class TasbihService extends ChangeNotifier {
     final totalCount = _history.fold(0, (sum, record) => sum + record.count);
     
     return totalCount / totalDays;
+  }
+
+  double getWeeklyAverage() {
+    final weekRecords = getLastWeekRecords();
+    if (weekRecords.isEmpty) return 0.0;
+    
+    final totalCount = weekRecords.fold(0, (sum, record) => sum + record.count);
+    return totalCount / 7;
   }
 
   List<DailyRecord> getLastWeekRecords() {
@@ -385,6 +542,13 @@ class TasbihService extends ChangeNotifier {
   Future<void> reloadData() async {
     await _loadData();
   }
+
+  @override
+  void dispose() {
+    // إنهاء الجلسة عند التخلص من الخدمة
+    endSession();
+    super.dispose();
+  }
 }
 
 /// نموذج سجل يومي
@@ -412,6 +576,36 @@ class DailyRecord {
       date: DateTime.parse(map['date']),
       count: map['count'] ?? 0,
       dhikrBreakdown: Map<String, int>.from(map['dhikrBreakdown'] ?? {}),
+    );
+  }
+}
+
+/// نموذج إحصائيات التسبيح
+class TasbihStatistics {
+  final int todayCount;
+  final int totalCount;
+  final int currentStreak;
+  final Map<String, int> favoriteTypes;
+  final double weeklyAverage;
+  final int monthlyTotal;
+
+  TasbihStatistics({
+    required this.todayCount,
+    required this.totalCount,
+    required this.currentStreak,
+    required this.favoriteTypes,
+    required this.weeklyAverage,
+    required this.monthlyTotal,
+  });
+
+  factory TasbihStatistics.empty() {
+    return TasbihStatistics(
+      todayCount: 0,
+      totalCount: 0,
+      currentStreak: 0,
+      favoriteTypes: {},
+      weeklyAverage: 0.0,
+      monthlyTotal: 0,
     );
   }
 }
