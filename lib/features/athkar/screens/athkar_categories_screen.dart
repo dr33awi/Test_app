@@ -1,4 +1,4 @@
-// lib/features/athkar/screens/athkar_categories_screen.dart
+// lib/features/athkar/screens/athkar_categories_screen.dart (محدث مع UnifiedStatsWidget)
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../app/themes/app_theme.dart';
@@ -10,10 +10,10 @@ import '../services/athkar_service.dart';
 import '../models/athkar_model.dart';
 import '../widgets/athkar_category_card.dart';
 import 'notification_settings_screen.dart';
-// استيراد نظام الإحصائيات
+// نظام الإحصائيات الموحد
 import '../../statistics/screens/statistics_dashboard_screen.dart';
 import '../../statistics/services/statistics_service.dart';
-import '../../statistics/models/statistics_models.dart';
+import '../../statistics/widgets/unified_stats_widget.dart';
 
 class AthkarCategoriesScreen extends StatefulWidget {
   const AthkarCategoriesScreen({super.key});
@@ -36,10 +36,6 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen>
   final Map<String, int> _progressMap = {};
   bool _progressLoading = true;
   
-  // إحصائيات اليوم
-  DailyStatistics? _todayStats;
-  int _currentStreak = 0;
-  
   // للأنيميشن
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -51,10 +47,9 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen>
     _permissionService = getIt<PermissionService>();
     _storage = getIt<StorageService>();
     
-    // تهيئة خدمة الإحصائيات إذا كانت متاحة
+    // تهيئة خدمة الإحصائيات
     if (getIt.isRegistered<StatisticsService>()) {
       _statsService = getIt<StatisticsService>();
-      _loadStatistics();
     }
     
     // تهيئة الأنيميشن
@@ -81,30 +76,6 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen>
     _futureCategories = _service.loadCategories();
     _checkNotificationPermission();
     await _loadProgress();
-    
-    // مزامنة مع نظام الإحصائيات
-    await _service.syncWithStatisticsService();
-  }
-
-  void _loadStatistics() {
-    if (_statsService != null) {
-      setState(() {
-        _todayStats = _statsService!.getTodayStatistics();
-        _currentStreak = _statsService!.currentStreak;
-      });
-      
-      // الاستماع للتغييرات
-      _statsService!.addListener(_onStatsChanged);
-    }
-  }
-  
-  void _onStatsChanged() {
-    if (mounted && _statsService != null) {
-      setState(() {
-        _todayStats = _statsService!.getTodayStatistics();
-        _currentStreak = _statsService!.currentStreak;
-      });
-    }
   }
 
   Future<void> _loadProgress() async {
@@ -170,14 +141,6 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen>
       _futureCategories = _service.loadCategories();
     });
     await _loadProgress();
-    
-    // إعادة المزامنة مع الإحصائيات
-    await _service.syncWithStatisticsService();
-    
-    // إعادة تحميل الإحصائيات
-    if (_statsService != null) {
-      _loadStatistics();
-    }
   }
 
   @override
@@ -205,7 +168,7 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen>
                         padding: EdgeInsets.only(top: ThemeConstants.space2),
                       ),
                       
-                      // العنوان التوضيحي مع إحصائيات سريعة
+                      // العنوان التوضيحي
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
@@ -229,16 +192,25 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen>
                                   color: context.textSecondaryColor,
                                 ),
                               ),
-                              
-                              // إحصائيات سريعة
-                              if (!_progressLoading && _progressMap.isNotEmpty) ...[
-                                ThemeConstants.space4.h,
-                                _buildQuickStats(),
-                              ],
                             ],
                           ),
                         ),
                       ),
+                      
+                      // لوحة الإحصائيات الموحدة
+                      if (!_progressLoading)
+                        const SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: ThemeConstants.space4,
+                              vertical: ThemeConstants.space3,
+                            ),
+                            child: UnifiedStatsWidget(
+                              isCompact: true,
+                              showDetailedStats: false,
+                            ),
+                          ),
+                        ),
                       
                       // قائمة الفئات
                       FutureBuilder<List<AthkarCategory>>(
@@ -312,257 +284,6 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen>
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildQuickStats() {
-    final completedCategories = _progressMap.values.where((p) => p >= 100).length;
-    final inProgressCategories = _progressMap.values.where((p) => p > 0 && p < 100).length;
-    final totalCategories = _progressMap.length;
-    final averageProgress = totalCategories > 0 
-        ? _progressMap.values.reduce((a, b) => a + b) ~/ totalCategories 
-        : 0;
-
-    return Column(
-      children: [
-        // بطاقة الإحصائيات المحلية
-        AppCard(
-          padding: const EdgeInsets.all(ThemeConstants.space4),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(ThemeConstants.space2),
-                    decoration: BoxDecoration(
-                      color: ThemeConstants.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
-                    ),
-                    child: const Icon(
-                      Icons.insights_rounded,
-                      color: ThemeConstants.primary,
-                      size: ThemeConstants.iconMd,
-                    ),
-                  ),
-                  ThemeConstants.space3.w,
-                  Text(
-                    'إحصائيات الأذكار',
-                    style: context.titleMedium?.copyWith(
-                      fontWeight: ThemeConstants.semiBold,
-                    ),
-                  ),
-                  const Spacer(),
-                  // زر الذهاب للإحصائيات التفصيلية
-                  if (_statsService != null)
-                    Material(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
-                      child: InkWell(
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const StatisticsDashboardScreen(),
-                            ),
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: ThemeConstants.space3,
-                            vertical: ThemeConstants.space2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: ThemeConstants.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
-                            border: Border.all(
-                              color: ThemeConstants.primary.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'المزيد',
-                                style: context.labelMedium?.copyWith(
-                                  color: ThemeConstants.primary,
-                                  fontWeight: ThemeConstants.semiBold,
-                                ),
-                              ),
-                              ThemeConstants.space1.w,
-                              const Icon(
-                                Icons.arrow_forward,
-                                size: 16,
-                                color: ThemeConstants.primary,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              
-              ThemeConstants.space4.h,
-              
-              // الإحصائيات
-              Row(
-                children: [
-                  Expanded(
-                    child: _QuickStatItem(
-                      icon: Icons.check_circle_rounded,
-                      count: completedCategories,
-                      label: 'مكتملة',
-                      color: ThemeConstants.success,
-                    ),
-                  ),
-                  
-                  Container(
-                    width: 1,
-                    height: 40,
-                    color: context.dividerColor,
-                  ),
-                  
-                  Expanded(
-                    child: _QuickStatItem(
-                      icon: Icons.trending_up_rounded,
-                      count: inProgressCategories,
-                      label: 'قيد التقدم',
-                      color: ThemeConstants.warning,
-                    ),
-                  ),
-                  
-                  Container(
-                    width: 1,
-                    height: 40,
-                    color: context.dividerColor,
-                  ),
-                  
-                  Expanded(
-                    child: _QuickStatItem(
-                      icon: Icons.percent_rounded,
-                      count: averageProgress,
-                      label: 'متوسط التقدم',
-                      color: ThemeConstants.primary,
-                      isPercentage: true,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        
-        // إحصائيات اليوم من نظام الإحصائيات الموحد
-        if (_todayStats != null) ...[
-          ThemeConstants.space3.h,
-          _buildTodayStatsCard(),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildTodayStatsCard() {
-    return Container(
-      padding: const EdgeInsets.all(ThemeConstants.space3),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            ThemeConstants.primary.withValues(alpha: 0.1),
-            ThemeConstants.primaryLight.withValues(alpha: 0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
-        border: Border.all(
-          color: ThemeConstants.primary.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // العنوان
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(ThemeConstants.space1),
-                decoration: BoxDecoration(
-                  color: ThemeConstants.primary.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
-                ),
-                child: const Icon(
-                  Icons.today_rounded,
-                  size: 16,
-                  color: ThemeConstants.primary,
-                ),
-              ),
-              ThemeConstants.space2.w,
-              Text(
-                'إحصائيات اليوم',
-                style: context.labelLarge?.copyWith(
-                  color: ThemeConstants.primary,
-                  fontWeight: ThemeConstants.semiBold,
-                ),
-              ),
-            ],
-          ),
-          
-          ThemeConstants.space3.h,
-          
-          // الإحصائيات
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _MiniStatItem(
-                icon: Icons.menu_book,
-                value: '${_todayStats?.athkarCompleted ?? 0}',
-                label: 'أذكار',
-                color: ThemeConstants.primary,
-              ),
-              
-              Container(
-                width: 1,
-                height: 30,
-                color: context.dividerColor,
-              ),
-              
-              _MiniStatItem(
-                icon: Icons.radio_button_checked,
-                value: '${_todayStats?.tasbihCount ?? 0}',
-                label: 'تسبيح',
-                color: ThemeConstants.accent,
-              ),
-              
-              Container(
-                width: 1,
-                height: 30,
-                color: context.dividerColor,
-              ),
-              
-              _MiniStatItem(
-                icon: Icons.local_fire_department,
-                value: '$_currentStreak',
-                label: 'سلسلة',
-                color: ThemeConstants.error,
-              ),
-              
-              Container(
-                width: 1,
-                height: 30,
-                color: context.dividerColor,
-              ),
-              
-              _MiniStatItem(
-                icon: Icons.star,
-                value: '${_todayStats?.totalPoints ?? 0}',
-                label: 'نقاط',
-                color: ThemeConstants.warning,
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
@@ -757,119 +478,7 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen>
     ).then((_) {
       // إعادة تحميل التقدم عند العودة من صفحة التفاصيل
       _loadProgress();
-      
-      // تحديث الإحصائيات
-      if (_statsService != null) {
-        _loadStatistics();
-      }
     });
-  }
-}
-
-// ويدجت عنصر الإحصائيات السريعة
-class _QuickStatItem extends StatelessWidget {
-  final IconData icon;
-  final int count;
-  final String label;
-  final Color color;
-  final bool isPercentage;
-
-  const _QuickStatItem({
-    required this.icon,
-    required this.count,
-    required this.label,
-    required this.color,
-    this.isPercentage = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: ThemeConstants.space2),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(ThemeConstants.space2),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              icon,
-              color: color,
-              size: ThemeConstants.iconSm,
-            ),
-          ),
-          ThemeConstants.space2.h,
-          AnimatedSwitcher(
-            duration: ThemeConstants.durationFast,
-            child: Text(
-              isPercentage ? '$count%' : '$count',
-              key: ValueKey('$count'),
-              style: context.titleMedium?.copyWith(
-                color: color,
-                fontWeight: ThemeConstants.bold,
-              ),
-            ),
-          ),
-          Text(
-            label,
-            style: context.labelSmall?.copyWith(
-              color: context.textSecondaryColor,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ويدجت عنصر إحصائيات صغير
-class _MiniStatItem extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final String label;
-  final Color color;
-
-  const _MiniStatItem({
-    required this.icon,
-    required this.value,
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon, 
-          color: color, 
-          size: 20,
-        ),
-        const SizedBox(height: 4),
-        AnimatedSwitcher(
-          duration: ThemeConstants.durationFast,
-          child: Text(
-            value,
-            key: ValueKey(value),
-            style: context.titleSmall?.copyWith(
-              color: color,
-              fontWeight: ThemeConstants.bold,
-            ),
-          ),
-        ),
-        Text(
-          label,
-          style: context.labelSmall?.copyWith(
-            color: context.textSecondaryColor,
-            fontSize: 10,
-          ),
-        ),
-      ],
-    );
   }
 }
 

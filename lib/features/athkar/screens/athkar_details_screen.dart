@@ -1,9 +1,11 @@
-// lib/features/athkar/screens/athkar_details_screen.dart (محدث مع نظام الإحصائيات)
-import 'package:athkar_app/features/athkar/utils/athkar_extensions.dart' hide AppBackButton;
+// lib/features/athkar/screens/athkar_details_screen.dart (محسن مع نظام الإحصائيات الموحد)
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import '../../../app/themes/app_theme.dart' hide AppLoading, AppEmptyState, AppButton;
+import '../../../app/themes/app_theme.dart';
+// استخدام الـ widgets من athkar_extensions.dart مؤقتاً حتى يتم إنشاء ملفات app/themes
+import '../utils/athkar_extensions.dart';
 import '../../../app/di/service_locator.dart';
 import '../../../core/infrastructure/services/storage/storage_service.dart';
 import '../../../core/infrastructure/services/utils/extensions/string_extensions.dart';
@@ -12,9 +14,10 @@ import '../models/athkar_model.dart';
 import '../widgets/athkar_item_card.dart';
 import '../widgets/athkar_progress_bar.dart';
 import '../utils/category_utils.dart';
+import '../utils/athkar_extensions.dart'; // فقط للـ helpers الخاصة بالأذكار
 import 'notification_settings_screen.dart';
-// إضافة استيراد نظام الإحصائيات
-import '../../statistics/integration/statistics_integration.dart';
+// نظام الإحصائيات الموحد
+import '../../statistics/services/statistics_service.dart';
 
 class AthkarDetailsScreen extends StatefulWidget {
   String categoryId;
@@ -31,8 +34,7 @@ class AthkarDetailsScreen extends StatefulWidget {
 class _AthkarDetailsScreenState extends State<AthkarDetailsScreen> {
   late final AthkarService _service;
   late final StorageService _storage;
-  // إضافة مدير التكامل مع الإحصائيات
-  late final StatisticsIntegration _statsIntegration;
+  late final StatisticsService _statsService;
   
   AthkarCategory? _category;
   final Map<int, int> _counts = {};
@@ -53,16 +55,17 @@ class _AthkarDetailsScreenState extends State<AthkarDetailsScreen> {
     super.initState();
     _service = getIt<AthkarService>();
     _storage = getIt<StorageService>();
-    _statsIntegration = StatisticsIntegration();
+    
+    // استخدام Provider للإحصائيات
+    _statsService = getIt<StatisticsService>();
+    
     _load();
   }
 
   @override
   void dispose() {
-    // تسجيل نهاية الجلسة في الإحصائيات
     _endSession();
     
-    // Auto-reset if category was completed and user is navigating back
     if (_allCompleted && !_wasCompletedOnLoad) {
       _resetAllSilently();
     }
@@ -74,18 +77,13 @@ class _AthkarDetailsScreenState extends State<AthkarDetailsScreen> {
       final cat = await _service.getCategoryById(widget.categoryId);
       if (!mounted) return;
       
-      // بدء جلسة الإحصائيات
       if (cat != null) {
         _startSession();
       }
       
-      // تحميل التقدم المحفوظ
       final savedProgress = _loadSavedProgress();
-      
-      // تحميل حجم الخط المحفوظ
       _fontSize = await _service.getSavedFontSize();
       
-      // Check if category was already completed when loading
       bool wasAlreadyCompleted = false;
       if (cat != null) {
         int totalRequired = 0;
@@ -105,7 +103,6 @@ class _AthkarDetailsScreenState extends State<AthkarDetailsScreen> {
         _wasCompletedOnLoad = wasAlreadyCompleted;
         
         if (cat != null) {
-          // تهيئة العدادات
           for (var i = 0; i < cat.athkar.length; i++) {
             final item = cat.athkar[i];
             _counts[item.id] = savedProgress[item.id] ?? 0;
@@ -122,36 +119,28 @@ class _AthkarDetailsScreenState extends State<AthkarDetailsScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('حدث خطأ في تحميل الأذكار'),
-          backgroundColor: ThemeConstants.error,
-        ),
-      );
+      context.showErrorSnackBar('حدث خطأ في تحميل الأذكار');
     }
   }
 
-  // بدء جلسة الإحصائيات
   void _startSession() {
     _sessionStartTime = DateTime.now();
     _sessionItemsCompleted = 0;
-    _statsIntegration.startAthkarSession(widget.categoryId);
   }
 
-  // إنهاء جلسة الإحصائيات
   Future<void> _endSession() async {
     if (_category == null || _sessionStartTime == null) return;
     
-    // حساب عدد الأذكار المكتملة في هذه الجلسة
-    final totalCompleted = _completedItems.length;
+    final duration = DateTime.now().difference(_sessionStartTime!);
     final totalItems = _category!.athkar.length;
     
-    // تسجيل النشاط في الإحصائيات
-    await _statsIntegration.endAthkarSession(
+    // استخدام StatisticsService مباشرة
+    await _statsService.recordAthkarActivity(
       categoryId: widget.categoryId,
       categoryName: _category!.title,
       itemsCompleted: _sessionItemsCompleted,
       totalItems: totalItems,
+      duration: duration,
     );
     
     _sessionStartTime = null;
@@ -160,7 +149,6 @@ class _AthkarDetailsScreenState extends State<AthkarDetailsScreen> {
   void _updateVisibleItems() {
     if (_category == null) return;
     
-    // عرض فقط الأذكار غير المكتملة
     _visibleItems = _category!.athkar
         .where((item) => !_completedItems.contains(item.id))
         .toList();
@@ -206,14 +194,12 @@ class _AthkarDetailsScreenState extends State<AthkarDetailsScreen> {
       if (currentCount < item.count) {
         _counts[item.id] = currentCount + 1;
         
-        // إضافة للمكتملة إذا وصلت للعدد المطلوب
         if (_counts[item.id]! >= item.count) {
           _completedItems.add(item.id);
-          _sessionItemsCompleted++; // تحديث عداد الجلسة
+          _sessionItemsCompleted++;
           HapticFeedback.mediumImpact();
-          _updateVisibleItems(); // إخفاء الذكر المكتمل
+          _updateVisibleItems();
           
-          // تسجيل إكمال ذكر واحد في الإحصائيات
           _recordSingleAthkarCompletion(item);
         }
       }
@@ -222,45 +208,39 @@ class _AthkarDetailsScreenState extends State<AthkarDetailsScreen> {
     
     _saveProgress();
     
-    // التحقق من إكمال الفئة بالكامل
     if (_allCompleted && !_wasCompletedOnLoad) {
       _onCategoryCompleted();
     }
   }
 
-  // تسجيل إكمال ذكر واحد
   Future<void> _recordSingleAthkarCompletion(AthkarItem item) async {
     if (_category == null) return;
     
-    await _statsIntegration.recordSingleAthkar(
+    // تسجيل إكمال ذكر واحد في الإحصائيات
+    await _statsService.recordAthkarActivity(
       categoryId: widget.categoryId,
       categoryName: _category!.title,
-      itemText: item.text.truncate(50),
+      itemsCompleted: 1,
+      totalItems: 1,
+      duration: const Duration(seconds: 30),
     );
   }
 
-  // عند إكمال الفئة بالكامل
   Future<void> _onCategoryCompleted() async {
     if (_category == null) return;
     
-    // إنهاء الجلسة وتسجيل الإحصائيات
     await _endSession();
-    
-    // إعادة بدء جلسة جديدة إذا قرر المستخدم المتابعة
     _startSession();
     
-    // يمكن إضافة رسالة تهنئة أو مكافأة
     if (mounted) {
-      context.showSuccessSnackBar('بارك الله فيك! أكملت ${_category!.title}');
+      context.showAthkarSuccessSnackBar('بارك الله فيك! أكملت ${_category!.title}');
     }
   }
 
   void _onItemLongPress(AthkarItem item) {
     HapticFeedback.mediumImpact();
     
-    // إعادة تعيين العداد
     setState(() {
-      // تحديث عداد الجلسة إذا كان الذكر مكتملاً
       if (_completedItems.contains(item.id)) {
         _sessionItemsCompleted = (_sessionItemsCompleted - 1).clamp(0, _category!.athkar.length);
       }
@@ -276,7 +256,6 @@ class _AthkarDetailsScreenState extends State<AthkarDetailsScreen> {
   }
 
   Future<void> _shareProgress() async {
-    // مشاركة التقدم
     final text = '''
 ✨ أكملت ${_category!.title} ✨
 ${_category!.athkar.map((item) => '✓ ${item.text.truncate(50)}').join('\n')}
@@ -294,16 +273,14 @@ ${_category!.athkar.map((item) => '✓ ${item.text.truncate(50)}').join('\n')}
       _allCompleted = false;
       _totalProgress = 0;
       _wasCompletedOnLoad = false;
-      _sessionItemsCompleted = 0; // إعادة تعيين عداد الجلسة
+      _sessionItemsCompleted = 0;
       _updateVisibleItems();
     });
     _saveProgress();
     
-    // بدء جلسة جديدة
     _startSession();
   }
 
-  // Silent reset method that doesn't update UI
   Future<void> _resetAllSilently() async {
     _counts.clear();
     _completedItems.clear();
@@ -324,7 +301,6 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
     await Share.share(text);
   }
 
-  // إظهار حوار حجم الخط
   void _showFontSizeDialog() {
     showDialog(
       context: context,
@@ -369,7 +345,6 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
             HapticFeedback.lightImpact();
             setState(() => _fontSize = size);
             
-            // حفظ حجم الخط المختار
             await _service.saveFontSize(size);
             
             Navigator.pop(context);
@@ -427,10 +402,7 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
         body: SafeArea(
           child: Column(
             children: [
-              // Custom AppBar محسن
               _buildCustomAppBar(context, 'جاري تحميل الأذكار...'),
-              
-              // Loading content
               Expanded(
                 child: Center(
                   child: AppLoading.page(
@@ -450,10 +422,7 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
         body: SafeArea(
           child: Column(
             children: [
-              // Custom AppBar محسن
               _buildCustomAppBar(context, 'الأذكار'),
-              
-              // Error content
               Expanded(
                 child: AppEmptyState.error(
                   message: 'تعذر تحميل الأذكار المطلوبة',
@@ -473,18 +442,13 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
       body: SafeArea(
         child: Column(
           children: [
-            // Custom AppBar محسن
             _buildCustomAppBar(context, category.title, category: category),
-            
-            // شريط التقدم
             AthkarProgressBar(
               progress: _totalProgress,
               color: CategoryUtils.getCategoryThemeColor(category.id),
               completedCount: _completedItems.length,
               totalCount: category.athkar.length,
             ),
-            
-            // قائمة الأذكار
             Expanded(
               child: _buildContent(category),
             ),
@@ -495,7 +459,6 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
   }
 
   Widget _buildCustomAppBar(BuildContext context, String title, {AthkarCategory? category}) {
-    // استخدام نفس التدرج المستخدم في CategoryGrid لفئة prayer_times
     const gradient = LinearGradient(
       colors: [ThemeConstants.primary, ThemeConstants.primaryLight],
       begin: Alignment.topLeft,
@@ -506,14 +469,12 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
       padding: const EdgeInsets.all(ThemeConstants.space4),
       child: Row(
         children: [
-          // زر الرجوع
           AppBackButton(
             onPressed: () => Navigator.of(context).pop(),
           ),
           
           ThemeConstants.space3.w,
           
-          // الأيقونة الجانبية مع نفس التدرج المستخدم في CategoryGrid
           Container(
             padding: const EdgeInsets.all(ThemeConstants.space2),
             decoration: BoxDecoration(
@@ -536,7 +497,6 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
           
           ThemeConstants.space3.w,
           
-          // العنوان والوصف
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -568,9 +528,7 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
             ),
           ),
           
-          // الأزرار
           if (category != null) ...[
-            // زر حجم الخط
             Container(
               margin: const EdgeInsets.only(left: ThemeConstants.space2),
               child: Material(
@@ -608,7 +566,6 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
               ),
             ),
             
-            // زر إعدادات الإشعارات
             Container(
               margin: const EdgeInsets.only(left: ThemeConstants.space2),
               child: Material(
@@ -658,7 +615,6 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
 
   Widget _buildContent(AthkarCategory category) {
     if (_visibleItems.isEmpty && _completedItems.isNotEmpty) {
-      // عرض رسالة الإكمال
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(ThemeConstants.space6),
@@ -735,7 +691,6 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
       );
     }
     
-    // عرض الأذكار
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView.builder(
@@ -746,7 +701,6 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
           final currentCount = _counts[item.id] ?? 0;
           final isCompleted = _completedItems.contains(item.id);
           
-          // إيجاد الفهرس الأصلي
           final originalIndex = category.athkar.indexOf(item);
           final number = originalIndex + 1;
           

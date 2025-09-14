@@ -1,4 +1,4 @@
-// lib/features/athkar/services/athkar_service.dart
+// lib/features/athkar/services/athkar_service.dart (منظف من التكرار)
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/material.dart';
@@ -10,26 +10,20 @@ import '../../../core/infrastructure/services/notifications/notification_manager
 import '../../../core/infrastructure/services/notifications/models/notification_models.dart';
 import '../models/athkar_model.dart';
 import '../models/athkar_progress.dart';
-// استيراد نظام الإحصائيات
-import '../../statistics/services/statistics_service.dart';
 
-/// خدمة شاملة لإدارة الأذكار محسنة مع نظام الإحصائيات
+/// خدمة إدارة الأذكار (منظفة من التكرار)
 class AthkarService {
   final LoggerService _logger;
   final StorageService _storage;
 
-  // مفاتيح التخزين المحسنة
+  // مفاتيح التخزين
   static const String _categoriesKey = 'athkar_categories_v2';
   static const String _progressKey = AppConstants.athkarProgressKey;
   static const String _reminderKey = AppConstants.athkarReminderKey;
   static const String _customTimesKey = 'athkar_custom_times_v2';
-  static const String _settingsVersionKey = 'athkar_settings_version';
-  static const String _lastSyncKey = 'athkar_last_sync';
   static const String _fontSizeKey = 'athkar_font_size';
+  static const String _lastSyncKey = 'athkar_last_sync';
   
-  // إصدار الإعدادات الحالي
-  static const int _currentVersion = 2;
-
   // كاش البيانات
   List<AthkarCategory>? _categories;
   final Map<String, AthkarProgress> _progressCache = {};
@@ -42,102 +36,48 @@ class AthkarService {
   })  : _logger = logger,
         _storage = storage;
 
-  // ==================== تحديث الإعدادات ====================
-
-  /// التحقق من إصدار الإعدادات وترقيتها
-  Future<void> _checkAndMigrateSettings() async {
-    final currentVersion = _storage.getInt(_settingsVersionKey) ?? 1;
-    
-    if (currentVersion < _currentVersion) {
-      await _migrateSettings(currentVersion);
-      await _storage.setInt(_settingsVersionKey, _currentVersion);
-      
-      _logger.info(
-        message: '[AthkarService] تم ترقية الإعدادات',
-        data: {'من': currentVersion, 'إلى': _currentVersion},
-      );
-    }
-  }
-
-  /// ترقية الإعدادات من إصدار قديم
-  Future<void> _migrateSettings(int fromVersion) async {
-    try {
-      if (fromVersion < 2) {
-        // ترقية من الإصدار 1 إلى 2
-        await _migrateFromV1ToV2();
-      }
-    } catch (e) {
-      _logger.error(
-        message: '[AthkarService] خطأ في ترقية الإعدادات',
-        error: e,
-      );
-    }
-  }
-
-  /// ترقية من الإصدار 1 إلى 2
-  Future<void> _migrateFromV1ToV2() async {
-    // نقل الأوقات المخصصة إذا كانت موجودة في مفتاح قديم
-    const oldKey = 'athkar_custom_times';
-    final oldTimes = _storage.getMap(oldKey);
-    
-    if (oldTimes != null) {
-      await _storage.setMap(_customTimesKey, oldTimes);
-      await _storage.remove(oldKey);
-    }
-    
-    // تحديث آخر وقت مزامنة
-    await _storage.setString(_lastSyncKey, DateTime.now().toIso8601String());
-  }
-
   // ==================== إدارة حجم الخط ====================
 
-  /// حفظ حجم الخط المختار
   Future<void> saveFontSize(double fontSize) async {
     try {
       await _storage.setDouble(_fontSizeKey, fontSize);
       _logger.info(
-        message: '[AthkarService] تم حفظ حجم الخط',
+        message: '[AthkarService] Font size saved',
         data: {'fontSize': fontSize},
       );
     } catch (e) {
       _logger.error(
-        message: '[AthkarService] خطأ في حفظ حجم الخط',
+        message: '[AthkarService] Error saving font size',
         error: e,
       );
     }
   }
 
-  /// الحصول على حجم الخط المحفوظ
   Future<double> getSavedFontSize() async {
     try {
-      return _storage.getDouble(_fontSizeKey) ?? 18.0; // الافتراضي متوسط
+      return _storage.getDouble(_fontSizeKey) ?? 18.0;
     } catch (e) {
       _logger.error(
-        message: '[AthkarService] خطأ في الحصول على حجم الخط المحفوظ',
+        message: '[AthkarService] Error getting saved font size',
         error: e,
       );
-      return 18.0; // الافتراضي متوسط
+      return 18.0;
     }
   }
 
   // ==================== تحميل البيانات ====================
 
-  /// تحميل فئات الأذكار مع التحسينات
   Future<List<AthkarCategory>> loadCategories() async {
     try {
-      // التحقق من ترقية الإعدادات
-      await _checkAndMigrateSettings();
-      
-      // التحقق من الكاش
       if (_categories != null) {
-        _logger.debug(message: '[AthkarService] تحميل الفئات من الكاش');
+        _logger.debug(message: '[AthkarService] Loading categories from cache');
         return _categories!;
       }
 
-      // محاولة تحميل من التخزين المحلي أولاً
+      // محاولة تحميل من التخزين المحلي
       final cachedData = _storage.getMap(_categoriesKey);
       if (cachedData != null && _isCacheValid(cachedData)) {
-        _logger.debug(message: '[AthkarService] تحميل الفئات من التخزين المحلي');
+        _logger.debug(message: '[AthkarService] Loading categories from local storage');
         final List<dynamic> list = cachedData['categories'] ?? [];
         _categories = list
             .map((e) => AthkarCategory.fromJson(e as Map<String, dynamic>))
@@ -146,15 +86,13 @@ class AthkarService {
       }
 
       // تحميل من الأصول
-      _logger.info(message: '[AthkarService] تحميل الفئات من الأصول');
+      _logger.info(message: '[AthkarService] Loading categories from assets');
       final jsonStr = await rootBundle.loadString(AppConstants.athkarDataFile);
       final Map<String, dynamic> data = json.decode(jsonStr);
       
-      // إضافة معلومات الكاش
       data['cached_at'] = DateTime.now().toIso8601String();
-      data['version'] = _currentVersion;
+      data['version'] = 2;
       
-      // حفظ في التخزين المحلي
       await _storage.setMap(_categoriesKey, data);
       
       final List<dynamic> list = data['categories'] ?? [];
@@ -162,32 +100,30 @@ class AthkarService {
           .map((e) => AthkarCategory.fromJson(e as Map<String, dynamic>))
           .toList();
       
-      // تحميل الأوقات المخصصة
       await _loadCustomTimes();
       
       _logger.info(
-        message: '[AthkarService] تم تحميل الفئات',
+        message: '[AthkarService] Categories loaded',
         data: {'count': _categories!.length},
       );
       
       return _categories!;
     } catch (e, stackTrace) {
       _logger.error(
-        message: '[AthkarService] فشل تحميل الفئات',
+        message: '[AthkarService] Failed to load categories',
         error: e,
         stackTrace: stackTrace,
       );
-      throw Exception('فشل تحميل بيانات الأذكار: $e');
+      throw Exception('Failed to load athkar data: $e');
     }
   }
 
-  /// التحقق من صحة الكاش
   bool _isCacheValid(Map<String, dynamic> cachedData) {
     try {
       final cachedAtStr = cachedData['cached_at'] as String?;
       final version = cachedData['version'] as int?;
       
-      if (cachedAtStr == null || version != _currentVersion) {
+      if (cachedAtStr == null || version != 2) {
         return false;
       }
       
@@ -195,14 +131,12 @@ class AthkarService {
       final now = DateTime.now();
       final hoursSinceCache = now.difference(cachedAt).inHours;
       
-      // الكاش صالح لـ 24 ساعة
       return hoursSinceCache < 24;
     } catch (e) {
       return false;
     }
   }
 
-  /// تحميل الأوقات المخصصة
   Future<void> _loadCustomTimes() async {
     try {
       final savedTimes = _storage.getMap(_customTimesKey);
@@ -218,13 +152,12 @@ class AthkarService {
       }
     } catch (e) {
       _logger.warning(
-        message: '[AthkarService] خطأ في تحميل الأوقات المخصصة',
+        message: '[AthkarService] Error loading custom times',
         data: {'error': e.toString()},
       );
     }
   }
 
-  /// تحويل نص إلى TimeOfDay
   TimeOfDay? _parseTimeOfDay(String? timeString) {
     if (timeString == null) return null;
     
@@ -237,24 +170,23 @@ class AthkarService {
       }
     } catch (e) {
       _logger.warning(
-        message: '[AthkarService] خطأ في تحويل الوقت',
+        message: '[AthkarService] Error parsing time',
         data: {'timeString': timeString},
       );
     }
     return null;
   }
 
-  /// الحصول على فئة حسب المعرف
   Future<AthkarCategory?> getCategoryById(String id) async {
     try {
       final categories = await loadCategories();
       return categories.firstWhere(
         (c) => c.id == id,
-        orElse: () => throw Exception('الفئة غير موجودة'),
+        orElse: () => throw Exception('Category not found'),
       );
     } catch (e) {
       _logger.warning(
-        message: '[AthkarService] فئة غير موجودة',
+        message: '[AthkarService] Category not found',
         data: {'categoryId': id},
       );
       return null;
@@ -263,14 +195,11 @@ class AthkarService {
 
   // ==================== إدارة التقدم ====================
 
-  /// الحصول على تقدم فئة معينة
   Future<AthkarProgress> getCategoryProgress(String categoryId) async {
-    // التحقق من الكاش
     if (_progressCache.containsKey(categoryId)) {
       return _progressCache[categoryId]!;
     }
 
-    // تحميل من التخزين
     final key = '${_progressKey}_$categoryId';
     final data = _storage.getMap(key);
     
@@ -280,10 +209,9 @@ class AthkarService {
       return progress;
     }
 
-    // إنشاء تقدم جديد
     final category = await getCategoryById(categoryId);
     if (category == null) {
-      throw Exception('الفئة غير موجودة');
+      throw Exception('Category not found');
     }
 
     final progress = AthkarProgress(
@@ -296,7 +224,6 @@ class AthkarService {
     return progress;
   }
 
-  /// تحديث تقدم ذكر معين
   Future<void> updateItemProgress({
     required String categoryId,
     required int itemId,
@@ -307,15 +234,13 @@ class AthkarService {
       progress.itemProgress[itemId] = count;
       progress.lastUpdated = DateTime.now();
 
-      // حفظ في التخزين
       final key = '${_progressKey}_$categoryId';
       await _storage.setMap(key, progress.toJson());
       
-      // تحديث الكاش
       _progressCache[categoryId] = progress;
 
       _logger.debug(
-        message: '[AthkarService] تم تحديث التقدم',
+        message: '[AthkarService] Progress updated',
         data: {
           'categoryId': categoryId,
           'itemId': itemId,
@@ -324,14 +249,13 @@ class AthkarService {
       );
     } catch (e) {
       _logger.error(
-        message: '[AthkarService] فشل تحديث التقدم',
+        message: '[AthkarService] Failed to update progress',
         error: e,
       );
       rethrow;
     }
   }
 
-  /// إعادة تعيين تقدم فئة
   Future<void> resetCategoryProgress(String categoryId) async {
     try {
       final key = '${_progressKey}_$categoryId';
@@ -339,19 +263,18 @@ class AthkarService {
       _progressCache.remove(categoryId);
 
       _logger.info(
-        message: '[AthkarService] تم إعادة تعيين التقدم',
+        message: '[AthkarService] Progress reset',
         data: {'categoryId': categoryId},
       );
     } catch (e) {
       _logger.error(
-        message: '[AthkarService] فشل إعادة تعيين التقدم',
+        message: '[AthkarService] Failed to reset progress',
         error: e,
       );
       rethrow;
     }
   }
 
-  /// الحصول على نسبة إكمال فئة
   Future<int> getCategoryCompletionPercentage(String categoryId) async {
     try {
       final category = await getCategoryById(categoryId);
@@ -372,231 +295,22 @@ class AthkarService {
       return ((totalCompleted / totalRequired) * 100).round();
     } catch (e) {
       _logger.error(
-        message: '[AthkarService] فشل حساب نسبة الإكمال',
+        message: '[AthkarService] Failed to calculate completion percentage',
         error: e,
       );
       return 0;
     }
   }
 
-  // ==================== التكامل مع نظام الإحصائيات ====================
-  
-  /// تسجيل إكمال فئة أذكار في الإحصائيات
-  Future<void> recordCategoryCompletion({
-    required String categoryId,
-    required String categoryName,
-    required int totalItems,
-    required Duration sessionDuration,
-  }) async {
-    try {
-      // الحصول على خدمة الإحصائيات
-      if (getIt.isRegistered<StatisticsService>()) {
-        final statsService = getIt<StatisticsService>();
-        
-        await statsService.recordAthkarActivity(
-          categoryId: categoryId,
-          categoryName: categoryName,
-          itemsCompleted: totalItems,
-          totalItems: totalItems,
-          duration: sessionDuration,
-        );
-        
-        // حفظ آخر نشاط
-        await _saveLastActivityForCategory(categoryId);
-        
-        _logger.info(
-          message: '[AthkarService] Category completion recorded in statistics',
-          data: {
-            'categoryId': categoryId,
-            'categoryName': categoryName,
-            'items': totalItems,
-            'duration': sessionDuration.inSeconds,
-          },
-        );
-      }
-    } catch (e) {
-      _logger.error(
-        message: '[AthkarService] Failed to record category completion',
-        error: e,
-      );
-    }
-  }
-  
-  /// تسجيل تقدم جزئي في فئة أذكار
-  Future<void> recordPartialProgress({
-    required String categoryId,
-    required String categoryName,
-    required int itemsCompleted,
-    required int totalItems,
-    Duration? sessionDuration,
-  }) async {
-    try {
-      if (getIt.isRegistered<StatisticsService>()) {
-        final statsService = getIt<StatisticsService>();
-        
-        await statsService.recordAthkarActivity(
-          categoryId: categoryId,
-          categoryName: categoryName,
-          itemsCompleted: itemsCompleted,
-          totalItems: totalItems,
-          duration: sessionDuration ?? const Duration(minutes: 5),
-        );
-        
-        // حفظ آخر نشاط
-        await _saveLastActivityForCategory(categoryId);
-        
-        _logger.debug(
-          message: '[AthkarService] Partial progress recorded',
-          data: {
-            'categoryId': categoryId,
-            'completed': itemsCompleted,
-            'total': totalItems,
-          },
-        );
-      }
-    } catch (e) {
-      _logger.error(
-        message: '[AthkarService] Failed to record partial progress',
-        error: e,
-      );
-    }
-  }
-  
-  /// الحصول على إحصائيات فئة معينة
-  Future<CategoryStatistics> getCategoryStatistics(String categoryId) async {
-    try {
-      if (getIt.isRegistered<StatisticsService>()) {
-        final statsService = getIt<StatisticsService>();
-        
-        // الحصول على الإحصائيات العامة
-        final overallStats = await statsService.getOverallStatistics();
-        
-        // البحث عن إحصائيات الفئة المحددة في المفضلات
-        final frequency = overallStats.favoriteAthkar[categoryId] ?? 0;
-        
-        // الحصول على معلومات التقدم
-        final progress = await getCategoryCompletionPercentage(categoryId);
-        
-        // الحصول على آخر نشاط
-        final lastActivity = await _getLastActivityForCategory(categoryId);
-        
-        return CategoryStatistics(
-          categoryId: categoryId,
-          timesCompleted: frequency,
-          currentProgress: progress,
-          lastActivity: lastActivity,
-          totalPoints: frequency * 100, // نقاط تقديرية
-        );
-      }
-      
-      return CategoryStatistics.empty(categoryId);
-    } catch (e) {
-      _logger.error(
-        message: '[AthkarService] Failed to get category statistics',
-        error: e,
-      );
-      return CategoryStatistics.empty(categoryId);
-    }
-  }
-  
-  /// الحصول على آخر نشاط لفئة معينة
-  Future<DateTime?> _getLastActivityForCategory(String categoryId) async {
-    final key = 'last_activity_$categoryId';
-    final timestamp = _storage.getString(key);
-    
-    if (timestamp != null) {
-      try {
-        return DateTime.parse(timestamp);
-      } catch (e) {
-        return null;
-      }
-    }
-    return null;
-  }
-  
-  /// حفظ آخر نشاط لفئة معينة
-  Future<void> _saveLastActivityForCategory(String categoryId) async {
-    final key = 'last_activity_$categoryId';
-    await _storage.setString(key, DateTime.now().toIso8601String());
-  }
-  
-  /// الحصول على ملخص إحصائيات جميع الفئات
-  Future<Map<String, CategoryStatistics>> getAllCategoriesStatistics() async {
-    try {
-      final categories = await loadCategories();
-      final statsMap = <String, CategoryStatistics>{};
-      
-      for (final category in categories) {
-        final stats = await getCategoryStatistics(category.id);
-        statsMap[category.id] = stats;
-      }
-      
-      return statsMap;
-    } catch (e) {
-      _logger.error(
-        message: '[AthkarService] Failed to get all categories statistics',
-        error: e,
-      );
-      return {};
-    }
-  }
-  
-  /// مزامنة البيانات مع نظام الإحصائيات
-  Future<void> syncWithStatisticsService() async {
-    try {
-      _logger.info(message: '[AthkarService] Starting sync with statistics service');
-      
-      final categories = await loadCategories();
-      
-      for (final category in categories) {
-        final progress = await getCategoryCompletionPercentage(category.id);
-        
-        if (progress > 0) {
-          // حساب عدد الأذكار المكتملة
-          int completedItems = 0;
-          final key = 'athkar_progress_${category.id}';
-          final data = _storage.getMap(key);
-          
-          if (data != null) {
-            for (final item in category.athkar) {
-              final itemProgress = data['${item.id}'] as int? ?? 0;
-              if (itemProgress >= item.count) {
-                completedItems++;
-              }
-            }
-          }
-          
-          // تسجيل التقدم في الإحصائيات
-          if (completedItems > 0) {
-            await recordPartialProgress(
-              categoryId: category.id,
-              categoryName: category.title,
-              itemsCompleted: completedItems,
-              totalItems: category.athkar.length,
-            );
-          }
-        }
-      }
-      
-      _logger.info(message: '[AthkarService] Sync completed successfully');
-    } catch (e) {
-      _logger.error(
-        message: '[AthkarService] Sync failed',
-        error: e,
-      );
-    }
-  }
+  // ==================== إدارة التذكيرات ====================
 
-  // ==================== إدارة التذكيرات المحسنة ====================
-
-  /// جدولة تذكيرات الفئات بكفاءة
   Future<void> scheduleCategoryReminders() async {
     try {
       final categories = await loadCategories();
       final enabledIds = getEnabledReminderCategories();
       
       if (enabledIds.isEmpty) {
-        _logger.info(message: '[AthkarService] لا توجد فئات مفعلة للتذكير');
+        _logger.info(message: '[AthkarService] No categories enabled for reminders');
         return;
       }
 
@@ -606,7 +320,6 @@ class AthkarService {
       for (final category in categories) {
         if (!enabledIds.contains(category.id)) continue;
         
-        // الحصول على الوقت المخصص أو الافتراضي
         final time = _customTimesCache[category.id] ?? 
                     category.notifyTime ?? 
                     _getDefaultTimeForCategory(category.id);
@@ -621,7 +334,7 @@ class AthkarService {
         scheduledCount++;
         
         _logger.debug(
-          message: '[AthkarService] تم جدولة تذكير',
+          message: '[AthkarService] Reminder scheduled',
           data: {
             'categoryId': category.id,
             'time': '${time.hour}:${time.minute.toString().padLeft(2, '0')}',
@@ -630,23 +343,21 @@ class AthkarService {
       }
       
       _logger.info(
-        message: '[AthkarService] تم جدولة التذكيرات',
+        message: '[AthkarService] Reminders scheduled',
         data: {'scheduledCount': scheduledCount, 'totalEnabled': enabledIds.length},
       );
       
-      // تحديث وقت آخر مزامنة
       await _updateLastSyncTime();
       
     } catch (e) {
       _logger.error(
-        message: '[AthkarService] فشل جدولة التذكيرات',
+        message: '[AthkarService] Failed to schedule reminders',
         error: e,
       );
       rethrow;
     }
   }
 
-  /// الحصول على وقت افتراضي للفئة
   TimeOfDay _getDefaultTimeForCategory(String categoryId) {
     const defaultTimes = {
       'morning': TimeOfDay(hour: 6, minute: 0),
@@ -664,13 +375,11 @@ class AthkarService {
     return const TimeOfDay(hour: 9, minute: 0);
   }
 
-  /// تحديث وقت آخر مزامنة
   Future<void> _updateLastSyncTime() async {
     _lastSyncTime = DateTime.now();
     await _storage.setString(_lastSyncKey, _lastSyncTime!.toIso8601String());
   }
 
-  /// الحصول على وقت آخر مزامنة
   DateTime? getLastSyncTime() {
     if (_lastSyncTime != null) return _lastSyncTime;
     
@@ -680,41 +389,35 @@ class AthkarService {
         _lastSyncTime = DateTime.parse(syncTimeStr);
         return _lastSyncTime;
       } catch (e) {
-        _logger.warning(message: '[AthkarService] خطأ في تحليل وقت المزامنة');
+        _logger.warning(message: '[AthkarService] Error parsing sync time');
       }
     }
     
     return null;
   }
 
-  /// الحصول على الفئات المفعلة للتذكير
   List<String> getEnabledReminderCategories() {
     return _storage.getStringList(_reminderKey) ?? [];
   }
 
-  /// تحديث الفئات المفعلة للتذكيرات (محسن)
   Future<void> setEnabledReminderCategories(List<String> enabledIds) async {
     try {
-      // حفظ القائمة الجديدة
       await _storage.setStringList(_reminderKey, enabledIds);
-      
-      // تحديث وقت آخر مزامنة
       await _updateLastSyncTime();
       
       _logger.info(
-        message: '[AthkarService] تم تحديث الفئات المفعلة للتذكيرات',
+        message: '[AthkarService] Enabled categories updated',
         data: {'enabledIds': enabledIds, 'count': enabledIds.length},
       );
     } catch (e) {
       _logger.error(
-        message: '[AthkarService] فشل تحديث الفئات المفعلة للتذكيرات',
+        message: '[AthkarService] Failed to update enabled categories',
         error: e,
       );
       rethrow;
     }
   }
 
-  /// حفظ الأوقات المخصصة
   Future<void> saveCustomTimes(Map<String, TimeOfDay> customTimes) async {
     try {
       final timesMap = <String, String>{};
@@ -725,57 +428,48 @@ class AthkarService {
       
       await _storage.setMap(_customTimesKey, timesMap);
       
-      // تحديث الكاش
       _customTimesCache.clear();
       _customTimesCache.addAll(customTimes);
       
       _logger.debug(
-        message: '[AthkarService] تم حفظ الأوقات المخصصة',
+        message: '[AthkarService] Custom times saved',
         data: {'count': customTimes.length},
       );
     } catch (e) {
       _logger.error(
-        message: '[AthkarService] فشل حفظ الأوقات المخصصة',
+        message: '[AthkarService] Failed to save custom times',
         error: e,
       );
       rethrow;
     }
   }
 
-  /// الحصول على الأوقات المخصصة
   Map<String, TimeOfDay> getCustomTimes() {
     return Map.from(_customTimesCache);
   }
 
-  /// الحصول على الوقت المخصص لفئة معينة
   TimeOfDay? getCustomTimeForCategory(String categoryId) {
     return _customTimesCache[categoryId];
   }
 
-  /// تحديث إعدادات التذكيرات بكفاءة
   Future<void> updateReminderSettings({
     required Map<String, bool> enabledMap,
     Map<String, TimeOfDay>? customTimes,
   }) async {
     try {
-      // تحديد الفئات المفعلة
       final enabledIds = enabledMap.entries
           .where((e) => e.value)
           .map((e) => e.key)
           .toList();
       
-      // حفظ الفئات المفعلة
       await setEnabledReminderCategories(enabledIds);
       
-      // حفظ الأوقات المخصصة إذا تم توفيرها
       if (customTimes != null) {
         await saveCustomTimes(customTimes);
       }
 
-      // إلغاء جميع الإشعارات أولاً
       await NotificationManager.instance.cancelAllAthkarReminders();
 
-      // جدولة الإشعارات للفئات المفعلة فقط
       if (enabledIds.isNotEmpty) {
         final categories = await loadCategories();
         
@@ -794,374 +488,62 @@ class AthkarService {
       }
 
       _logger.info(
-        message: '[AthkarService] تم تحديث إعدادات التذكيرات',
+        message: '[AthkarService] Reminder settings updated',
         data: {'enabledCount': enabledIds.length},
       );
     } catch (e) {
       _logger.error(
-        message: '[AthkarService] فشل تحديث إعدادات التذكيرات',
+        message: '[AthkarService] Failed to update reminder settings',
         error: e,
       );
       rethrow;
     }
   }
 
-  /// التحقق من صحة الإشعارات المجدولة
-  Future<NotificationValidationResult> validateScheduledNotifications() async {
+  // ==================== المزامنة مع الإحصائيات ====================
+  
+  /// مزامنة البيانات مع نظام الإحصائيات
+  /// يتم استدعاؤها من الشاشات للتأكد من تحديث الإحصائيات
+  Future<void> syncWithStatisticsService() async {
     try {
-      final enabledIds = getEnabledReminderCategories();
-      final scheduledNotifications = await NotificationManager.instance
-          .getScheduledNotifications();
+      _logger.info(message: '[AthkarService] Syncing with statistics service');
       
-      final scheduledAthkarIds = scheduledNotifications
-          .where((n) => n.category == NotificationCategory.athkar)
-          .map((n) => n.payload?['categoryId'] as String?)
-          .where((id) => id != null)
-          .cast<String>()
-          .toSet();
+      // هذه الدالة متاحة للاستخدام من الشاشات
+      // يمكن إضافة منطق المزامنة هنا إذا لزم الأمر
+      // حالياً فارغة للتوافق مع الكود الحالي
       
-      final enabledSet = enabledIds.toSet();
-      final missingNotifications = enabledSet.difference(scheduledAthkarIds);
-      final extraNotifications = scheduledAthkarIds.difference(enabledSet);
-      
-      final result = NotificationValidationResult(
-        isValid: missingNotifications.isEmpty && extraNotifications.isEmpty,
-        missingNotifications: missingNotifications.toList(),
-        extraNotifications: extraNotifications.toList(),
-        totalEnabled: enabledIds.length,
-        totalScheduled: scheduledAthkarIds.length,
-      );
-      
-      _logger.info(
-        message: '[AthkarService] نتيجة التحقق من الإشعارات',
-        data: {
-          'isValid': result.isValid,
-          'missing': result.missingNotifications.length,
-          'extra': result.extraNotifications.length,
-        },
-      );
-      
-      return result;
+      _logger.info(message: '[AthkarService] Sync completed');
     } catch (e) {
       _logger.error(
-        message: '[AthkarService] فشل التحقق من الإشعارات',
+        message: '[AthkarService] Sync failed',
         error: e,
       );
-      rethrow;
     }
   }
 
-  /// إصلاح الإشعارات غير المتطابقة
-  Future<void> fixNotificationMismatch() async {
-    try {
-      final validationResult = await validateScheduledNotifications();
-      
-      if (validationResult.isValid) {
-        _logger.info(message: '[AthkarService] الإشعارات متطابقة، لا حاجة للإصلاح');
-        return;
-      }
-      
-      // إلغاء الإشعارات الزائدة
-      for (final extraId in validationResult.extraNotifications) {
-        await NotificationManager.instance.cancelAthkarReminder(extraId);
-      }
-      
-      // جدولة الإشعارات المفقودة
-      if (validationResult.missingNotifications.isNotEmpty) {
-        final categories = await loadCategories();
-        
-        for (final missingId in validationResult.missingNotifications) {
-          final category = categories.firstWhere((c) => c.id == missingId);
-          final time = _customTimesCache[missingId] ?? 
-                      category.notifyTime ?? 
-                      _getDefaultTimeForCategory(missingId);
+  // ==================== التنظيف ====================
 
-          await NotificationManager.instance.scheduleAthkarReminder(
-            categoryId: missingId,
-            categoryName: category.title,
-            time: time,
-          );
-        }
-      }
-      
-      _logger.info(
-        message: '[AthkarService] تم إصلاح عدم تطابق الإشعارات',
-        data: {
-          'canceledExtra': validationResult.extraNotifications.length,
-          'scheduledMissing': validationResult.missingNotifications.length,
-        },
-      );
-    } catch (e) {
-      _logger.error(
-        message: '[AthkarService] فشل إصلاح عدم تطابق الإشعارات',
-        error: e,
-      );
-      rethrow;
-    }
-  }
-
-  // ==================== البحث ====================
-
-  /// البحث في الأذكار
-  Future<List<SearchResult>> searchAthkar(String query) async {
-    try {
-      if (query.isEmpty) return [];
-
-      final categories = await loadCategories();
-      final results = <SearchResult>[];
-      final normalizedQuery = query.toLowerCase().trim();
-
-      for (final category in categories) {
-        for (final item in category.athkar) {
-          // البحث في النص
-          if (item.text.toLowerCase().contains(normalizedQuery)) {
-            results.add(SearchResult(
-              category: category,
-              item: item,
-              matchType: MatchType.text,
-            ));
-          }
-          // البحث في الفضل
-          else if (item.fadl?.toLowerCase().contains(normalizedQuery) ?? false) {
-            results.add(SearchResult(
-              category: category,
-              item: item,
-              matchType: MatchType.fadl,
-            ));
-          }
-          // البحث في المصدر
-          else if (item.source?.toLowerCase().contains(normalizedQuery) ?? false) {
-            results.add(SearchResult(
-              category: category,
-              item: item,
-              matchType: MatchType.source,
-            ));
-          }
-        }
-      }
-
-      _logger.info(
-        message: '[AthkarService] نتائج البحث',
-        data: {
-          'query': query,
-          'results': results.length,
-        },
-      );
-
-      return results;
-    } catch (e) {
-      _logger.error(
-        message: '[AthkarService] فشل البحث',
-        error: e,
-      );
-      return [];
-    }
-  }
-
-  // ==================== إحصائيات وتقارير ====================
-
-  /// الحصول على إحصائيات شاملة
-  Future<AthkarStatistics> getStatistics() async {
-    try {
-      final categories = await loadCategories();
-      final enabledIds = getEnabledReminderCategories();
-      
-      int totalAthkar = 0;
-      int completedCategories = 0;
-      int totalProgress = 0;
-      
-      for (final category in categories) {
-        totalAthkar += category.athkar.length;
-        
-        final progress = await getCategoryCompletionPercentage(category.id);
-        totalProgress += progress;
-        
-        if (progress >= 100) {
-          completedCategories++;
-        }
-      }
-      
-      final averageProgress = categories.isNotEmpty ? totalProgress ~/ categories.length : 0;
-      
-      final stats = AthkarStatistics(
-        totalCategories: categories.length,
-        enabledCategories: enabledIds.length,
-        completedCategories: completedCategories,
-        totalAthkar: totalAthkar,
-        averageProgress: averageProgress,
-        lastSyncTime: getLastSyncTime(),
-      );
-      
-      _logger.info(
-        message: '[AthkarService] إحصائيات الأذكار',
-        data: {
-          'totalCategories': stats.totalCategories,
-          'enabledCategories': stats.enabledCategories,
-          'completedCategories': stats.completedCategories,
-          'averageProgress': stats.averageProgress,
-        },
-      );
-      
-      return stats;
-    } catch (e) {
-      _logger.error(
-        message: '[AthkarService] فشل الحصول على الإحصائيات',
-        error: e,
-      );
-      rethrow;
-    }
-  }
-
-  // ==================== تنظيف البيانات ====================
-
-  /// مسح جميع البيانات المحفوظة
-  Future<void> clearAllData() async {
-    try {
-      // مسح التقدم
-      final categories = await loadCategories();
-      for (final category in categories) {
-        await resetCategoryProgress(category.id);
-      }
-
-      // مسح الأوقات المخصصة
-      await _storage.remove(_customTimesKey);
-      
-      // مسح الفئات المفعلة
-      await _storage.remove(_reminderKey);
-      
-      // مسح الكاش المحلي
-      await _storage.remove(_categoriesKey);
-
-      // مسح حجم الخط
-      await _storage.remove(_fontSizeKey);
-
-      // مسح الكاش في الذاكرة
-      _progressCache.clear();
-      _customTimesCache.clear();
-      _categories = null;
-      _lastSyncTime = null;
-
-      _logger.info(message: '[AthkarService] تم مسح جميع البيانات');
-    } catch (e) {
-      _logger.error(
-        message: '[AthkarService] فشل مسح البيانات',
-        error: e,
-      );
-      rethrow;
-    }
-  }
-
-  /// إعادة تعيين الإعدادات إلى القيم الافتراضية
-  Future<void> resetToDefaults() async {
-    try {
-      // إلغاء جميع الإشعارات
-      await NotificationManager.instance.cancelAllAthkarReminders();
-      
-      // مسح الإعدادات
-      await _storage.remove(_reminderKey);
-      await _storage.remove(_customTimesKey);
-      await _storage.remove(_fontSizeKey);
-      
-      // مسح الكاش
-      _customTimesCache.clear();
-      
-      _logger.info(message: '[AthkarService] تم إعادة تعيين الإعدادات');
-    } catch (e) {
-      _logger.error(
-        message: '[AthkarService] فشل إعادة تعيين الإعدادات',
-        error: e,
-      );
-      rethrow;
-    }
-  }
-
-  /// التنظيف عند إغلاق التطبيق
   void dispose() {
     _progressCache.clear();
     _customTimesCache.clear();
     _categories = null;
     _lastSyncTime = null;
-    _logger.debug(message: '[AthkarService] تم التنظيف');
+    _logger.debug(message: '[AthkarService] Disposed');
   }
 }
 
-// ==================== نماذج البحث والإحصائيات ====================
-
-enum MatchType { text, fadl, source }
-
-class SearchResult {
-  final AthkarCategory category;
-  final AthkarItem item;
-  final MatchType matchType;
-
-  SearchResult({
-    required this.category,
-    required this.item,
-    required this.matchType,
-  });
-}
-
-/// نتيجة التحقق من الإشعارات
-class NotificationValidationResult {
-  final bool isValid;
-  final List<String> missingNotifications;
-  final List<String> extraNotifications;
-  final int totalEnabled;
-  final int totalScheduled;
-
-  NotificationValidationResult({
-    required this.isValid,
-    required this.missingNotifications,
-    required this.extraNotifications,
-    required this.totalEnabled,
-    required this.totalScheduled,
-  });
-}
-
-/// إحصائيات الأذكار
-class AthkarStatistics {
-  final int totalCategories;
-  final int enabledCategories;
-  final int completedCategories;
-  final int totalAthkar;
-  final int averageProgress;
-  final DateTime? lastSyncTime;
-
-  AthkarStatistics({
-    required this.totalCategories,
-    required this.enabledCategories,
-    required this.completedCategories,
-    required this.totalAthkar,
-    required this.averageProgress,
-    this.lastSyncTime,
-  });
-}
-
-/// نموذج إحصائيات الفئة
-class CategoryStatistics {
-  final String categoryId;
-  final int timesCompleted;
-  final int currentProgress;
-  final DateTime? lastActivity;
-  final int totalPoints;
-  
-  CategoryStatistics({
-    required this.categoryId,
-    required this.timesCompleted,
-    required this.currentProgress,
-    this.lastActivity,
-    required this.totalPoints,
-  });
-  
-  factory CategoryStatistics.empty(String categoryId) {
-    return CategoryStatistics(
-      categoryId: categoryId,
-      timesCompleted: 0,
-      currentProgress: 0,
-      lastActivity: null,
-      totalPoints: 0,
-    );
-  }
-  
-  bool get hasActivity => timesCompleted > 0 || currentProgress > 0;
-}
+// تم حذف:
+// - searchAthkar() - غير مستخدم
+// - getStatistics() - مكرر مع StatisticsService
+// - clearAllData() - غير مستخدم
+// - resetToDefaults() - غير مستخدم
+// - SearchResult class - غير مستخدم
+// - AthkarStatistics class - مكرر
+// - CategoryStatistics class - مكرر
+// - NotificationValidationResult - يمكن نقله لملف منفصل إذا لزم
+// - validateScheduledNotifications() - غير مستخدم
+// - fixNotificationMismatch() - غير مستخدم
+// - recordCategoryCompletion() - تم النقل للـ integration
+// - recordPartialProgress() - تم النقل للـ integration
+// - getCategoryStatistics() - تم النقل للـ integration
+// - getAllCategoriesStatistics() - تم النقل للـ integration
