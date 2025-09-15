@@ -1,4 +1,4 @@
-// lib/features/statistics/integration/statistics_integration.dart (محسن)
+// lib/features/statistics/integration/statistics_integration.dart (محسن ومصحح نهائياً)
 
 import '../../../app/di/service_locator.dart';
 import '../services/statistics_service.dart';
@@ -177,6 +177,7 @@ class StatisticsIntegration {
         'longestStreak': overallStats.longestStreak,
         'favorites': overallStats.favoriteAthkar,
         'dailyAverage': overallStats.dailyAverage,
+        'totalDays': overallStats.totalDays, // أضفت هذا السطر للتأكد من وجود totalDays
       },
       'progress': _calculateAthkarProgress(todayStats, overallStats),
     };
@@ -197,7 +198,10 @@ class StatisticsIntegration {
         'total': overallStats.totalTasbihCount,
         'streak': overallStats.currentStreak,
         'favorites': overallStats.favoriteDhikr,
-        'dailyAverage': _calculateTasbihDailyAverage(overallStats),
+        'dailyAverage': overallStats.totalDays > 0 
+            ? (overallStats.totalTasbihCount / overallStats.totalDays).toStringAsFixed(1)
+            : '0',
+        'totalDays': overallStats.totalDays,
       },
       'achievements': _getTasbihAchievements(overallStats),
     };
@@ -299,11 +303,6 @@ class StatisticsIntegration {
 
   int _estimateTasbihTime(int count) {
     return count * 2; // تقدير: 2 ثانية لكل تسبيحة
-  }
-
-  double _calculateTasbihDailyAverage(OverallStatistics stats) {
-    if (stats.totalDays == 0) return 0;
-    return stats.totalTasbihCount / stats.totalDays;
   }
 
   List<Map<String, dynamic>> _getTasbihAchievements(OverallStatistics stats) {

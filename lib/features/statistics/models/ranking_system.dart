@@ -1,7 +1,10 @@
-// lib/features/statistics/models/ranking_system.dart
+// lib/features/statistics/models/ranking_system.dart (مُصحح)
 
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import '../../../app/themes/app_theme.dart';
+import '../../../app/di/service_locator.dart';
+import '../../../core/infrastructure/services/storage/storage_service.dart';
 
 /// نظام الرتب والمستويات
 class RankingSystem {
@@ -9,6 +12,9 @@ class RankingSystem {
   factory RankingSystem() => _instance;
   RankingSystem._internal();
 
+  final StorageService _storage = getIt<StorageService>();
+  final _random = math.Random();
+  
   // ==================== تعريف الرتب ====================
   
   final List<UserRank> ranks = [
@@ -163,7 +169,14 @@ class RankingSystem {
       description: 'أكمل أسبوعك الأول',
       icon: Icons.looks_one,
       color: Colors.blue,
-      requiredCondition: (stats) => stats.totalDays >= 7,
+      requiredCondition: (stats) {
+        // تحقق من نوع البيانات قبل الوصول إلى الخصائص
+        if (stats is Map<String, dynamic>) {
+          final totalDays = stats['totalDays'] as int? ?? 0;
+          return totalDays >= 7;
+        }
+        return false;
+      },
     ),
     
     SpecialBadge(
@@ -172,7 +185,13 @@ class RankingSystem {
       description: 'حافظ على نشاط يومي لمدة شهر',
       icon: Icons.calendar_month,
       color: Colors.green,
-      requiredCondition: (stats) => stats.currentStreak >= 30,
+      requiredCondition: (stats) {
+        if (stats is Map<String, dynamic>) {
+          final currentStreak = stats['currentStreak'] as int? ?? 0;
+          return currentStreak >= 30;
+        }
+        return false;
+      },
     ),
     
     SpecialBadge(
@@ -181,7 +200,13 @@ class RankingSystem {
       description: 'سلسلة 100 يوم متواصل',
       icon: Icons.looks_one_outlined,
       color: Colors.amber,
-      requiredCondition: (stats) => stats.longestStreak >= 100,
+      requiredCondition: (stats) {
+        if (stats is Map<String, dynamic>) {
+          final longestStreak = stats['longestStreak'] as int? ?? 0;
+          return longestStreak >= 100;
+        }
+        return false;
+      },
     ),
     
     SpecialBadge(
@@ -252,7 +277,19 @@ class RankingSystem {
   
   /// التحقق من الشارات المفتوحة
   List<SpecialBadge> getUnlockedBadges(dynamic stats) {
-    return specialBadges.where((badge) => badge.requiredCondition(stats)).toList();
+    // تحقق من أن stats هو Map قبل تمريره للشارات
+    if (stats is! Map<String, dynamic>) {
+      return [];
+    }
+    
+    return specialBadges.where((badge) {
+      try {
+        return badge.requiredCondition(stats);
+      } catch (e) {
+        // في حالة حدوث خطأ، أرجع false
+        return false;
+      }
+    }).toList();
   }
 }
 
