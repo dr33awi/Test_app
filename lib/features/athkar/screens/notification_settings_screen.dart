@@ -1,4 +1,4 @@
-// lib/features/athkar/screens/notification_settings_screen.dart (محسن)
+// lib/features/athkar/screens/notification_settings_screen.dart (مُصلح)
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../app/di/service_locator.dart';
@@ -7,6 +7,7 @@ import '../../../core/infrastructure/services/permissions/permission_service.dar
 import '../../../core/infrastructure/services/storage/storage_service.dart';
 import '../services/athkar_service.dart';
 import '../models/athkar_model.dart';
+import '../constants/athkar_constants.dart';
 import '../../../core/infrastructure/services/notifications/notification_manager.dart';
 import '../../../core/infrastructure/services/notifications/models/notification_models.dart';
 
@@ -14,47 +15,25 @@ class AthkarNotificationSettingsScreen extends StatefulWidget {
   const AthkarNotificationSettingsScreen({super.key});
 
   @override
-  State<AthkarNotificationSettingsScreen> createState() => _AthkarNotificationSettingsScreenState();
+  State<AthkarNotificationSettingsScreen> createState() => 
+      _AthkarNotificationSettingsScreenState();
 }
 
-class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSettingsScreen> {
+class _AthkarNotificationSettingsScreenState 
+    extends State<AthkarNotificationSettingsScreen> {
   late final AthkarService _service;
   late final PermissionService _permissionService;
   late final StorageService _storage;
   
   List<AthkarCategory>? _categories;
-  
   final Map<String, bool> _enabled = {};
   final Map<String, TimeOfDay> _customTimes = {};
-  final Map<String, TimeOfDay> _originalTimes = {}; // لحفظ الأوقات الأصلية
+  final Map<String, TimeOfDay> _originalTimes = {};
+  
   bool _saving = false;
   bool _hasPermission = false;
   bool _isLoading = true;
   String? _errorMessage;
-
-  // مفاتيح التخزين المحسنة
-  static const String _customTimesKey = 'athkar_custom_times_v2';
-  static const String _settingsVersionKey = 'athkar_settings_version';
-  static const int _currentSettingsVersion = 2;
-
-  // أوقات افتراضية للفئات المختلفة
-  static const Map<String, TimeOfDay> _defaultTimes = {
-    'morning': TimeOfDay(hour: 6, minute: 0),      // أذكار الصباح
-    'evening': TimeOfDay(hour: 18, minute: 0),     // أذكار المساء
-    'sleep': TimeOfDay(hour: 22, minute: 0),       // أذكار النوم
-    'wakeup': TimeOfDay(hour: 5, minute: 30),      // أذكار الاستيقاظ
-    'prayer': TimeOfDay(hour: 12, minute: 0),      // أذكار الصلاة
-    'eating': TimeOfDay(hour: 19, minute: 0),      // أذكار الطعام
-    'travel': TimeOfDay(hour: 8, minute: 0),       // أذكار السفر
-    'general': TimeOfDay(hour: 14, minute: 0),     // أذكار عامة
-  };
-
-  // الفئات التي يجب تفعيلها تلقائياً
-  static const Set<String> _autoEnabledCategories = {
-    'morning',
-    'evening', 
-    'sleep',
-  };
 
   @override
   void initState() {
@@ -63,24 +42,6 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
     _permissionService = getIt<PermissionService>();
     _storage = getIt<StorageService>();
     _loadData();
-  }
-
-  TimeOfDay _getDefaultTimeForCategory(String categoryId) {
-    for (final key in _defaultTimes.keys) {
-      if (categoryId.toLowerCase().contains(key)) {
-        return _defaultTimes[key]!;
-      }
-    }
-    return const TimeOfDay(hour: 9, minute: 0);
-  }
-
-  bool _shouldAutoEnable(String categoryId) {
-    for (final key in _autoEnabledCategories) {
-      if (categoryId.toLowerCase().contains(key)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   Future<void> _loadData() async {
@@ -96,41 +57,43 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
       // التحقق من الإذن
       _hasPermission = await _permissionService.checkNotificationPermission();
       
-      // تحميل جميع الفئات
+      // تحميل الفئات
       final allCategories = await _service.loadCategories();
       
-      // تحميل الفئات المفعلة
+      // تحميل الإعدادات المحفوظة
       final enabledIds = _service.getEnabledReminderCategories();
-      
-      // تحميل الأوقات المخصصة
-      await _loadCustomTimes();
+      final savedCustomTimes = _service.getCustomTimes();
       
       // التحقق من أول تشغيل
-      final isFirstLaunch = enabledIds.isEmpty && _customTimes.isEmpty;
+      final isFirstLaunch = enabledIds.isEmpty && savedCustomTimes.isEmpty;
       
       // تهيئة البيانات
       _enabled.clear();
+      _customTimes.clear();
+      _originalTimes.clear();
+      
       final autoEnabledIds = <String>[];
       
       for (final category in allCategories) {
+        // تحديد حالة التفعيل
         bool shouldEnable = enabledIds.contains(category.id);
         
         // في أول تشغيل، تفعيل الفئات الأساسية
-        if (isFirstLaunch && _shouldAutoEnable(category.id)) {
+        if (isFirstLaunch && AthkarConstants.shouldAutoEnable(category.id)) {
           shouldEnable = true;
           autoEnabledIds.add(category.id);
         }
         
         _enabled[category.id] = shouldEnable;
         
-        // تعيين الوقت إذا لم يكن محفوظاً
-        if (!_customTimes.containsKey(category.id)) {
-          _customTimes[category.id] = category.notifyTime ?? 
-              _getDefaultTimeForCategory(category.id);
-        }
+        // تعيين الوقت
+        final customTime = savedCustomTimes[category.id];
+        final time = customTime ?? 
+                    category.notifyTime ?? 
+                    AthkarConstants.getDefaultTimeForCategory(category.id);
         
-        // حفظ الوقت الأصلي
-        _originalTimes[category.id] = _customTimes[category.id]!;
+        _customTimes[category.id] = time;
+        _originalTimes[category.id] = time;
       }
       
       setState(() {
@@ -138,29 +101,14 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
         _isLoading = false;
       });
       
-      // حفظ البيانات في أول تشغيل
+      // حفظ الإعدادات الأولية في أول تشغيل
       if (isFirstLaunch && autoEnabledIds.isNotEmpty) {
-        await _service.setEnabledReminderCategories(autoEnabledIds);
-        await _saveCustomTimes();
-        
-        if (_hasPermission) {
-          await _scheduleNotificationsOptimized(autoEnabledIds);
-        }
-        
-        if (mounted) {
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted) {
-              context.showSuccessSnackBar(
-                'تم تفعيل الأذكار الأساسية تلقائياً (${autoEnabledIds.length} فئات)'
-              );
-            }
-          });
-        }
+        await _saveInitialSettings(autoEnabledIds);
       }
       
       // التحقق من صحة الإشعارات المجدولة
       if (_hasPermission) {
-        await _validateNotifications();
+        await _validateScheduledNotifications();
       }
       
     } catch (e) {
@@ -172,66 +120,66 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
     }
   }
 
-  /// التحقق من إصدار الإعدادات وترقيتها عند الحاجة
   Future<void> _checkSettingsVersion() async {
-    final currentVersion = _storage.getInt(_settingsVersionKey) ?? 1;
+    final currentVersion = _storage.getInt(AthkarConstants.settingsVersionKey) ?? 1;
     
-    if (currentVersion < _currentSettingsVersion) {
-      // ترقية الإعدادات
+    if (currentVersion < AthkarConstants.currentSettingsVersion) {
+      // ترقية الإعدادات إذا لزم الأمر
       await _migrateSettings(currentVersion);
-      await _storage.setInt(_settingsVersionKey, _currentSettingsVersion);
+      await _storage.setInt(
+        AthkarConstants.settingsVersionKey,
+        AthkarConstants.currentSettingsVersion,
+      );
     }
   }
 
-  /// ترقية الإعدادات من إصدار قديم
   Future<void> _migrateSettings(int fromVersion) async {
-    if (fromVersion < 2) {
-      // ترقية من الإصدار 1 إلى 2
-      // نقل الأوقات من مفتاح قديم إلى جديد إذا لزم الأمر
-      debugPrint('ترقية إعدادات الأذكار من الإصدار $fromVersion إلى $_currentSettingsVersion');
-    }
+    debugPrint('ترقية إعدادات الأذكار من الإصدار $fromVersion');
+    // يمكن إضافة منطق الترقية هنا عند الحاجة
   }
 
-  /// تحميل الأوقات المخصصة
-  Future<void> _loadCustomTimes() async {
-    final savedTimes = _storage.getMap(_customTimesKey);
+  Future<void> _saveInitialSettings(List<String> autoEnabledIds) async {
+    await _service.setEnabledReminderCategories(autoEnabledIds);
+    await _service.saveCustomTimes(_customTimes);
     
-    if (savedTimes != null) {
-      savedTimes.forEach((categoryId, timeString) {
-        final time = _parseTimeOfDay(timeString);
-        if (time != null) {
-          _customTimes[categoryId] = time;
+    if (_hasPermission) {
+      await _service.scheduleCategoryReminders();
+    }
+    
+    if (mounted) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          context.showSuccessSnackBar(
+            'تم تفعيل الأذكار الأساسية تلقائياً (${autoEnabledIds.length} فئات)'
+          );
         }
       });
     }
   }
 
-  /// حفظ الأوقات المخصصة
-  Future<void> _saveCustomTimes() async {
-    final timesMap = <String, String>{};
-    
-    _customTimes.forEach((categoryId, time) {
-      timesMap[categoryId] = '${time.hour}:${time.minute}';
-    });
-    
-    await _storage.setMap(_customTimesKey, timesMap);
-  }
-
-  /// تحويل نص إلى TimeOfDay
-  TimeOfDay? _parseTimeOfDay(String? timeString) {
-    if (timeString == null) return null;
-    
+  Future<void> _validateScheduledNotifications() async {
     try {
-      final parts = timeString.split(':');
-      if (parts.length == 2) {
-        final hour = int.parse(parts[0]);
-        final minute = int.parse(parts[1]);
-        return TimeOfDay(hour: hour, minute: minute);
+      final enabledIds = _service.getEnabledReminderCategories();
+      final scheduledNotifications = await NotificationManager.instance
+          .getScheduledNotifications();
+      
+      final scheduledAthkarIds = scheduledNotifications
+          .where((n) => n.category == NotificationCategory.athkar)
+          .map((n) => n.payload?['categoryId'] as String?)
+          .where((id) => id != null)
+          .cast<String>()
+          .toSet();
+      
+      final enabledSet = enabledIds.toSet();
+      final missingNotifications = enabledSet.difference(scheduledAthkarIds);
+      
+      if (missingNotifications.isNotEmpty) {
+        debugPrint('إعادة جدولة الإشعارات المفقودة: $missingNotifications');
+        await _service.scheduleCategoryReminders();
       }
     } catch (e) {
-      debugPrint('خطأ في تحويل الوقت: $timeString');
+      debugPrint('خطأ في التحقق من الإشعارات: $e');
     }
-    return null;
   }
 
   Future<void> _requestPermission() async {
@@ -241,13 +189,15 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
       
       if (granted) {
         context.showSuccessSnackBar('تم منح إذن الإشعارات');
+        
         // جدولة الإشعارات للفئات المفعلة
         final enabledIds = _enabled.entries
             .where((e) => e.value)
             .map((e) => e.key)
             .toList();
+            
         if (enabledIds.isNotEmpty) {
-          await _scheduleNotificationsOptimized(enabledIds);
+          await _service.scheduleCategoryReminders();
         }
       } else {
         context.showErrorSnackBar('تم رفض إذن الإشعارات');
@@ -283,12 +233,12 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
     });
     
     try {
-      await _saveCustomTimes();
+      // حفظ الوقت الجديد
+      await _service.saveCustomTimes(_customTimes);
       
       // إعادة جدولة فقط إذا كانت الفئة مفعلة
       if (_enabled[categoryId] == true && _hasPermission) {
-        final category = (_categories ?? [])
-            .firstWhere((c) => c.id == categoryId);
+        final category = _categories!.firstWhere((c) => c.id == categoryId);
         
         await NotificationManager.instance.cancelAthkarReminder(categoryId);
         await NotificationManager.instance.scheduleAthkarReminder(
@@ -309,7 +259,8 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
     } catch (e) {
       // إعادة الوقت السابق في حالة الخطأ
       setState(() {
-        _customTimes[categoryId] = oldTime ?? _getDefaultTimeForCategory(categoryId);
+        _customTimes[categoryId] = oldTime ?? 
+            AthkarConstants.getDefaultTimeForCategory(categoryId);
       });
       
       if (mounted) {
@@ -329,27 +280,21 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
         final enabledCount = _enabled.values.where((e) => e).length;
         if (enabledCount > 0) {
           if (mounted) {
-            SnackBarExtension(context).showWarningSnackBar('يجب تفعيل أذونات الإشعارات أولاً');
+            context.showWarningSnackBar('يجب تفعيل أذونات الإشعارات أولاً');
           }
           return;
         }
       }
 
-      // حفظ الفئات المفعلة
-      final enabledIds = _enabled.entries
-          .where((e) => e.value)
-          .map((e) => e.key)
-          .toList();
+      // تحديث الإعدادات
+      await _service.updateReminderSettings(
+        enabledMap: _enabled,
+        customTimes: _customTimes,
+      );
       
-      await _service.setEnabledReminderCategories(enabledIds);
-      
-      // حفظ الأوقات المخصصة
-      await _saveCustomTimes();
-      
-      // جدولة الإشعارات بكفاءة
-      if (_hasPermission) {
-        await _scheduleNotificationsOptimized(enabledIds);
-      }
+      // تحديث الأوقات الأصلية
+      _originalTimes.clear();
+      _originalTimes.addAll(_customTimes);
       
       if (mounted) {
         context.showSuccessSnackBar('تم حفظ الإعدادات بنجاح');
@@ -363,92 +308,6 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
       if (mounted) {
         setState(() => _saving = false);
       }
-    }
-  }
-
-  /// جدولة الإشعارات بكفاءة أكبر
-  Future<void> _scheduleNotificationsOptimized(List<String> enabledIds) async {
-    final notificationManager = NotificationManager.instance;
-    final categories = _categories ?? [];
-    
-    try {
-      // الحصول على الإشعارات المجدولة حالياً
-      final currentNotifications = await notificationManager.getScheduledNotifications();
-      final currentAthkarIds = currentNotifications
-          .where((n) => n.category == NotificationCategory.athkar)
-          .map((n) => n.payload?['categoryId'] as String?)
-          .where((id) => id != null)
-          .cast<String>()
-          .toSet();
-      
-      final enabledSet = enabledIds.toSet();
-      
-      // إلغاء الإشعارات غير المطلوبة
-      final toCancel = currentAthkarIds.difference(enabledSet);
-      for (final categoryId in toCancel) {
-        await notificationManager.cancelAthkarReminder(categoryId);
-      }
-      
-      // جدولة الإشعارات الجديدة أو المحدثة
-      for (final categoryId in enabledIds) {
-        final category = categories.firstWhere((c) => c.id == categoryId);
-        final time = _customTimes[categoryId];
-        
-        if (time != null) {
-          // التحقق من أن الوقت تغير أو أن الإشعار غير موجود
-          final needsReschedule = !currentAthkarIds.contains(categoryId) ||
-                                  time != _originalTimes[categoryId];
-          
-          if (needsReschedule) {
-            await notificationManager.cancelAthkarReminder(categoryId);
-            await notificationManager.scheduleAthkarReminder(
-              categoryId: categoryId,
-              categoryName: category.title,
-              time: time,
-            );
-          }
-        }
-      }
-      
-      // تحديث الأوقات الأصلية
-      enabledIds.forEach((id) {
-        if (_customTimes.containsKey(id)) {
-          _originalTimes[id] = _customTimes[id]!;
-        }
-      });
-      
-    } catch (e) {
-      debugPrint('خطأ في جدولة الإشعارات: $e');
-      rethrow;
-    }
-  }
-
-  /// التحقق من صحة الإشعارات المجدولة
-  Future<void> _validateNotifications() async {
-    if (!_hasPermission) return;
-    
-    try {
-      final enabledIds = _service.getEnabledReminderCategories();
-      final scheduledNotifications = await NotificationManager.instance
-          .getScheduledNotifications();
-      
-      final scheduledAthkarIds = scheduledNotifications
-          .where((n) => n.category == NotificationCategory.athkar)
-          .map((n) => n.payload?['categoryId'] as String?)
-          .where((id) => id != null)
-          .cast<String>()
-          .toSet();
-      
-      final enabledSet = enabledIds.toSet();
-      final missingNotifications = enabledSet.difference(scheduledAthkarIds);
-      final extraNotifications = scheduledAthkarIds.difference(enabledSet);
-      
-      if (missingNotifications.isNotEmpty || extraNotifications.isNotEmpty) {
-        debugPrint('إعادة مزامنة الإشعارات... مفقود: $missingNotifications، زائد: $extraNotifications');
-        await _scheduleNotificationsOptimized(enabledIds);
-      }
-    } catch (e) {
-      debugPrint('خطأ في التحقق من الإشعارات: $e');
     }
   }
 
@@ -488,7 +347,7 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
     final shouldEnable = await AppInfoDialog.showConfirmation(
       context: context,
       title: 'تفعيل جميع التذكيرات',
-      content: 'هل تريد تفعيل تذكيرات جميع فئات الأذكار بالأوقات الافتراضية؟',
+      content: 'هل تريد تفعيل تذكيرات جميع فئات الأذكار؟',
       confirmText: 'تفعيل الكل',
       cancelText: 'إلغاء',
       icon: Icons.notifications_active,
@@ -501,7 +360,6 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
         }
       });
       await _saveChanges();
-      context.showSuccessSnackBar('تم تفعيل جميع التذكيرات');
     }
   }
 
@@ -525,7 +383,6 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
         }
       });
       await _saveChanges();
-      context.showSuccessSnackBar('تم إيقاف جميع التذكيرات');
     }
   }
 
@@ -536,13 +393,8 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
       body: SafeArea(
         child: Column(
           children: [
-            // Custom AppBar محسن
             _buildCustomAppBar(context),
-            
-            // المحتوى
-            Expanded(
-              child: _buildBody(),
-            ),
+            Expanded(child: _buildBody()),
           ],
         ),
       ),
@@ -560,14 +412,12 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
       padding: const EdgeInsets.all(ThemeConstants.space4),
       child: Row(
         children: [
-          // زر الرجوع
           AppBackButton(
             onPressed: () => Navigator.of(context).pop(),
           ),
           
           ThemeConstants.space3.w,
           
-          // الأيقونة الجانبية
           Container(
             padding: const EdgeInsets.all(ThemeConstants.space2),
             decoration: BoxDecoration(
@@ -590,7 +440,6 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
           
           ThemeConstants.space3.w,
           
-          // العنوان والوصف
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -612,73 +461,9 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
             ),
           ),
           
-          // قائمة الإجراءات
           if (_hasPermission && (_categories?.isNotEmpty ?? false))
-            Container(
-              margin: const EdgeInsets.only(left: ThemeConstants.space2),
-              child: Material(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
-                child: PopupMenuButton<String>(
-                  icon: Container(
-                    padding: const EdgeInsets.all(ThemeConstants.space2),
-                    decoration: BoxDecoration(
-                      color: context.cardColor,
-                      borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
-                      border: Border.all(
-                        color: context.dividerColor.withValues(alpha: 0.3),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.more_vert,
-                      color: context.textPrimaryColor,
-                      size: ThemeConstants.iconMd,
-                    ),
-                  ),
-                  onSelected: (value) {
-                    switch (value) {
-                      case 'enable_all':
-                        _enableAllReminders();
-                        break;
-                      case 'disable_all':
-                        _disableAllReminders();
-                        break;
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'enable_all',
-                      child: Row(
-                        children: [
-                          Icon(Icons.notifications_active),
-                          SizedBox(width: 8),
-                          Text('تفعيل الكل'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'disable_all',
-                      child: Row(
-                        children: [
-                          Icon(Icons.notifications_off),
-                          SizedBox(width: 8),
-                          Text('إيقاف الكل'),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            _buildActionsMenu(),
           
-          // مؤشر الحفظ
           if (_saving)
             Container(
               margin: const EdgeInsets.only(left: ThemeConstants.space2),
@@ -692,6 +477,72 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildActionsMenu() {
+    return Container(
+      margin: const EdgeInsets.only(left: ThemeConstants.space2),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+        child: PopupMenuButton<String>(
+          icon: Container(
+            padding: const EdgeInsets.all(ThemeConstants.space2),
+            decoration: BoxDecoration(
+              color: context.cardColor,
+              borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+              border: Border.all(
+                color: context.dividerColor.withValues(alpha: 0.3),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(
+              Icons.more_vert,
+              color: context.textPrimaryColor,
+              size: ThemeConstants.iconMd,
+            ),
+          ),
+          onSelected: (value) {
+            switch (value) {
+              case 'enable_all':
+                _enableAllReminders();
+                break;
+              case 'disable_all':
+                _disableAllReminders();
+                break;
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'enable_all',
+              child: Row(
+                children: [
+                  Icon(Icons.notifications_active),
+                  SizedBox(width: 8),
+                  Text('تفعيل الكل'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'disable_all',
+              child: Row(
+                children: [
+                  Icon(Icons.notifications_off),
+                  SizedBox(width: 8),
+                  Text('إيقاف الكل'),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -724,17 +575,14 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // حالة الإذن
             _buildPermissionSection(),
             
             const SizedBox(height: ThemeConstants.space6),
             
-            // قائمة الفئات
             if (_hasPermission) ...[
               if (categories.isEmpty)
                 _buildNoCategoriesMessage()
               else ...[
-                // إحصائيات سريعة
                 _buildQuickStats(categories),
                 
                 const SizedBox(height: ThemeConstants.space4),
@@ -925,7 +773,7 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
           ),
           const SizedBox(height: ThemeConstants.space2),
           Text(
-            'يجب تفعيل الإشعارات أولاً لتتمكن من إعداد تذكيرات الأذكار لجميع الفئات',
+            'يجب تفعيل الإشعارات أولاً لتتمكن من إعداد تذكيرات الأذكار',
             style: context.bodyMedium?.copyWith(
               color: context.textSecondaryColor,
             ),
@@ -945,9 +793,9 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
   Widget _buildCategoryTile(AthkarCategory category) {
     final isEnabled = _enabled[category.id] ?? false;
     final currentTime = _customTimes[category.id] ?? 
-        _getDefaultTimeForCategory(category.id);
-    final hasOriginalTime = category.notifyTime != null;
-    final isAutoEnabled = _shouldAutoEnable(category.id);
+        AthkarConstants.getDefaultTimeForCategory(category.id);
+    final isAutoEnabled = AthkarConstants.shouldAutoEnable(category.id);
+    final isEssential = AthkarConstants.isEssentialCategory(category.id);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: ThemeConstants.space3),
@@ -989,46 +837,15 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
                               ),
                             ),
                           ),
-                          if (isAutoEnabled)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: ThemeConstants.space2,
-                                vertical: ThemeConstants.space1,
-                              ),
-                              decoration: BoxDecoration(
-                                color: ThemeConstants.success.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(
-                                  ThemeConstants.radiusXs,
-                                ),
-                              ),
-                              child: Text(
-                                'أساسي',
-                                style: context.labelSmall?.copyWith(
-                                  color: ThemeConstants.success,
-                                  fontSize: 10,
-                                  fontWeight: ThemeConstants.bold,
-                                ),
-                              ),
-                            )
-                          else if (!hasOriginalTime)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: ThemeConstants.space2,
-                                vertical: ThemeConstants.space1,
-                              ),
-                              decoration: BoxDecoration(
-                                color: ThemeConstants.info.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(
-                                  ThemeConstants.radiusXs,
-                                ),
-                              ),
-                              child: Text(
-                                'مخصص',
-                                style: context.labelSmall?.copyWith(
-                                  color: ThemeConstants.info,
-                                  fontSize: 10,
-                                ),
-                              ),
+                          if (isEssential)
+                            _buildBadge(
+                              'أساسي',
+                              ThemeConstants.success,
+                            ),
+                          if (isAutoEnabled && !isEssential)
+                            _buildBadge(
+                              'مفضل',
+                              ThemeConstants.info,
                             ),
                         ],
                       ),
@@ -1043,30 +860,11 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
                         ),
                       
                       // عدد الأذكار
-                      Row(
-                        children: [
-                          Text(
-                            '${category.athkar.length} ذكر',
-                            style: context.labelSmall?.copyWith(
-                              color: context.textSecondaryColor.withValues(alpha: 0.7),
-                            ),
-                          ),
-                          if (isAutoEnabled) ...[
-                            Text(
-                              ' • ',
-                              style: context.labelSmall?.copyWith(
-                                color: context.textSecondaryColor.withValues(alpha: 0.7),
-                              ),
-                            ),
-                            Text(
-                              'مفعل تلقائياً',
-                              style: context.labelSmall?.copyWith(
-                                color: ThemeConstants.success,
-                                fontWeight: ThemeConstants.medium,
-                              ),
-                            ),
-                          ],
-                        ],
+                      Text(
+                        '${category.athkar.length} ذكر',
+                        style: context.labelSmall?.copyWith(
+                          color: context.textSecondaryColor.withValues(alpha: 0.7),
+                        ),
                       ),
                     ],
                   ),
@@ -1077,95 +875,19 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
                   onChanged: _hasPermission 
                       ? (value) => _toggleCategory(category.id, value)
                       : null,
-                  activeColor: isAutoEnabled ? ThemeConstants.success : ThemeConstants.primary,
+                  activeColor: isEssential 
+                      ? ThemeConstants.success 
+                      : ThemeConstants.primary,
                 ),
               ],
             ),
             
             if (isEnabled) ...[
               const SizedBox(height: ThemeConstants.space3),
-              Container(
-                padding: const EdgeInsets.all(ThemeConstants.space3),
-                decoration: BoxDecoration(
-                  color: (isAutoEnabled ? ThemeConstants.success : ThemeConstants.primary)
-                      .withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
-                  border: Border.all(
-                    color: (isAutoEnabled ? ThemeConstants.success : ThemeConstants.primary)
-                        .withValues(alpha: 0.2),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.access_time,
-                      size: ThemeConstants.iconSm,
-                      color: isAutoEnabled ? ThemeConstants.success : ThemeConstants.primary,
-                    ),
-                    const SizedBox(width: ThemeConstants.space2),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'وقت التذكير: ${currentTime.format(context)}',
-                            style: context.bodyMedium?.copyWith(
-                              color: isAutoEnabled ? ThemeConstants.success : ThemeConstants.primary,
-                              fontWeight: ThemeConstants.medium,
-                            ),
-                          ),
-                          if (!hasOriginalTime)
-                            Text(
-                              isAutoEnabled 
-                                  ? 'وقت افتراضي للفئة الأساسية'
-                                  : 'وقت افتراضي - يمكنك تغييره',
-                              style: context.labelSmall?.copyWith(
-                                color: (isAutoEnabled ? ThemeConstants.success : ThemeConstants.primary)
-                                    .withValues(alpha: 0.7),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => _selectTime(category.id, currentTime),
-                      style: TextButton.styleFrom(
-                        minimumSize: const Size(0, 32),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: ThemeConstants.space3,
-                        ),
-                      ),
-                      child: const Text('تغيير'),
-                    ),
-                  ],
-                ),
-              ),
-            ] else if (!hasOriginalTime) ...[
-              const SizedBox(height: ThemeConstants.space2),
-              Row(
-                children: [
-                  Icon(
-                    Icons.access_time_outlined,
-                    size: ThemeConstants.iconXs,
-                    color: context.textSecondaryColor.withValues(alpha: 0.7),
-                  ),
-                  const SizedBox(width: ThemeConstants.space1),
-                  Text(
-                    'الوقت الافتراضي: ${currentTime.format(context)}',
-                    style: context.labelSmall?.copyWith(
-                      color: context.textSecondaryColor.withValues(alpha: 0.7),
-                    ),
-                  ),
-                  if (isAutoEnabled) ...[
-                    Text(
-                      ' (أساسي)',
-                      style: context.labelSmall?.copyWith(
-                        color: ThemeConstants.success.withValues(alpha: 0.7),
-                        fontWeight: ThemeConstants.medium,
-                      ),
-                    ),
-                  ],
-                ],
+              _buildTimeSelector(
+                category: category,
+                currentTime: currentTime,
+                isEssential: isEssential,
               ),
             ],
           ],
@@ -1173,8 +895,92 @@ class _AthkarNotificationSettingsScreenState extends State<AthkarNotificationSet
       ),
     );
   }
+
+  Widget _buildBadge(String label, Color color) {
+    return Container(
+      margin: const EdgeInsets.only(left: ThemeConstants.space2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: ThemeConstants.space2,
+        vertical: ThemeConstants.space1,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(ThemeConstants.radiusXs),
+      ),
+      child: Text(
+        label,
+        style: context.labelSmall?.copyWith(
+          color: color,
+          fontSize: 10,
+          fontWeight: ThemeConstants.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeSelector({
+    required AthkarCategory category,
+    required TimeOfDay currentTime,
+    required bool isEssential,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(ThemeConstants.space3),
+      decoration: BoxDecoration(
+        color: (isEssential ? ThemeConstants.success : ThemeConstants.primary)
+            .withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+        border: Border.all(
+          color: (isEssential ? ThemeConstants.success : ThemeConstants.primary)
+              .withValues(alpha: 0.2),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.access_time,
+            size: ThemeConstants.iconSm,
+            color: isEssential ? ThemeConstants.success : ThemeConstants.primary,
+          ),
+          const SizedBox(width: ThemeConstants.space2),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'وقت التذكير: ${currentTime.format(context)}',
+                  style: context.bodyMedium?.copyWith(
+                    color: isEssential ? ThemeConstants.success : ThemeConstants.primary,
+                    fontWeight: ThemeConstants.medium,
+                  ),
+                ),
+                if (category.notifyTime == null)
+                  Text(
+                    'وقت افتراضي - يمكنك تغييره',
+                    style: context.labelSmall?.copyWith(
+                      color: (isEssential ? ThemeConstants.success : ThemeConstants.primary)
+                          .withValues(alpha: 0.7),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () => _selectTime(category.id, currentTime),
+            style: TextButton.styleFrom(
+              minimumSize: const Size(0, 32),
+              padding: const EdgeInsets.symmetric(
+                horizontal: ThemeConstants.space3,
+              ),
+            ),
+            child: const Text('تغيير'),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
+/// ويدجت إحصائية صغيرة
 class _StatItem extends StatelessWidget {
   final IconData icon;
   final int count;

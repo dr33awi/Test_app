@@ -367,31 +367,10 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen>
                       ),
                     ],
                   ),
-                  child: Stack(
-                    children: [
-                      Icon(
-                        Icons.notifications_outlined,
-                        color: context.textPrimaryColor,
-                        size: ThemeConstants.iconMd,
-                      ),
-                      if (_notificationsEnabled)
-                        Positioned(
-                          top: 0,
-                          right: 0,
-                          child: Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: ThemeConstants.success,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: context.backgroundColor,
-                                width: 1,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
+                  child: Icon(
+                    Icons.notifications_outlined,
+                    color: context.textPrimaryColor,
+                    size: ThemeConstants.iconMd,
                   ),
                 ),
               ),
