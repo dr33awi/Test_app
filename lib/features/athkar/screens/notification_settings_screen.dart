@@ -9,7 +9,6 @@ import '../services/athkar_service.dart';
 import '../models/athkar_model.dart';
 import '../../../core/infrastructure/services/notifications/notification_manager.dart';
 import '../../../core/infrastructure/services/notifications/models/notification_models.dart';
-import '../utils/athkar_extensions.dart' hide AppInfoDialog, AppBackButton, AppLoading, AppEmptyState, AppCard, AppButton;
 
 class AthkarNotificationSettingsScreen extends StatefulWidget {
   const AthkarNotificationSettingsScreen({super.key});

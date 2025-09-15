@@ -1,4 +1,4 @@
-// lib/features/athkar/screens/athkar_categories_screen.dart (محدث مع UnifiedStatsWidget)
+// lib/features/athkar/screens/athkar_categories_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../app/themes/app_theme.dart';
@@ -10,10 +10,6 @@ import '../services/athkar_service.dart';
 import '../models/athkar_model.dart';
 import '../widgets/athkar_category_card.dart';
 import 'notification_settings_screen.dart';
-// نظام الإحصائيات الموحد
-import '../../statistics/screens/statistics_dashboard_screen.dart';
-import '../../statistics/services/statistics_service.dart';
-import '../../statistics/widgets/unified_stats_widget.dart';
 
 class AthkarCategoriesScreen extends StatefulWidget {
   const AthkarCategoriesScreen({super.key});
@@ -27,7 +23,6 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen>
   late final AthkarService _service;
   late final PermissionService _permissionService;
   late final StorageService _storage;
-  StatisticsService? _statsService;
   
   late Future<List<AthkarCategory>> _futureCategories;
   bool _notificationsEnabled = false;
@@ -46,11 +41,6 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen>
     _service = getIt<AthkarService>();
     _permissionService = getIt<PermissionService>();
     _storage = getIt<StorageService>();
-    
-    // تهيئة خدمة الإحصائيات
-    if (getIt.isRegistered<StatisticsService>()) {
-      _statsService = getIt<StatisticsService>();
-    }
     
     // تهيئة الأنيميشن
     _animationController = AnimationController(
@@ -152,7 +142,7 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen>
           opacity: _fadeAnimation,
           child: Column(
             children: [
-              // Custom AppBar محسن
+              // Custom AppBar
               _buildCustomAppBar(context),
               
               // باقي المحتوى
@@ -196,21 +186,6 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen>
                           ),
                         ),
                       ),
-                      
-                      // لوحة الإحصائيات الموحدة
-                      if (!_progressLoading)
-                        const SliverToBoxAdapter(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: ThemeConstants.space4,
-                              vertical: ThemeConstants.space3,
-                            ),
-                            child: UnifiedStatsWidget(
-                              isCompact: true,
-                              showDetailedStats: false,
-                            ),
-                          ),
-                        ),
                       
                       // قائمة الفئات
                       FutureBuilder<List<AthkarCategory>>(
@@ -358,48 +333,6 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen>
               ],
             ),
           ),
-          
-          // زر الإحصائيات
-          if (_statsService != null)
-            Container(
-              margin: const EdgeInsets.only(left: ThemeConstants.space2),
-              child: Material(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
-                child: InkWell(
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const StatisticsDashboardScreen(),
-                      ),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
-                  child: Container(
-                    padding: const EdgeInsets.all(ThemeConstants.space2),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          ThemeConstants.primary.withValues(alpha: 0.1),
-                          ThemeConstants.primaryLight.withValues(alpha: 0.05),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
-                      border: Border.all(
-                        color: ThemeConstants.primary.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.analytics_rounded,
-                      color: ThemeConstants.primary,
-                      size: ThemeConstants.iconMd,
-                    ),
-                  ),
-                ),
-              ),
-            ),
           
           // زر إعدادات الإشعارات
           Container(

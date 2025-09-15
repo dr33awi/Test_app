@@ -15,12 +15,8 @@ import '../widgets/tasbih_bead_widget.dart';
 import '../widgets/tasbih_counter_ring.dart';
 import '../widgets/tasbih_pattern_painter.dart';
 import '../widgets/dhikr_card.dart';
-// استيراد نظام الإحصائيات الموحد
-import '../../statistics/screens/statistics_dashboard_screen.dart';
-import '../../statistics/services/statistics_service.dart';
-import '../../statistics/widgets/unified_stats_widget.dart';
 
-/// شاشة المسبحة الرقمية المحسنة مع نظام الإحصائيات الموحد
+/// شاشة المسبحة الرقمية
 class TasbihScreen extends StatefulWidget {
   const TasbihScreen({super.key});
 
@@ -42,9 +38,6 @@ class _TasbihScreenState extends State<TasbihScreen>
   // للتتبع والتفاعل
   bool _isPressed = false;
   DhikrItem _currentDhikr = DefaultAdhkar.getAll().first; // الذكر الحالي
-  
-  // إحصائيات
-  bool _hasStatisticsService = false;
 
   @override
   void initState() {
@@ -59,9 +52,6 @@ class _TasbihScreenState extends State<TasbihScreen>
       logger: getIt<LoggerService>(),
     );
     _logger = getIt<LoggerService>();
-    
-    // التحقق من وجود خدمة الإحصائيات
-    _hasStatisticsService = getIt.isRegistered<StatisticsService>();
     
     // بدء جلسة تسبيح
     _service.startSession(_currentDhikr.text);
@@ -133,28 +123,6 @@ class _TasbihScreenState extends State<TasbihScreen>
                 children: [
                   // شريط التطبيق المخصص
                   _buildCustomAppBar(context),
-                  
-                  // استخدام UnifiedStatsWidget بدلاً من _buildQuickStatsCard
-                  if (_hasStatisticsService)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: ThemeConstants.space4,
-                        vertical: ThemeConstants.space2,
-                      ),
-                      child: UnifiedStatsWidget(
-                        isCompact: true,
-                        showDetailedStats: false,
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const StatisticsDashboardScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
                   
                   // محدد نوع الذكر
                   _buildDhikrSelector(),
@@ -236,48 +204,6 @@ class _TasbihScreenState extends State<TasbihScreen>
               ],
             ),
           ),
-          
-          // زر الإحصائيات
-          if (_hasStatisticsService)
-            Container(
-              margin: const EdgeInsets.only(left: ThemeConstants.space2),
-              child: Material(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
-                child: InkWell(
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const StatisticsDashboardScreen(),
-                      ),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
-                  child: Container(
-                    padding: const EdgeInsets.all(ThemeConstants.space2),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          ThemeConstants.primary.withValues(alpha: 0.1),
-                          ThemeConstants.primaryLight.withValues(alpha: 0.05),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
-                      border: Border.all(
-                        color: ThemeConstants.primary.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.analytics_rounded,
-                      color: ThemeConstants.primary,
-                      size: ThemeConstants.iconMd,
-                    ),
-                  ),
-                ),
-              ),
-            ),
           
           // زر تصفير العداد
           Consumer<TasbihService>(

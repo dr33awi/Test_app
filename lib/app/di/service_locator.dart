@@ -43,10 +43,6 @@ import '../../features/tasbih/services/tasbih_service.dart';
 // خدمات الإعدادات الموحدة
 import '../../features/settings/services/settings_services_manager.dart';
 
-// نظام الإحصائيات الجديد
-import '../../features/statistics/services/statistics_service.dart';
-import '../../features/statistics/integration/statistics_integration.dart';
-
 final getIt = GetIt.instance;
 
 /// Service Locator لإدارة جميع الخدمات في التطبيق
@@ -99,9 +95,6 @@ class ServiceLocator {
 
       // 8. خدمات الميزات
       _registerFeatureServices();
-      
-      // 9. نظام الإحصائيات الجديد
-      _registerStatisticsServices();
 
       _isInitialized = true;
       debugPrint('ServiceLocator: All services initialized successfully ✓');
@@ -340,26 +333,6 @@ class ServiceLocator {
     }
   }
 
-  /// تسجيل نظام الإحصائيات الجديد
-  void _registerStatisticsServices() {
-    debugPrint('ServiceLocator: Registering statistics services...');
-    
-    // خدمة الإحصائيات الرئيسية
-    if (!getIt.isRegistered<StatisticsService>()) {
-      getIt.registerLazySingleton<StatisticsService>(
-        () => StatisticsService(
-          storage: getIt<StorageService>(),
-          logger: getIt<LoggerService>(),
-        ),
-      );
-      debugPrint('ServiceLocator: StatisticsService registered successfully');
-    }
-
-    // لا نحتاج لتهيئة StatisticsIntegration هنا
-    // سيتم استخدامها عند الحاجة في الخدمات التي تحتاجها
-    debugPrint('ServiceLocator: Statistics services ready for integration');
-  }
-
   /// التحقق من تهيئة جميع الخدمات المطلوبة
   static bool areServicesReady() {
     final requiredServices = [
@@ -381,9 +354,6 @@ class ServiceLocator {
       getIt.isRegistered<DuaService>(),
       getIt.isRegistered<TasbihService>(),
       getIt.isRegistered<SettingsServicesManager>(),
-      
-      // نظام الإحصائيات
-      getIt.isRegistered<StatisticsService>(),
     ];
     
     final allReady = requiredServices.every((service) => service);
@@ -419,11 +389,6 @@ class ServiceLocator {
     debugPrint('ServiceLocator: Cleaning up resources...');
 
     try {
-      // تنظيف نظام الإحصائيات
-      if (getIt.isRegistered<StatisticsService>()) {
-        getIt<StatisticsService>().dispose();
-      }
-
       // تنظيف مدير الإعدادات
       if (getIt.isRegistered<SettingsServicesManager>()) {
         getIt<SettingsServicesManager>().dispose();
@@ -554,9 +519,6 @@ extension ServiceLocatorExtensions on BuildContext {
   /// الحصول على خدمة القبلة
   QiblaService get qiblaService => getIt<QiblaService>();
   
-  /// الحصول على نظام الإحصائيات
-  StatisticsService get statisticsService => getIt<StatisticsService>();
-  
   // ==================== خدمات الإدارة ====================
   
   /// الحصول على إدارة الثيم
@@ -585,35 +547,5 @@ extension ServiceLocatorExtensions on BuildContext {
   Future<bool> hasPermission(AppPermissionType permission) async {
     final status = await permissionService.checkPermissionStatus(permission);
     return status == AppPermissionStatus.granted;
-  }
-  
-  /// تسجيل نشاط أذكار في الإحصائيات
-  Future<void> recordAthkarActivity({
-    required String categoryId,
-    required String categoryName,
-    required int itemsCompleted,
-    required int totalItems,
-    Duration? duration,
-  }) async {
-    await statisticsService.recordAthkarActivity(
-      categoryId: categoryId,
-      categoryName: categoryName,
-      itemsCompleted: itemsCompleted,
-      totalItems: totalItems,
-      duration: duration ?? const Duration(minutes: 5),
-    );
-  }
-  
-  /// تسجيل نشاط تسبيح في الإحصائيات
-  Future<void> recordTasbihActivity({
-    required String dhikrType,
-    required int count,
-    Duration? duration,
-  }) async {
-    await statisticsService.recordTasbihActivity(
-      dhikrType: dhikrType,
-      count: count,
-      duration: duration ?? Duration(seconds: count * 2),
-    );
   }
 }
