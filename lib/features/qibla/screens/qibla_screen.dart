@@ -1,4 +1,4 @@
-// lib/features/qibla/screens/qibla_screen.dart - نسخة منظفة
+// lib/features/qibla/screens/qibla_screen.dart - نسخة محدثة
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,6 +12,7 @@ import '../../../core/infrastructure/services/permissions/permission_service.dar
 import '../services/qibla_service.dart';
 import '../widgets/qibla_compass.dart';
 import '../widgets/qibla_info_card.dart';
+import '../widgets/compass_calibration_sheet.dart';
 
 /// شاشة القبلة
 class QiblaScreen extends StatefulWidget {
@@ -101,36 +102,30 @@ class _QiblaScreenState extends State<QiblaScreen>
     if (_disposed) return;
     
     HapticFeedback.lightImpact();
-    await _qiblaService.startCalibration();
     
-    if (mounted) {
-      _showCalibrationDialog();
-    }
+    // Show calibration sheet
+    showCompassCalibrationSheet(
+      context: context,
+      onStartCalibration: () async {
+        await _qiblaService.startCalibration();
+        
+        // Show progress dialog with animation after starting calibration
+        if (mounted) {
+          _showCalibrationProgressDialogWithAnimation();
+        }
+      },
+      initialAccuracy: _qiblaService.compassAccuracy,
+    );
   }
 
-  void _showCalibrationDialog() {
+  void _showCalibrationProgressDialogWithAnimation() {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('جاري المعايرة...'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            ThemeConstants.space4.h,
-            const Text('حرك هاتفك على شكل الرقم 8 في الهواء'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              _qiblaService.resetCalibration();
-              Navigator.of(context).pop();
-            },
-            child: const Text('إلغاء'),
-          ),
-        ],
+      builder: (context) => CalibrationProgressDialog(
+        onStartCalibration: () {
+          // Calibration already started, this is just for the animation
+        },
       ),
     ).then((_) {
       if (_qiblaService.isCalibrated) {
@@ -201,7 +196,7 @@ class _QiblaScreenState extends State<QiblaScreen>
             return SafeArea(
               child: Column(
                 children: [
-                  _buildAppBar(context, service),
+                  _buildCustomAppBar(context, service),
                   
                   Expanded(
                     child: RefreshIndicator(
@@ -241,28 +236,40 @@ class _QiblaScreenState extends State<QiblaScreen>
     );
   }
 
-  Widget _buildAppBar(BuildContext context, QiblaService service) {
+  Widget _buildCustomAppBar(BuildContext context, QiblaService service) {
+    const gradient = LinearGradient(
+      colors: [ThemeConstants.primary, ThemeConstants.primaryLight],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+    
     return Container(
       padding: const EdgeInsets.all(ThemeConstants.space4),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back),
+          // زر الرجوع بنفس شكل prayer_time_screen
+          AppBackButton(
             onPressed: () => Navigator.of(context).pop(),
           ),
           
           ThemeConstants.space3.w,
           
+          // أيقونة القبلة مع التدرج اللوني
           Container(
             padding: const EdgeInsets.all(ThemeConstants.space2),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [ThemeConstants.primaryDark, ThemeConstants.primary],
-              ),
+              gradient: gradient,
               borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+              boxShadow: [
+                BoxShadow(
+                  color: ThemeConstants.primary.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: const Icon(
-              Icons.explore,
+              Icons.explore_rounded,
               color: Colors.white,
               size: ThemeConstants.iconMd,
             ),
@@ -270,13 +277,17 @@ class _QiblaScreenState extends State<QiblaScreen>
           
           ThemeConstants.space3.w,
           
+          // العنوان والحالة
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'اتجاه القبلة',
-                  style: context.titleLarge?.bold,
+                  style: context.titleLarge?.copyWith(
+                    fontWeight: ThemeConstants.bold,
+                    color: context.textPrimaryColor,
+                  ),
                 ),
                 Text(
                   _getStatusText(service),
@@ -288,22 +299,73 @@ class _QiblaScreenState extends State<QiblaScreen>
             ),
           ),
           
-          IconButton(
-            icon: service.isLoading 
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.refresh),
-            onPressed: service.isLoading 
+          // زر التحديث بنفس شكل prayer_time_screen
+          _buildActionButton(
+            icon: service.isLoading
+                ? Icons.hourglass_empty
+                : Icons.refresh_rounded,
+            onTap: service.isLoading 
                 ? null 
-                : () {
-                    HapticFeedback.lightImpact();
-                    _updateQiblaData(forceUpdate: true);
-                  },
+                : () => _updateQiblaData(forceUpdate: true),
+            isLoading: service.isLoading,
+          ),
+          
+          // زر المعايرة
+          _buildActionButton(
+            icon: Icons.compass_calibration_outlined,
+            onTap: _startCalibration,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    VoidCallback? onTap,
+    bool isLoading = false,
+    bool isSecondary = false,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(left: ThemeConstants.space2),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+          child: Container(
+            padding: const EdgeInsets.all(ThemeConstants.space2),
+            decoration: BoxDecoration(
+              color: context.cardColor,
+              borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+              border: Border.all(
+                color: context.dividerColor.withValues(alpha: 0.3),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: isLoading
+                ? const SizedBox(
+                    width: ThemeConstants.iconMd,
+                    height: ThemeConstants.iconMd,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(ThemeConstants.primary),
+                    ),
+                  )
+                : Icon(
+                    icon,
+                    color: isSecondary ? context.textSecondaryColor : ThemeConstants.primary,
+                    size: ThemeConstants.iconMd,
+                  ),
+          ),
+        ),
       ),
     );
   }
