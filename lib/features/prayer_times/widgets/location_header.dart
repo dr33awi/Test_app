@@ -76,9 +76,12 @@ class _LocationHeaderState extends State<LocationHeader>
         });
         
         await _prayerService.updatePrayerTimes();
-        
-        context.showSuccessSnackBar('تم تحديث الموقع بنجاح');
+
+        if (!mounted) return;
+      context.showSuccessSnackBar('تم تحديث الموقع بنجاح');
+      
       }
+      
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -108,7 +111,6 @@ class _LocationHeaderState extends State<LocationHeader>
   @override
   Widget build(BuildContext context) {
     final hasError = _lastError != null;
-    final errorType = hasError ? PrayerUtils.getErrorType(_lastError) : null;
     
     return Container(
       margin: const EdgeInsets.all(ThemeConstants.space4),
@@ -319,6 +321,6 @@ class _LocationHeaderState extends State<LocationHeader>
     }
     
     return 'خط العرض: ${_currentLocation!.latitude.toStringAsFixed(4)}° • '
-           'خط الطول: ${_currentLocation!.longitude.toStringAsFixed(4)}°';
+          'خط الطول: ${_currentLocation!.longitude.toStringAsFixed(4)}°';
   }
 }

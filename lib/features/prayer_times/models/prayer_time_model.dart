@@ -1,8 +1,8 @@
-// lib/features/prayer_times/models/prayer_time_model_optimized.dart
+// lib/features/prayer_times/models/prayer_time_model.dart
 
 import 'package:flutter/foundation.dart';
 
-/// نموذج وقت الصلاة المحسن
+/// نموذج وقت الصلاة المنظف
 @immutable
 class PrayerTime {
   final String id;
@@ -93,7 +93,7 @@ class PrayerTime {
   int get hashCode => id.hashCode ^ time.hashCode;
 }
 
-/// أنواع الصلوات (بدون الأنواع غير المستخدمة)
+/// أنواع الصلوات (المستخدمة فقط)
 enum PrayerType {
   fajr('fajr', 'الفجر', 'Fajr'),
   sunrise('sunrise', 'الشروق', 'Sunrise'),
@@ -107,6 +107,9 @@ enum PrayerType {
   final String key;
   final String nameAr;
   final String nameEn;
+  
+  // للتوافق مع الكود الموجود
+  String get name => key;
 
   static PrayerType? fromKey(String key) {
     for (final type in PrayerType.values) {

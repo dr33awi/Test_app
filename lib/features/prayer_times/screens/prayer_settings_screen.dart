@@ -250,21 +250,22 @@ class _PrayerSettingsScreenState extends State<PrayerSettingsScreen> {
     );
   }
 
-  void _showUnsavedChangesDialog() {
-    AppInfoDialog.showConfirmation(
+  void _showUnsavedChangesDialog() async {
+    final result = await AppInfoDialog.showConfirmation(
       context: context,
       title: 'تغييرات غير محفوظة',
       content: 'لديك تغييرات لم يتم حفظها. هل تريد حفظ التغييرات قبل المغادرة؟',
       confirmText: 'حفظ وخروج',
       cancelText: 'تجاهل التغييرات',
-      // يمكن تمرير confirmButtonColor هنا إذا كان مطلوباً
-    ).then((result) {
-      if (result == true) {
-        _saveSettings();
-      } else {
-        Navigator.pop(context);
-      }
-    });
+    );
+    
+    if (!mounted) return;
+    
+    if (result == true) {
+      await _saveSettings();
+    } else {
+      Navigator.pop(context);
+    }
   }
 
   Widget _buildCalculationSection() {
@@ -592,10 +593,10 @@ class CalculationMethodDialog extends StatelessWidget {
             padding: const EdgeInsets.all(ThemeConstants.space3),
             child: TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('إلغاء'),
               style: TextButton.styleFrom(
                 foregroundColor: ThemeConstants.success, // استخدام اللون الأخضر
               ),
+              child: const Text('إلغاء'),
             ),
           ),
         ],

@@ -1,7 +1,7 @@
-// lib/features/prayer_times/utils/prayer_utils.dart
+// lib/features/prayer_times/utils/prayer_utils_unified.dart
 import 'package:flutter/material.dart';
 import '../../../app/themes/theme_constants.dart';
-import '../models/prayer_time_model.dart'; // استخدام النموذج الأصلي
+import '../models/prayer_time_model.dart';
 
 /// أدوات موحدة لمواقيت الصلاة - بدون تكرار
 class PrayerUtils {
@@ -48,7 +48,7 @@ class PrayerUtils {
       return 'بعد $days يوم';
     } else if (hours > 0) {
       if (minutes > 0) {
-        return 'بعد ${hours}س ${minutes}د';
+        return 'بعد $hours ساعة و $minutes دقيقة';
       }
       return 'بعد $hours ساعة';
     } else if (minutes > 0) {
@@ -56,13 +56,6 @@ class PrayerUtils {
     } else {
       return 'بعد $seconds ثانية';
     }
-  }
-
-  /// تنسيق الوقت حتى موعد محدد
-  static String formatTimeUntil(DateTime targetTime, {DateTime? fromTime}) {
-    final from = fromTime ?? DateTime.now();
-    final diff = targetTime.difference(from);
-    return formatRemainingTime(diff);
   }
 
   // ==================== الألوان والأيقونات ====================
@@ -164,30 +157,6 @@ class PrayerUtils {
     return timeDiff.inMinutes > 0 && timeDiff.inMinutes <= minutesBefore;
   }
 
-  /// الحصول على الصلاة الحالية من قائمة
-  static PrayerTime? getCurrentPrayer(List<PrayerTime> prayers) {
-    final now = DateTime.now();
-    final passedPrayers = prayers.where((p) => p.time.isBefore(now)).toList();
-    
-    if (passedPrayers.isEmpty) return null;
-    
-    // الصلاة الأخيرة التي مر وقتها هي الصلاة الحالية
-    passedPrayers.sort((a, b) => b.time.compareTo(a.time));
-    return passedPrayers.first;
-  }
-
-  /// الحصول على الصلاة التالية من قائمة
-  static PrayerTime? getNextPrayer(List<PrayerTime> prayers) {
-    final now = DateTime.now();
-    final upcomingPrayers = prayers.where((p) => p.time.isAfter(now)).toList();
-    
-    if (upcomingPrayers.isEmpty) return null;
-    
-    // أول صلاة قادمة
-    upcomingPrayers.sort((a, b) => a.time.compareTo(b.time));
-    return upcomingPrayers.first;
-  }
-
   // ==================== النصوص ====================
   
   /// اسم الصلاة بالعربية
@@ -205,9 +174,14 @@ class PrayerUtils {
         return 'المغرب';
       case PrayerType.isha:
         return 'العشاء';
-      default:
-        return '';
     }
+  }
+  
+  /// تنسيق الوقت حتى موعد محدد
+  static String formatTimeUntil(DateTime targetTime, {DateTime? fromTime}) {
+    final from = fromTime ?? DateTime.now();
+    final diff = targetTime.difference(from);
+    return formatRemainingTime(diff);
   }
 
   /// رسالة التنبيه
@@ -335,20 +309,62 @@ enum ErrorType {
   unknown,
 }
 
-/// Extension للسهولة
-extension PrayerTimeUtils on PrayerTime {
+/// Extensions للسهولة
+extension PrayerTimeExtensions on PrayerTime {
+  // خصائص التنسيق
   String get formattedTime => PrayerUtils.formatTime(time);
   String get formattedTime24 => PrayerUtils.formatTime(time, use24Hour: true);
   String get statusText => PrayerUtils.getPrayerStatusText(this);
+  String get remainingTimeText => PrayerUtils.formatRemainingTime(remainingTime);
+  
+  // الألوان والأيقونات
   Color get color => PrayerUtils.getPrayerColor(type);
   IconData get icon => PrayerUtils.getPrayerIcon(type);
   LinearGradient get gradient => PrayerUtils.getPrayerGradient(type);
+  
+  // التحقق من الحالة
+  bool get isApproachingSoon => PrayerUtils.isPrayerApproaching(this);
   bool isApproachingIn(int minutes) => PrayerUtils.isPrayerApproaching(this, minutesBefore: minutes);
+  
+  /// التحقق من أن الصلاة حالية (بين وقتها ووقت الصلاة التالية)
+  bool isCurrent(PrayerTime? nextPrayer) {
+    if (!isPassed || nextPrayer == null) return false;
+    final now = DateTime.now();
+    return now.isAfter(time) && now.isBefore(nextPrayer.time);
+  }
+  
+  /// الحصول على رسالة التنبيه
+  String getNotificationMessage(int minutesBefore) {
+    return PrayerUtils.getNotificationMessage(type, minutesBefore);
+  }
 }
 
-extension DailyPrayerTimesUtils on DailyPrayerTimes {
+extension DailyPrayerTimesExtensions on DailyPrayerTimes {
   /// الصلوات الرئيسية فقط (بدون الشروق)
   List<PrayerTime> get mainPrayers => prayers.where((p) => p.type != PrayerType.sunrise).toList();
+  
+  /// الصلوات التي انتهت
+  List<PrayerTime> get passedPrayers => prayers.where((p) => p.isPassed).toList();
+  
+  /// الصلوات القادمة
+  List<PrayerTime> get upcomingPrayers => prayers.where((p) => !p.isPassed).toList();
+  
+  /// الصلاة بنوع محدد
+  PrayerTime? getPrayerByType(PrayerType type) {
+    try {
+      return prayers.firstWhere((p) => p.type == type);
+    } catch (_) {
+      return null;
+    }
+  }
+  
+  /// الصلوات المحددة
+  PrayerTime? get fajr => getPrayerByType(PrayerType.fajr);
+  PrayerTime? get dhuhr => getPrayerByType(PrayerType.dhuhr);
+  PrayerTime? get asr => getPrayerByType(PrayerType.asr);
+  PrayerTime? get maghrib => getPrayerByType(PrayerType.maghrib);
+  PrayerTime? get isha => getPrayerByType(PrayerType.isha);
+  PrayerTime? get sunrise => getPrayerByType(PrayerType.sunrise);
   
   /// نسبة التقدم في اليوم
   double get dayProgress {
@@ -363,5 +379,62 @@ extension DailyPrayerTimesUtils on DailyPrayerTimes {
   double get currentPrayerProgress {
     if (currentPrayer == null || nextPrayer == null) return 0.0;
     return PrayerUtils.calculateProgressBetweenPrayers(currentPrayer!, nextPrayer!);
+  }
+  
+  /// التحقق من وجود صلاة قريبة
+  bool get hasApproachingPrayer {
+    return prayers.any((p) => p.isApproachingSoon);
+  }
+  
+  /// الحصول على الصلوات القريبة
+  List<PrayerTime> getApproachingPrayers({int minutesBefore = 15}) {
+    return prayers.where((p) => p.isApproachingIn(minutesBefore)).toList();
+  }
+  
+  /// نسخة محدثة من المواقيت
+  DailyPrayerTimes get updated => updatePrayerStates();
+}
+
+extension PrayerCalculationSettingsExtensions on PrayerCalculationSettings {
+  /// اسم طريقة الحساب
+  String get methodName => PrayerUtils.getCalculationMethodName(method);
+  
+  /// وصف طريقة الحساب
+  String get methodDescription => PrayerUtils.getCalculationMethodDescription(method);
+  
+  /// اسم المذهب
+  String get juristicName => PrayerUtils.getJuristicName(asrJuristic);
+  
+  /// التحقق من وجود تعديلات يدوية
+  bool get hasManualAdjustments => manualAdjustments.values.any((v) => v != 0);
+  
+  /// عدد التعديلات اليدوية
+  int get manualAdjustmentCount => manualAdjustments.values.where((v) => v != 0).length;
+}
+
+extension PrayerNotificationSettingsExtensions on PrayerNotificationSettings {
+  /// عدد الصلوات المفعلة للتنبيه
+  int get enabledPrayersCount => enabledPrayers.values.where((v) => v).length;
+  
+  /// التحقق من تفعيل تنبيه صلاة معينة
+  bool isPrayerEnabled(PrayerType type) => enabledPrayers[type] ?? false;
+  
+  /// الحصول على وقت التنبيه قبل الصلاة
+  int getMinutesBefore(PrayerType type) => minutesBefore[type] ?? 0;
+  
+  /// التحقق من وجود أي تنبيه مفعل
+  bool get hasAnyEnabled => enabledPrayers.values.any((v) => v);
+}
+
+extension PrayerLocationExtensions on PrayerLocation {
+  /// الإحداثيات كنص
+  String get coordinatesText {
+    return 'خط العرض: ${latitude.toStringAsFixed(4)}° • خط الطول: ${longitude.toStringAsFixed(4)}°';
+  }
+  
+  /// الارتفاع كنص
+  String? get altitudeText {
+    if (altitude == null) return null;
+    return 'الارتفاع: ${altitude!.toStringAsFixed(0)} متر';
   }
 }

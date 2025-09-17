@@ -235,7 +235,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                   physics: const AlwaysScrollableScrollPhysics(),
                   slivers: [
                     if (_isLoading && _dailyTimes == null)
-                      SliverFillRemaining(
+                      const SliverFillRemaining(
                         child: PrayerLoadingWidget(
                           message: 'جاري تحميل مواقيت الصلاة...',
                         ),

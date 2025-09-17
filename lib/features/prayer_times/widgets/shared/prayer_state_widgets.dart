@@ -384,7 +384,7 @@ class _RetryButtonState extends State<RetryButton> {
     return ElevatedButton.icon(
       onPressed: isLoading ? null : _handleRetry,
       icon: isLoading
-          ? SizedBox(
+          ? const SizedBox(
               width: 18,
               height: 18,
               child: CircularProgressIndicator(
@@ -392,7 +392,7 @@ class _RetryButtonState extends State<RetryButton> {
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
               ),
             )
-          : Icon(Icons.refresh, size: 20),
+          : const Icon(Icons.refresh, size: 20),
       label: Text(isLoading ? 'جاري المحاولة...' : widget.text),
       style: ElevatedButton.styleFrom(
         backgroundColor: ThemeConstants.primary,

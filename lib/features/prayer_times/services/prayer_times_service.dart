@@ -1,4 +1,4 @@
-// lib/features/prayer_times/services/prayer_times_service_improved.dart
+// lib/features/prayer_times/services/prayer_times_service.dart
 
 import 'dart:async';
 import 'dart:io';
@@ -13,8 +13,9 @@ import '../../../core/infrastructure/services/notifications/notification_manager
 import '../../../core/infrastructure/services/permissions/permission_service.dart';
 import '../../../core/error/exceptions.dart';
 import '../models/prayer_time_model.dart';
+import '../utils/prayer_utils.dart'; // استخدام Utils الموحد فقط
 
-/// خدمة مواقيت الصلاة المحسنة
+/// خدمة مواقيت الصلاة المحدثة
 class PrayerTimesService {
   final LoggerService _logger;
   final StorageService _storage;
@@ -33,20 +34,20 @@ class PrayerTimesService {
   PrayerCalculationSettings _settings = const PrayerCalculationSettings();
   PrayerNotificationSettings _notificationSettings = const PrayerNotificationSettings();
   
-  // Stream Controllers مع إصلاح تسريب الذاكرة
+  // Stream Controllers
   StreamController<DailyPrayerTimes>? _prayerTimesController;
   StreamController<PrayerTime?>? _nextPrayerController;
   Timer? _updateTimer;
   Timer? _countdownTimer;
-  Timer? _dataRefreshTimer; // جديد: مؤقت تحديث البيانات
+  Timer? _dataRefreshTimer;
   
-  // Cache محسن
+  // Cache
   final Map<String, DailyPrayerTimes> _timesCache = {};
   DailyPrayerTimes? _currentTimes;
   
   // حالة الخدمة
   bool _isDisposed = false;
-  bool _isUpdating = false; // جديد: منع التحديثات المتداخلة
+  bool _isUpdating = false;
   DateTime? _lastLocationUpdate;
   DateTime? _lastDataUpdate;
 
@@ -67,26 +68,18 @@ class PrayerTimesService {
     _nextPrayerController = StreamController<PrayerTime?>.broadcast();
   }
 
-  /// تهيئة الخدمة المحسنة
+  /// تهيئة الخدمة
   Future<void> _initialize() async {
     if (_isDisposed) return;
     
     _logger.debug(message: '[PrayerTimesService] تهيئة خدمة مواقيت الصلاة');
     
     try {
-      // تحميل الإعدادات المحفوظة
       await _loadSavedSettings();
-      
-      // تحميل الموقع المحفوظ
       await _loadSavedLocation();
-      
-      // تحميل آخر تحديثات
       await _loadLastUpdateTimes();
-      
-      // بدء المؤقتات
       _startTimers();
       
-      // تحديث المواقيت إذا كان هناك موقع محفوظ
       if (_currentLocation != null) {
         await _checkAndUpdateData();
       }
@@ -118,11 +111,10 @@ class PrayerTimesService {
     }
   }
 
-  /// بدء المؤقتات المحسنة
+  /// بدء المؤقتات
   void _startTimers() {
     if (_isDisposed) return;
     
-    // إيقاف المؤقتات السابقة أولاً
     _stopTimers();
     
     // مؤقت تحديث حالات الصلوات كل دقيقة
@@ -132,7 +124,7 @@ class PrayerTimesService {
       }
     });
     
-    // مؤقت العد التنازلي كل 30 ثانية (أقل استهلاكاً)
+    // مؤقت العد التنازلي كل 30 ثانية
     _countdownTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (!_isDisposed && _currentTimes != null && _nextPrayerController != null) {
         _nextPrayerController!.add(_currentTimes!.nextPrayer);
@@ -160,9 +152,9 @@ class PrayerTimesService {
       needsUpdate = true;
     }
     
-    // تحقق من تغيير اليوم
+    // تحقق من تغيير اليوم - استخدام PrayerUtils
     if (_currentTimes != null && 
-        !_isSameDay(_currentTimes!.date, now)) {
+        !PrayerUtils.isSameDay(_currentTimes!.date, now)) {
       needsUpdate = true;
     }
     
@@ -177,7 +169,7 @@ class PrayerTimesService {
     }
   }
 
-  /// الحصول على الموقع الحالي مع تحسينات
+  /// الحصول على الموقع الحالي
   Future<PrayerLocation> getCurrentLocation({bool forceUpdate = false}) async {
     if (_isDisposed) {
       throw StateError('Service is disposed');
@@ -186,7 +178,7 @@ class PrayerTimesService {
     // تحقق من الحاجة لتحديث الموقع
     if (!forceUpdate && _currentLocation != null && _lastLocationUpdate != null) {
       final timeSinceUpdate = DateTime.now().difference(_lastLocationUpdate!);
-      if (timeSinceUpdate.inHours < 12) { // تحديث الموقع كل 12 ساعة فقط
+      if (timeSinceUpdate.inHours < 12) {
         _logger.debug(message: '[PrayerTimesService] استخدام الموقع المحفوظ');
         return _currentLocation!;
       }
@@ -207,11 +199,11 @@ class PrayerTimesService {
         throw LocationException('خدمة الموقع غير مفعلة في الجهاز', code: 'SERVICE_DISABLED');
       }
       
-      // الحصول على الموقع مع timeout محسن
+      // الحصول على الموقع
       Position position;
       try {
         position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.medium, // توازن بين الدقة والسرعة
+          desiredAccuracy: LocationAccuracy.medium,
           timeLimit: const Duration(seconds: 20),
         );
       } on TimeoutException {
@@ -231,10 +223,9 @@ class PrayerTimesService {
           position.longitude,
         );
         
-        // إذا كان التغيير أقل من 5 كم، استخدم الموقع القديم
         if (distance < 5000) {
           _logger.debug(message: '[PrayerTimesService] لم يتغير الموقع بشكل كبير ($distance متر)');
-          await _saveLocationUpdateTime(); // حفظ وقت المحاولة
+          await _saveLocationUpdateTime();
           return _currentLocation!;
         }
       }
@@ -274,7 +265,6 @@ class PrayerTimesService {
         error: e,
       );
       
-      // محاولة استخدام الموقع المحفوظ كـ fallback
       if (_currentLocation != null) {
         _logger.warning(message: 'استخدام الموقع المحفوظ كبديل');
         return _currentLocation!;
@@ -300,7 +290,7 @@ class PrayerTimesService {
     }
   }
 
-  /// تحديث مواقيت الصلاة مع منع التداخل
+  /// تحديث مواقيت الصلاة
   Future<DailyPrayerTimes> updatePrayerTimes({DateTime? date}) async {
     if (_isDisposed) {
       throw StateError('Service is disposed');
@@ -308,7 +298,6 @@ class PrayerTimesService {
     
     if (_isUpdating) {
       _logger.debug(message: '[PrayerTimesService] تحديث جاري بالفعل، انتظار...');
-      // انتظار انتهاء التحديث الحالي
       while (_isUpdating && !_isDisposed) {
         await Future.delayed(const Duration(milliseconds: 100));
       }
@@ -337,7 +326,6 @@ class PrayerTimesService {
         final cachedTimes = _timesCache[dateKey]!.updatePrayerStates();
         _currentTimes = cachedTimes;
         
-        // إرسال إلى Stream
         if (_prayerTimesController != null && !_prayerTimesController!.isClosed) {
           _prayerTimesController!.add(cachedTimes);
         }
@@ -420,17 +408,15 @@ class PrayerTimesService {
     }
   }
 
-  /// تحديث حالات الصلوات مع فحص التغييرات
+  /// تحديث حالات الصلوات
   void _updatePrayerStates() {
     if (_isDisposed || _currentTimes == null) return;
     
     try {
       final updated = _currentTimes!.updatePrayerStates();
       
-      // فحص التغييرات قبل الإرسال
       bool hasChanges = false;
       
-      // فحص تغيير الصلاة التالية
       if (_currentTimes!.nextPrayer?.id != updated.nextPrayer?.id) {
         hasChanges = true;
         _logger.info(
@@ -442,7 +428,6 @@ class PrayerTimesService {
         );
       }
       
-      // فحص تغيير حالات الصلوات
       for (int i = 0; i < _currentTimes!.prayers.length; i++) {
         if (_currentTimes!.prayers[i].isPassed != updated.prayers[i].isPassed ||
             _currentTimes!.prayers[i].isNext != updated.prayers[i].isNext) {
@@ -469,11 +454,6 @@ class PrayerTimesService {
     }
   }
 
-  /// فحص إذا كان يومين متماثلين
-  bool _isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
-  }
-
   /// إيقاف المؤقتات
   void _stopTimers() {
     _updateTimer?.cancel();
@@ -484,8 +464,6 @@ class PrayerTimesService {
     _dataRefreshTimer = null;
   }
 
-  /// باقي الدوال... (نفس التطبيق الأصلي)
-  
   // تحميل الإعدادات المحفوظة
   Future<void> _loadSavedSettings() async {
     try {
@@ -645,7 +623,6 @@ class PrayerTimesService {
 
   // الحصول على معاملات الحساب
   adhan.CalculationParameters _getCalculationParameters() {
-    // نفس التطبيق الأصلي...
     adhan.CalculationParameters params;
     
     switch (_settings.method) {

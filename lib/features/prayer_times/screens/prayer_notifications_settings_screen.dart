@@ -255,7 +255,7 @@ class _PrayerNotificationsSettingsScreenState extends State<PrayerNotificationsS
         color: context.cardColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -272,7 +272,7 @@ class _PrayerNotificationsSettingsScreenState extends State<PrayerNotificationsS
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: _primaryGreenColor.withOpacity(0.1),
+                    color: _primaryGreenColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -361,7 +361,7 @@ class _PrayerNotificationsSettingsScreenState extends State<PrayerNotificationsS
         color: context.cardColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -378,7 +378,7 @@ class _PrayerNotificationsSettingsScreenState extends State<PrayerNotificationsS
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: _primaryGreenColor.withOpacity(0.1),
+                    color: _primaryGreenColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -435,7 +435,7 @@ class _PrayerNotificationsSettingsScreenState extends State<PrayerNotificationsS
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: _primaryGreenColor.withOpacity(0.1),
+          color: _primaryGreenColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(
@@ -540,7 +540,7 @@ class _PrayerNotificationsSettingsScreenState extends State<PrayerNotificationsS
             elevation: 2,
           ),
           child: _isSaving
-              ? SizedBox(
+              ? const SizedBox(
                   width: 24,
                   height: 24,
                   child: CircularProgressIndicator(
@@ -560,8 +560,8 @@ class _PrayerNotificationsSettingsScreenState extends State<PrayerNotificationsS
     );
   }
 
-  void _showUnsavedChangesDialog() {
-    showDialog(
+  void _showUnsavedChangesDialog() async {
+    final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('تغييرات غير محفوظة'),
@@ -569,22 +569,29 @@ class _PrayerNotificationsSettingsScreenState extends State<PrayerNotificationsS
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
+              Navigator.pop(context, false);
             },
             child: const Text('تجاهل التغييرات'),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context);
-              _saveSettings().then((_) {
-                Navigator.pop(context);
-              });
+              Navigator.pop(context, true);
             },
             child: const Text('حفظ وخروج'),
           ),
         ],
       ),
     );
+    
+    if (!mounted) return;
+    
+    if (result == true) {
+      await _saveSettings();
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } else if (result == false) {
+      Navigator.pop(context);
+    }
   }
 }
