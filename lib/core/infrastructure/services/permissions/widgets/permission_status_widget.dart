@@ -166,9 +166,7 @@ class PermissionStatusWidget extends StatelessWidget {
         return 'عدم الإزعاج';
       case AppPermissionType.batteryOptimization:
         return 'تحسين البطارية';
-      default:
-        return 'إذن غير معروف';
-    }
+      }
   }
   
   String _getStatusText() {

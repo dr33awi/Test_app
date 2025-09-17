@@ -108,7 +108,7 @@ class _AthkarDetailsScreenState extends State<AthkarDetailsScreen> {
       setState(() => _loading = false);
       // استخدام app_snackbar.dart بدلاً من athkar_extensions.dart
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('حدث خطأ في تحميل الأذكار'),
           backgroundColor: ThemeConstants.error,
         ),
@@ -248,7 +248,7 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
         ),
         title: Row(
           children: [
-            Icon(
+            const Icon(
               Icons.text_fields_rounded,
               color: ThemeConstants.primary,
               size: 24,

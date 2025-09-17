@@ -3,7 +3,6 @@ import 'package:athkar_app/core/infrastructure/services/storage/storage_service.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'dart:ui';
 import 'dart:math' as math;
 
 import '../../../app/themes/app_theme.dart';
@@ -13,8 +12,7 @@ import '../services/tasbih_service.dart';
 import '../models/dhikr_model.dart';
 import '../widgets/tasbih_bead_widget.dart';
 import '../widgets/tasbih_counter_ring.dart';
-import '../widgets/tasbih_pattern_painter.dart';
-import '../widgets/dhikr_card.dart';
+import 'package:athkar_app/app/themes/widgets/core/islamic_pattern_painter.dart';
 
 /// شاشة المسبحة الرقمية
 class TasbihScreen extends StatefulWidget {
@@ -146,7 +144,7 @@ class _TasbihScreenState extends State<TasbihScreen>
         animation: _rotationAnimation,
         builder: (context, child) {
           return CustomPaint(
-            painter: TasbihPatternPainter(
+            painter: IslamicPatternPainter(
               rotation: _rotationAnimation.value,
               color: _currentDhikr.primaryColor.withValues(alpha: 0.05),
             ),

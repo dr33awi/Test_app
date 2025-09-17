@@ -758,7 +758,7 @@ class _AthkarNotificationSettingsScreenState
       padding: const EdgeInsets.all(ThemeConstants.space5),
       child: Column(
         children: [
-          Icon(
+          const Icon(
             Icons.notifications_off_outlined,
             size: 48,
             color: ThemeConstants.warning,

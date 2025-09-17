@@ -1,7 +1,7 @@
-// lib/app/themes/theme_constants.dart
+// lib/app/themes/theme_constants.dart (منظف)
 import 'package:flutter/material.dart';
 
-/// كل ثوابت الثيم في ملف واحد
+/// كل ثوابت الثيم في ملف واحد - منظف من القيم غير المستخدمة
 class ThemeConstants {
   ThemeConstants._();
 
@@ -44,12 +44,6 @@ class ThemeConstants {
   static const Color darkTextPrimary = Color(0xFFF5F5F0); // نص فاتح
   static const Color darkTextSecondary = Color(0xFFBDBDB0); // نص ثانوي
   static const Color darkTextHint = Color(0xFF8A8A80); // نص تلميحي
-
-  // ===== ألوان خاصة بالميزات =====
-  static const Color athkarBackground = Color(0xFFF0F4EC); // خلفية الأذكار
-  static const Color prayerActive = Color(0xFF5D7052); // الصلاة النشطة
-  static const Color qiblaAccent = Color(0xFFB8860B); // لون القبلة
-  static const Color tasbihAccent = Color(0xFF8B6F47); // لون التسبيح
 
   // ===== الخطوط =====
   static const String fontFamilyArabic = 'Cairo';
@@ -131,12 +125,18 @@ class ThemeConstants {
   static const double height3xl = 72.0;
 
   // ===== مكونات خاصة =====
-  static const double appBarHeight = 64.0; // زيادة لإضافة شعار
+  static const double appBarHeight = 64.0;
   static const double bottomNavHeight = 64.0;
   static const double buttonHeight = 52.0;
   static const double inputHeight = 56.0;
   static const double fabSize = 56.0;
   static const double fabSizeMini = 40.0;
+
+  // ===== Avatar Sizes =====
+  static const double avatarSm = 32.0;
+  static const double avatarMd = 40.0;
+  static const double avatarLg = 56.0;
+  static const double avatarXl = 64.0;
 
   // ===== الظلال =====
   static const double elevationNone = 0.0;
@@ -195,57 +195,7 @@ class ThemeConstants {
     end: Alignment.bottomRight,
   );
 
-  // تدرجات خاصة بالخلفيات
-  static const LinearGradient backgroundGradient = LinearGradient(
-    colors: [
-      Color(0xFFFAFAF8),
-      Color(0xFFF5F5F0),
-    ],
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-  );
-
-  static const LinearGradient darkBackgroundGradient = LinearGradient(
-    colors: [
-      Color(0xFF1A1F1A),
-      Color(0xFF242B24),
-    ],
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-  );
-
-  // تدرجات الصلاة بألوان متناسقة مع الهوية البصرية
-  static const LinearGradient fajrGradient = LinearGradient(
-    colors: [Color(0xFF445A3B), Color(0xFF5D7052)], // أخضر زيتي داكن
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-  );
-
-  static const LinearGradient dhuhrGradient = LinearGradient(
-    colors: [Color(0xFFDAA520), Color(0xFFB8860B)], // ذهبي
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-  );
-
-  static const LinearGradient asrGradient = LinearGradient(
-    colors: [Color(0xFF8FA584), Color(0xFF7A8B6F)], // أخضر زيتي فاتح
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-  );
-
-  static const LinearGradient maghribGradient = LinearGradient(
-    colors: [Color(0xFFA68B5B), Color(0xFF8B6F47)], // بني دافئ
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-  );
-
-  static const LinearGradient ishaGradient = LinearGradient(
-    colors: [Color(0xFF2D352D), Color(0xFF1A1F1A)], // داكن أنيق
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-  );
-
-  // ===== الظلال الجاهزة المحسنة =====
+  // ===== الظلال الجاهزة =====
   static List<BoxShadow> shadowSm = [
     BoxShadow(
       color: primary.withOpacity(opacity5),
@@ -308,17 +258,7 @@ class ThemeConstants {
   static const IconData iconSettings = Icons.settings;
   static const IconData iconNotifications = Icons.notifications;
 
-  // ===== Avatar Sizes =====
-  static const double avatarSm = 32.0;
-  static const double avatarMd = 40.0;
-  static const double avatarLg = 56.0;
-  static const double avatarXl = 64.0;
-
   // ===== ثوابت الإشعارات =====
-  static const String athkarNotificationChannel = 'athkar_channel';
-  static const String prayerNotificationChannel = 'prayer_channel';
-  
-  // ===== ثوابت الوقت =====
   static const Duration defaultCacheDuration = Duration(hours: 24);
   static const Duration splashDuration = Duration(seconds: 2);
   static const Duration debounceDelay = Duration(milliseconds: 500);
@@ -366,24 +306,68 @@ class ThemeConstants {
         : lightDivider;
   }
 
+  /// إنشاء تدرج مخصص
+  static LinearGradient customGradient({
+    required List<Color> colors,
+    AlignmentGeometry begin = Alignment.topLeft,
+    AlignmentGeometry end = Alignment.bottomRight,
+    List<double>? stops,
+  }) {
+    return LinearGradient(
+      colors: colors,
+      begin: begin,
+      end: end,
+      stops: stops,
+    );
+  }
+
+  /// الحصول على ظل حسب الارتفاع
+  static List<BoxShadow> shadowForElevation(double elevation) {
+    if (elevation <= 0) return [];
+    if (elevation <= 2) return shadowSm;
+    if (elevation <= 4) return shadowMd;
+    if (elevation <= 8) return shadowLg;
+    return shadowXl;
+  }
+
   /// الحصول على تدرج حسب وقت الصلاة
   static LinearGradient prayerGradient(String prayerName) {
     switch (prayerName.toLowerCase()) {
       case 'fajr':
       case 'الفجر':
-        return fajrGradient;
+        return const LinearGradient(
+          colors: [Color(0xFF445A3B), Color(0xFF5D7052)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
       case 'dhuhr':
       case 'الظهر':
-        return dhuhrGradient;
+        return const LinearGradient(
+          colors: [Color(0xFFDAA520), Color(0xFFB8860B)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
       case 'asr':
       case 'العصر':
-        return asrGradient;
+        return const LinearGradient(
+          colors: [Color(0xFF8FA584), Color(0xFF7A8B6F)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
       case 'maghrib':
       case 'المغرب':
-        return maghribGradient;
+        return const LinearGradient(
+          colors: [Color(0xFFA68B5B), Color(0xFF8B6F47)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
       case 'isha':
       case 'العشاء':
-        return ishaGradient;
+        return const LinearGradient(
+          colors: [Color(0xFF2D352D), Color(0xFF1A1F1A)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
       default:
         return primaryGradient;
     }
@@ -441,56 +425,52 @@ class ThemeConstants {
     }
   }
 
-  /// إنشاء تدرج مخصص
-  static LinearGradient customGradient({
-    required List<Color> colors,
-    AlignmentGeometry begin = Alignment.topLeft,
-    AlignmentGeometry end = Alignment.bottomRight,
-    List<double>? stops,
-  }) {
-    return LinearGradient(
-      colors: colors,
-      begin: begin,
-      end: end,
-      stops: stops,
-    );
-  }
-
-  /// الحصول على ظل حسب الارتفاع
-  static List<BoxShadow> shadowForElevation(double elevation) {
-    if (elevation <= 0) return [];
-    if (elevation <= 2) return shadowSm;
-    if (elevation <= 4) return shadowMd;
-    if (elevation <= 8) return shadowLg;
-    return shadowXl;
-  }
-
   /// الحصول على تدرج حسب الوقت
   static LinearGradient getTimeBasedGradient() {
     final hour = DateTime.now().hour;
     
     if (hour < 5) {
-      return LinearGradient(
+      return const LinearGradient(
         colors: [darkCard, darkBackground],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
     } else if (hour < 8) {
-      return fajrGradient;
+      return const LinearGradient(
+        colors: [primaryDark, primary],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
     } else if (hour < 12) {
-      return LinearGradient(
+      return const LinearGradient(
         colors: [primaryLight, primarySoft],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
     } else if (hour < 15) {
-      return dhuhrGradient;
+      return const LinearGradient(
+        colors: [accent, accentLight],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
     } else if (hour < 17) {
-      return asrGradient;
+      return const LinearGradient(
+        colors: [primarySoft, primaryLight],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
     } else if (hour < 20) {
-      return maghribGradient;
+      return const LinearGradient(
+        colors: [tertiary, tertiaryLight],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
     } else {
-      return ishaGradient;
+      return const LinearGradient(
+        colors: [primaryDark, primary],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
     }
   }
 }

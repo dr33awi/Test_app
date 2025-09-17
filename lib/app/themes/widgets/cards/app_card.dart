@@ -1,4 +1,4 @@
-// lib/app/themes/widgets/cards/app_card.dart
+// lib/app/themes/widgets/cards/app_card.dart (منظف)
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../theme_constants.dart';
@@ -52,11 +52,10 @@ class AppCard extends StatelessWidget {
   final String? content;
   final Widget? child;
   
-  // الأيقونات والصور
+  // الأيقونات
   final IconData? icon;
   final Widget? leading;
   final Widget? trailing;
-  final String? imageUrl;
   
   // الألوان والتصميم
   final Color? primaryColor;
@@ -73,8 +72,6 @@ class AppCard extends StatelessWidget {
   final List<CardAction>? actions;
   
   // خصائص إضافية
-  final String? badge;
-  final Color? badgeColor;
   final bool isSelected;
   final bool showShadow;
   
@@ -101,7 +98,6 @@ class AppCard extends StatelessWidget {
     this.icon,
     this.leading,
     this.trailing,
-    this.imageUrl,
     this.primaryColor,
     this.backgroundColor,
     this.gradientColors,
@@ -112,8 +108,6 @@ class AppCard extends StatelessWidget {
     this.onTap,
     this.onLongPress,
     this.actions,
-    this.badge,
-    this.badgeColor,
     this.isSelected = false,
     this.showShadow = true,
     this.currentCount,
@@ -158,7 +152,6 @@ class AppCard extends StatelessWidget {
                   padding: padding ?? const EdgeInsets.all(ThemeConstants.space4),
                   child: _buildContent(context),
                 ),
-                if (badge != null) _buildBadge(context),
                 if (isSelected) _buildSelectionIndicator(context),
               ],
             ),
@@ -773,29 +766,6 @@ class AppCard extends StatelessWidget {
     );
   }
 
-  Widget _buildBadge(BuildContext context) {
-    final badgeBgColor = badgeColor ?? context.colorScheme.secondary;
-    
-    return Positioned(
-      top: ThemeConstants.space2,
-      left: ThemeConstants.space2,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: ThemeConstants.space2,
-          vertical: ThemeConstants.space1,
-        ),
-        decoration: BoxDecoration(
-          color: badgeBgColor,
-          borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
-        ),
-        child: Text(
-          badge!,
-          style: context.labelSmall?.textColor(badgeBgColor.contrastingTextColor).semiBold,
-        ),
-      ),
-    );
-  }
-
   Widget _buildSelectionIndicator(BuildContext context) {
     final effectiveColor = primaryColor ?? context.primaryColor;
     
@@ -835,22 +805,7 @@ class AppCard extends StatelessWidget {
     return isSecondary ? context.textSecondaryColor : context.textPrimaryColor;
   }
 
-  // Factory constructors للتوافق مع الكود القديم
-  factory AppCard.simple({
-    required String title,
-    String? subtitle,
-    IconData? icon,
-    VoidCallback? onTap,
-  }) {
-    return AppCard(
-      type: CardType.normal,
-      title: title,
-      subtitle: subtitle,
-      icon: icon,
-      onTap: onTap,
-    );
-  }
-
+  // Factory constructors الضرورية فقط
   factory AppCard.athkar({
     required String content,
     String? source,
@@ -874,44 +829,6 @@ class AppCard extends StatelessWidget {
       onTap: onTap,
       onFavoriteToggle: onFavoriteToggle,
       actions: actions,
-    );
-  }
-
-  factory AppCard.quote({
-    required String quote,
-    String? author,
-    String? category,
-    Color? primaryColor,
-    List<Color>? gradientColors,
-  }) {
-    return AppCard(
-      type: CardType.quote,
-      style: CardStyle.gradient,
-      content: quote,
-      source: author,
-      subtitle: category,
-      primaryColor: primaryColor,
-      gradientColors: gradientColors,
-    );
-  }
-
-  factory AppCard.completion({
-    required String title,
-    required String message,
-    String? subMessage,
-    IconData icon = Icons.check_circle_outline,
-    Color? primaryColor,
-    List<CardAction> actions = const [],
-  }) {
-    return AppCard(
-      type: CardType.completion,
-      title: title,
-      content: message,
-      subtitle: subMessage,
-      icon: icon,
-      primaryColor: primaryColor,
-      actions: actions,
-      padding: const EdgeInsets.all(ThemeConstants.space6),
     );
   }
 

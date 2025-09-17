@@ -675,16 +675,6 @@ class _DailyQuotesCardState extends State<DailyQuotesCard> {
     }
   }
 
-  String _getQuoteSubtitle(QuoteType type) {
-    switch (type) {
-      case QuoteType.verse:
-        return 'من القرآن الكريم';
-      case QuoteType.hadith:
-        return 'من السنة النبوية';
-      case QuoteType.dua:
-        return 'دعاء مأثور';
-    }
-  }
 
   void _copyQuote(BuildContext context, QuoteData quote) {
     final shareText = '${quote.content}\n\n${quote.source}\n\nمن تطبيق الأذكار';

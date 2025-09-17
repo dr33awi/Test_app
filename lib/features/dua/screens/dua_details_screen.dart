@@ -1,13 +1,12 @@
 // lib/features/dua/screens/dua_details_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:ui';
 import 'dart:math' as math;
 import '../../../app/themes/app_theme.dart';
 import '../../../app/di/service_locator.dart';
 import '../services/dua_service.dart';
 import '../models/dua_model.dart';
-import '../widgets/dua_pattern_painter.dart';
+import 'package:athkar_app/app/themes/widgets/core/islamic_pattern_painter.dart';
 import '../widgets/dua_card_widget.dart';
 
 class DuaDetailsScreen extends StatefulWidget {
@@ -102,7 +101,7 @@ class _DuaDetailsScreenState extends State<DuaDetailsScreen>
         animation: _backgroundAnimation,
         builder: (context, child) {
           return CustomPaint(
-            painter: DuaPatternPainter(
+            painter: IslamicPatternPainter(
               rotation: _backgroundAnimation.value,
               color: ThemeConstants.primary.withValues(alpha: 0.02),
             ),
