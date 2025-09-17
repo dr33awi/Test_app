@@ -13,7 +13,7 @@ extension AthkarSpecificHelpers on BuildContext {
       SnackBar(
         content: Row(
           children: [
-            Icon(
+            const Icon(
               Icons.info_outline,
               color: Colors.white,
               size: ThemeConstants.iconSm,
