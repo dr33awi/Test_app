@@ -1,4 +1,4 @@
-// lib/features/home/widgets/category_grid.dart - محسن للأداء مع مؤشر التطوير
+// lib/features/home/widgets/category_grid.dart - محدث مع أسماء الله الحسنى
 
 import 'package:athkar_app/features/home/widgets/color_helper.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +14,7 @@ class CategoryGrid extends StatefulWidget {
 
 class _CategoryGridState extends State<CategoryGrid> {
 
-  // بيانات ثابتة للأداء مع إضافة حالة التطوير
+  // بيانات ثابتة للأداء مع استبدال القرآن بأسماء الله الحسنى
   static const List<CategoryItem> _categories = [
     CategoryItem(
       id: 'prayer_times',
@@ -23,7 +23,7 @@ class _CategoryGridState extends State<CategoryGrid> {
       icon: Icons.mosque,
       routeName: '/prayer-times',
       progress: 0.8,
-      isInDevelopment: false, // قيد التطوير
+      isInDevelopment: false,
     ),
     CategoryItem(
       id: 'athkar',
@@ -35,11 +35,11 @@ class _CategoryGridState extends State<CategoryGrid> {
       isInDevelopment: false,
     ),
     CategoryItem(
-      id: 'quran',
-      title: 'القرآن الكريم',
-      subtitle: 'تلاوة وتدبر',
-      icon: Icons.menu_book_rounded,
-      routeName: '/quran',
+      id: 'asma_allah',  // تغيير من 'quran' إلى 'asma_allah'
+      title: 'أسماء الله الحسنى',  // تغيير العنوان
+      subtitle: 'الأسماء والصفات',  // تغيير الوصف
+      icon: Icons.star_purple500_outlined,  // تغيير الأيقونة
+      routeName: '/asma-allah',  // تغيير المسار
       progress: 0.4,
       isInDevelopment: false,
     ),
@@ -50,7 +50,7 @@ class _CategoryGridState extends State<CategoryGrid> {
       icon: Icons.explore,
       routeName: '/qibla',
       progress: 1.0,
-      isInDevelopment: false, // قيد التطوير
+      isInDevelopment: false,
     ),
     CategoryItem(
       id: 'tasbih',
@@ -61,15 +61,15 @@ class _CategoryGridState extends State<CategoryGrid> {
       progress: 0.9,
       isInDevelopment: false,
     ),
-CategoryItem(
-  id: 'dua',
-  title: 'الأدعية المأثورة',
-  subtitle: 'أدعية من الكتاب والسنة',
-  icon: Icons.pan_tool_rounded,
-  routeName: '/dua',
-  progress: 0.8, // يمكن تحديث التقدم
-  isInDevelopment: false, // تغيير من true إلى false
-),
+    CategoryItem(
+      id: 'dua',
+      title: 'الأدعية المأثورة',
+      subtitle: 'أدعية من الكتاب والسنة',
+      icon: Icons.pan_tool_rounded,
+      routeName: '/dua',
+      progress: 0.8,
+      isInDevelopment: false,
+    ),
   ];
 
   void _onCategoryTap(CategoryItem category) {
@@ -100,7 +100,7 @@ CategoryItem(
         ),
         title: Row(
           children: [
-            Icon(
+            const Icon(
               Icons.construction,
               color: ThemeConstants.warning,
               size: ThemeConstants.iconLg,
@@ -129,7 +129,7 @@ CategoryItem(
               ),
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.info_outline,
                     color: ThemeConstants.warning,
                     size: ThemeConstants.iconMd,
@@ -215,15 +215,15 @@ CategoryItem(
           
           ThemeConstants.space4.h,
           
-          // الصف الثاني: أيام متتالية وأذكار اليوم
+          // الصف الثاني: أسماء الله الحسنى ومواقيت الصلاة
           Row(
             children: [
-              // أيام متتالية (مربعة)
+              // أسماء الله الحسنى (مربعة)
               Expanded(
-                child: _buildSquareCategoryItem(context, _categories[2]), // quran
+                child: _buildSquareCategoryItem(context, _categories[2]), // asma_allah
               ),
               ThemeConstants.space4.w,
-              // أذكار اليوم (عريضة) - مواقيت الصلاة قيد التطوير
+              // مواقيت الصلاة (عريضة)
               Expanded(
                 flex: 2,
                 child: _buildCategoryItem(context, _categories[0]), // prayer_times
@@ -236,7 +236,7 @@ CategoryItem(
           // الصف الثالث: اتجاه القبلة والأدعية
           Row(
             children: [
-              // اتجاه القبلة - قيد التطوير
+              // اتجاه القبلة
               Expanded(
                 child: _buildCategoryItem(context, _categories[3]), // qibla
               ),
@@ -539,7 +539,7 @@ class CategoryItem {
   final IconData icon;
   final String? routeName;
   final double progress;
-  final bool isInDevelopment; // إضافة حالة التطوير
+  final bool isInDevelopment;
 
   const CategoryItem({
     required this.id,
@@ -548,6 +548,6 @@ class CategoryItem {
     required this.icon,
     this.routeName,
     required this.progress,
-    this.isInDevelopment = false, // افتراضياً ليس قيد التطوير
+    this.isInDevelopment = false,
   });
 }

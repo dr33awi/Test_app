@@ -1,4 +1,4 @@
-// lib/app/routes/app_router.dart (محدث بدون تكرار)
+// lib/app/routes/app_router.dart - محدث مع أسماء الله الحسنى
 import 'package:flutter/material.dart';
 import '../../app/themes/app_theme.dart';
 import '../../features/home/screens/home_screen.dart';
@@ -22,18 +22,22 @@ import '../../features/dua/screens/dua_categories_screen.dart';
 // Tasbih
 import '../../features/tasbih/screens/tasbih_screen.dart';
 
-// Settings - استخدام الشاشة الرئيسية الجديدة
+// Asma Allah - أسماء الله الحسنى
+import '../../features/asma_allah/screens/asma_allah_screen.dart';
+
+// Settings
 import '../../features/settings/screens/main_settings_screen.dart';
 
 class AppRouter {
-  // Main Routes - القيم الثابتة فقط للاستخدام الخارجي
+  // Main Routes
   static const String initialRoute = '/';
   static const String home = '/';
   
   // Feature Routes
   static const String prayerTimes = '/prayer-times';
   static const String athkar = '/athkar';
-  static const String quran = '/quran';
+  static const String asmaAllah = '/asma-allah';  // إضافة مسار أسماء الله الحسنى
+  static const String quran = '/quran';  // الإبقاء عليه للتوافق
   static const String qibla = '/qibla';
   static const String tasbih = '/tasbih';
   static const String dua = '/dua';
@@ -90,7 +94,10 @@ class AppRouter {
           settings
         );
         
-      case quran:
+      case asmaAllah:  // صفحة أسماء الله الحسنى
+        return _slideRoute(const AsmaAllahScreen(), settings);
+        
+      case quran:  // الإبقاء عليه للتوافق
         return _slideRoute(_buildComingSoonScreen('القرآن الكريم'), settings);
         
       case qibla:
@@ -103,7 +110,7 @@ class AppRouter {
         return _slideRoute(const DuaCategoriesScreen(), settings);
         
       // ==================== Settings ====================
-      case '/settings': // استخدم هذا فقط
+      case '/settings':
         return _slideRoute(const MainSettingsScreen(), settings);
         
       // ==================== Feature Routes ====================
@@ -179,7 +186,9 @@ class AppRouter {
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
-        backgroundColor: ThemeConstants.primary,
+        backgroundColor: title == 'أسماء الله الحسنى' 
+            ? const Color(0xFF6B46C1)  // لون بنفسجي لأسماء الله الحسنى
+            : ThemeConstants.primary,
         foregroundColor: Colors.white,
       ),
       body: Center(
@@ -190,13 +199,17 @@ class AppRouter {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: ThemeConstants.primary.withValues(alpha: 0.1),
+                color: title == 'أسماء الله الحسنى'
+                    ? const Color(0xFF6B46C1).withValues(alpha: 0.1)
+                    : ThemeConstants.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 _getIconForFeature(title),
                 size: 60,
-                color: ThemeConstants.primary,
+                color: title == 'أسماء الله الحسنى'
+                    ? const Color(0xFF6B46C1)
+                    : ThemeConstants.primary,
               ),
             ),
             const SizedBox(height: ThemeConstants.space5),
@@ -234,7 +247,9 @@ class AppRouter {
               icon: const Icon(Icons.arrow_back),
               label: const Text('العودة'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: ThemeConstants.primary,
+                backgroundColor: title == 'أسماء الله الحسنى'
+                    ? const Color(0xFF6B46C1)
+                    : ThemeConstants.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: ThemeConstants.space4,
@@ -429,6 +444,8 @@ class AppRouter {
         return Icons.mosque;
       case 'الأذكار':
         return Icons.menu_book;
+      case 'أسماء الله الحسنى':  // إضافة أيقونة أسماء الله الحسنى
+        return Icons.star_purple500_outlined;
       case 'القرآن الكريم':
         return Icons.book;
       case 'اتجاه القبلة':
