@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:athkar_app/app/themes/app_theme.dart';
 import '../models/asma_allah_model.dart';
-import 'dart:math' as math;
 
 // Extension methods لإضافة الوظائف المطلوبة
 extension AsmaAllahExtensions on AsmaAllahModel {
@@ -46,515 +45,139 @@ extension AsmaAllahExtensions on AsmaAllahModel {
 // ============================================================================
 // EnhancedAsmaAllahCard - بطاقة محسنة لاسم من أسماء الله الحسنى
 // ============================================================================
-class EnhancedAsmaAllahCard extends StatefulWidget {
+class EnhancedAsmaAllahCard extends StatelessWidget {
   final AsmaAllahModel item;
   final VoidCallback onTap;
-  
+
   const EnhancedAsmaAllahCard({
     super.key,
     required this.item,
     required this.onTap,
   });
-  
-  @override
-  State<EnhancedAsmaAllahCard> createState() => _EnhancedAsmaAllahCardState();
-}
 
-class _EnhancedAsmaAllahCardState extends State<EnhancedAsmaAllahCard> 
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  bool _isPressed = false;
-  
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 150),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.98,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
-  }
-  
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-  
   @override
   Widget build(BuildContext context) {
-    final color = widget.item.getColor();
-    
-    return GestureDetector(
-      onTapDown: (_) {
-        setState(() => _isPressed = true);
-        _controller.forward();
-      },
-      onTapUp: (_) {
-        setState(() => _isPressed = false);
-        _controller.reverse();
-        widget.onTap();
-      },
-      onTapCancel: () {
-        setState(() => _isPressed = false);
-        _controller.reverse();
-      },
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _scaleAnimation.value,
-            child: Container(
-              height: 120,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    context.cardColor,
-                    context.isDarkMode 
-                        ? color.withValues(alpha: 0.1)
-                        : color.withValues(alpha: 0.05),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: _isPressed 
-                      ? color
-                      : color.withValues(alpha: 0.3),
-                  width: _isPressed ? 2 : 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withValues(alpha: _isPressed ? 0.3 : 0.15),
-                    blurRadius: _isPressed ? 15 : 10,
-                    offset: Offset(0, _isPressed ? 6 : 4),
+    final color = item.getColor();
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: Container(
+          height: 120,
+          decoration: BoxDecoration(
+            color: context.cardColor, // خلفية مسطحة بدون تدرج أو ظل
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: color.withValues(alpha: 0.25), width: 1),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 70,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
                   ),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  // النمط الزخرفي
-                  Positioned(
-                    right: -20,
-                    bottom: -20,
-                    child: Transform.rotate(
-                      angle: math.pi / 4,
-                      child: Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.25),
+                        borderRadius: BorderRadius.circular(10),
                       ),
+                      child: Text('${item.id}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                     ),
-                  ),
-                  
-                  // المحتوى
-                  Row(
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // الجزء الأيسر - الرقم والأيقونة
-                      Container(
-                        width: 100,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              color,
-                              color.withValues(alpha: 0.8),
-                            ],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
-                          borderRadius: const BorderRadius.only(
-                            topRight: Radius.circular(20),
-                            bottomRight: Radius.circular(20),
-                          ),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // الرقم
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                '${widget.item.id}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                ),
-                              ),
-                            ),
-                            
-                            const SizedBox(height: 8),
-                            
-                            // الأيقونة
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                widget.item.getIcon(),
-                                color: Colors.white,
-                                size: 28,
-                              ),
-                            ),
-                          ],
+                      Text(
+                        item.name,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: color,
+                          fontFamily: 'Cairo',
+                          height: 1,
                         ),
                       ),
-                      
-                      // المحتوى النصي
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // الاسم
-                              Text(
-                                widget.item.name,
-                                style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800,
-                                  color: color,
-                                  fontFamily: 'Cairo',
-                                  height: 1,
-                                ),
-                              ),
-                              
-                              const SizedBox(height: 8),
-                              
-                              // المعنى
-                              Text(
-                                widget.item.meaning,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: context.isDarkMode
-                                      ? Colors.white70
-                                      : Colors.grey[700],
-                                  height: 1.3,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
+                      const SizedBox(height: 6),
+                      Text(
+                        item.meaning,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.isDarkMode ? Colors.white70 : Colors.grey[700],
+                          height: 1.3,
                         ),
-                      ),
-                      
-                      // سهم
-                      Padding(
-                        padding: const EdgeInsets.only(left: 12),
-                        child: Icon(
-                          Icons.arrow_back_ios,
-                          color: color.withValues(alpha: 0.5),
-                          size: 18,
-                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-// ============================================================================
-// AsmaAllahGridCard - بطاقة شبكة لاسم من أسماء الله الحسنى
-// ============================================================================
-class AsmaAllahGridCard extends StatefulWidget {
-  final AsmaAllahModel item;
-  final VoidCallback onTap;
-  
-  const AsmaAllahGridCard({
-    super.key,
-    required this.item,
-    required this.onTap,
-  });
-  
-  @override
-  State<AsmaAllahGridCard> createState() => _AsmaAllahGridCardState();
-}
-
-class _AsmaAllahGridCardState extends State<AsmaAllahGridCard> 
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.95,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
-  }
-  
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-  
-  @override
-  Widget build(BuildContext context) {
-    final color = widget.item.getColor();
-    
-    return GestureDetector(
-      onTapDown: (_) => _controller.forward(),
-      onTapUp: (_) {
-        _controller.reverse();
-        widget.onTap();
-      },
-      onTapCancel: () => _controller.reverse(),
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _scaleAnimation.value,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    color.withValues(alpha: 0.9),
-                    color,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.4),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
               ),
-              child: Stack(
-                children: [
-                  // النمط الزخرفي
-                  Positioned(
-                    right: -10,
-                    top: -10,
-                    child: Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-                  
-                  // المحتوى
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // الرقم
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '${widget.item.id}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                        
-                        const SizedBox(height: 12),
-                        
-                        // الأيقونة
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            widget.item.getIcon(),
-                            color: Colors.white,
-                            size: 32,
-                          ),
-                        ),
-                        
-                        const SizedBox(height: 12),
-                        
-                        // الاسم
-                        Text(
-                          widget.item.name,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontFamily: 'Cairo',
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+            ],
+          ),
+        ),
       ),
     );
   }
 }
+
 
 // ============================================================================
 // EnhancedAsmaAllahHeader - هيدر محسن للصفحة
 // ============================================================================
-class EnhancedAsmaAllahHeader extends StatefulWidget {
+class EnhancedAsmaAllahHeader extends StatelessWidget {
   const EnhancedAsmaAllahHeader({super.key});
-  
-  @override
-  State<EnhancedAsmaAllahHeader> createState() => _EnhancedAsmaAllahHeaderState();
-}
 
-class _EnhancedAsmaAllahHeaderState extends State<EnhancedAsmaAllahHeader> 
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _rotationAnimation;
-  late Animation<double> _scaleAnimation;
-  
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(seconds: 20),
-      vsync: this,
-    )..repeat();
-    
-    _rotationAnimation = Tween<double>(
-      begin: 0,
-      end: 2 * math.pi,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.linear,
-    ));
-    
-    _scaleAnimation = Tween<double>(
-      begin: 0.95,
-      end: 1.05,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
-  }
-  
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-  
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // الخلفية المتدرجة
         Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Color(0xFF6B46C1),
-                Color(0xFF9F7AEA),
-                Color(0xFF6B46C1),
-              ],
+              colors: [Color(0xFF6B46C1), Color(0xFF9F7AEA), Color(0xFF6B46C1)],
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
             ),
           ),
         ),
-        
-        // النمط الإسلامي المتحرك
-        AnimatedBuilder(
-          animation: _rotationAnimation,
-          builder: (context, child) {
-            return Positioned.fill(
-              child: CustomPaint(
-                painter: IslamicPatternPainter(
-                  rotation: _rotationAnimation.value,
-                  color: Colors.white,
-                  patternType: PatternType.geometric,
-                  opacity: 0.08,
-                ),
-              ),
-            );
-          },
-        ),
-        
-        // دوائر زخرفية متحركة
-        ...List.generate(3, (index) {
-          return Positioned(
-            left: index * 100.0 - 50,
-            top: index * 50.0 + 20,
-            child: AnimatedBuilder(
-              animation: _scaleAnimation,
-              builder: (context, child) {
-                return Transform.scale(
-                  scale: _scaleAnimation.value + (index * 0.1),
-                  child: Container(
-                    width: 150,
-                    height: 150,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        width: 1,
-                      ),
-                    ),
-                  ),
-                );
-              },
+        Positioned.fill(
+          child: CustomPaint(
+            painter: IslamicPatternPainter(
+              rotation: 0, // ثابت بدون حركة
+              color: Colors.white,
+              patternType: PatternType.geometric,
+              opacity: 0.08,
             ),
-          );
-        }),
-        
-        // المحتوى
+          ),
+        ),
+        // دوائر ثابتة بسيطة
+        Positioned(
+          left: 10,
+          top: 40,
+          child: Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
+            ),
+          ),
+        ),
         SafeArea(
           child: Center(
             child: Padding(
@@ -562,103 +185,23 @@ class _EnhancedAsmaAllahHeaderState extends State<EnhancedAsmaAllahHeader>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // الأيقونة المتحركة
-                  AnimatedBuilder(
-                    animation: _scaleAnimation,
-                    builder: (context, child) {
-                      return Transform.scale(
-                        scale: _scaleAnimation.value,
-                        child: Container(
-                          width: 90,
-                          height: 90,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.white.withValues(alpha: 0.3),
-                                Colors.white.withValues(alpha: 0.1),
-                              ],
-                            ),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.3),
-                              width: 2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.2),
-                                blurRadius: 20,
-                                spreadRadius: 5,
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.star_purple500_outlined,
-                            size: 45,
-                            color: Colors.white,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // العنوان
-                  ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      colors: [
-                        Colors.white,
-                        Color(0xFFFFC107),
-                        Colors.white,
-                      ],
-                    ).createShader(bounds),
-                    child: const Text(
-                      'أسماء الله الحسنى',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        fontFamily: 'Cairo',
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 12),
-                  
-                  // الآية
+                  const SizedBox(height: 16),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 8,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.3),
-                      ),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                     ),
                     child: const Text(
                       '﴿وَلِلَّهِ الْأَسْمَاءُ الْحُسْنَىٰ فَادْعُوهُ بِهَا﴾',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                        fontFamily: 'Amiri',
-                      ),
+                      style: TextStyle(fontSize: 18, color: Colors.white, fontFamily: 'Amiri'),
                     ),
                   ),
-                  
                   const SizedBox(height: 8),
-                  
-                  // الوصف
                   Text(
                     'تسعة وتسعون اسماً من أحصاها دخل الجنة',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontFamily: 'Cairo',
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.9), fontFamily: 'Cairo'),
                   ),
                 ],
               ),
@@ -714,19 +257,7 @@ class AsmaAllahSearchBar extends StatelessWidget {
       hint: 'ابحث في الأسماء أو المعاني...',
       onChanged: onChanged,
       textInputAction: TextInputAction.search,
-      prefixIcon: const Icon(
-        Icons.search,
-        color: Color(0xFF6B46C1),
-      ),
-      suffixIcon: controller.text.isNotEmpty
-          ? IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                onClear();
-              },
-            )
-          : null,
+      // تمت إزالة الأيقونات بناءً على الطلب
       filled: true,
       fillColor: context.isDarkMode 
           ? Colors.white.withValues(alpha: 0.05)

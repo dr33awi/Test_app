@@ -1,4 +1,3 @@
-// ============================================
 // File: lib/features/asma_allah/extensions/asma_allah_extensions.dart
 // ============================================
 import 'package:flutter/material.dart';

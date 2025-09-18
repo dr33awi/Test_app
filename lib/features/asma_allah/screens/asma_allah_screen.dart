@@ -18,20 +18,11 @@ class AsmaAllahScreen extends StatefulWidget {
   State<AsmaAllahScreen> createState() => _AsmaAllahScreenState();
 }
 
-class _AsmaAllahScreenState extends State<AsmaAllahScreen> with SingleTickerProviderStateMixin {
+class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
   late AsmaAllahService _service;
 
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  bool _isGridView = false;
-
-  late final AnimationController _animationController =
-      AnimationController(duration: const Duration(milliseconds: 800), vsync: this)..forward();
-  late final Animation<double> _fadeAnimation =
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut);
-
-  final List<String> _categories = const ['الكل', 'الرحمة', 'القوة والعزة', 'العلم والحكمة', 'الخلق والرزق', 'المغفرة'];
-  String _selectedCategory = 'الكل';
 
   @override
   void initState() {
@@ -43,32 +34,12 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> with SingleTickerProv
   @override
   void dispose() {
     _searchController.dispose();
-    _animationController.dispose();
     _service.dispose();
     super.dispose();
   }
 
   List<AsmaAllahModel> _getFilteredList() {
     var list = _service.asmaAllahList;
-    if (_selectedCategory != 'الكل') {
-      list = list.where((item) {
-        final n = item.name;
-        switch (_selectedCategory) {
-          case 'الرحمة':
-            return n.contains('رحم') || n.contains('رحيم') || n.contains('رؤوف') || n.contains('ودود');
-          case 'القوة والعزة':
-            return n.contains('عزيز') || n.contains('قوي') || n.contains('جبار') || n.contains('قهار') || n.contains('متين') || n.contains('قادر');
-          case 'العلم والحكمة':
-            return n.contains('عليم') || n.contains('حكيم') || n.contains('خبير') || n.contains('سميع') || n.contains('بصير');
-          case 'الخلق والرزق':
-            return n.contains('خالق') || n.contains('بارئ') || n.contains('مصور') || n.contains('رزاق') || n.contains('وهاب');
-          case 'المغفرة':
-            return n.contains('غفور') || n.contains('غفار') || n.contains('تواب') || n.contains('عفو');
-          default:
-            return true;
-        }
-      }).toList();
-    }
     if (_searchQuery.isNotEmpty) {
       list = list.where((item) => item.name.contains(_searchQuery) || item.meaning.contains(_searchQuery)).toList();
     }
@@ -84,12 +55,10 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> with SingleTickerProv
         body: CustomScrollView(
           slivers: [
             _buildEnhancedSliverAppBar(),
-            SliverToBoxAdapter(child: FadeTransition(opacity: _fadeAnimation, child: _buildSearchAndFilters())),
-            SliverToBoxAdapter(child: FadeTransition(opacity: _fadeAnimation, child: _buildCategoryChips())),
+            SliverToBoxAdapter(child: _buildSearchAndFilters()),
             _buildContent(),
           ],
         ),
-        floatingActionButton: _buildFloatingActionButton(),
       ),
     );
   }
@@ -102,26 +71,8 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> with SingleTickerProv
       elevation: 0,
       backgroundColor: const Color(0xFF6B46C1),
       foregroundColor: Colors.white,
-      title: AnimatedOpacity(
-        opacity: _searchQuery.isEmpty ? 1.0 : 0.0,
-        duration: const Duration(milliseconds: 200),
-        child: const Text('أسماء الله الحسنى', style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
-      ),
-      actions: [
-        Container(
-          margin: const EdgeInsets.only(left: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(color: Colors.white.withOpacity(0.20), borderRadius: BorderRadius.circular(20)),
-          child: Row(children: [
-            const Icon(Icons.format_list_numbered, size: 18),
-            const SizedBox(width: 4),
-            Consumer<AsmaAllahService>(builder: (_, __, ___) {
-              final filteredCount = _getFilteredList().length;
-              return Text('$filteredCount', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16));
-            }),
-          ]),
-        ),
-      ],
+      title: null, // إزالة العنوان حسب الطلب
+      actions: const [],
       flexibleSpace: const FlexibleSpaceBar(background: EnhancedAsmaAllahHeader()),
     );
   }
@@ -145,7 +96,7 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> with SingleTickerProv
                 decoration: InputDecoration(
                   hintText: 'ابحث عن اسم أو معنى...',
                   hintStyle: TextStyle(color: context.isDarkMode ? Colors.white54 : Colors.grey[600]),
-                  prefixIcon: Icon(Icons.search, color: const Color(0xFF6B46C1).withOpacity(0.70)),
+                  // إزالة أيقونة البحث حسب الطلب
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
                           icon: Icon(Icons.clear, color: Colors.grey[600]),
@@ -161,68 +112,7 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> with SingleTickerProv
               ),
             ),
           ),
-          const SizedBox(width: 12),
-          Container(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [Color(0xFF6B46C1), Color(0xFF9F7AEA)]),
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [BoxShadow(color: const Color(0xFF6B46C1).withOpacity(0.30), blurRadius: 8, offset: const Offset(0, 4))],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(15),
-                onTap: () {
-                  setState(() => _isGridView = !_isGridView);
-                  HapticFeedback.lightImpact();
-                },
-                child: const Padding(
-                  padding: EdgeInsets.all(12),
-                  child: Icon(Icons.grid_view, color: Colors.white),
-                ),
-              ),
-            ),
-          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildCategoryChips() {
-    return SizedBox(
-      height: 50,
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        scrollDirection: Axis.horizontal,
-        itemCount: _categories.length,
-        itemBuilder: (_, i) {
-          final category = _categories[i];
-          final isSelected = _selectedCategory == category;
-          return Padding(
-            padding: const EdgeInsets.only(left: 8),
-            child: FilterChip(
-              label: Text(
-                category,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : const Color(0xFF6B46C1),
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-              selected: isSelected,
-              onSelected: (_) {
-                setState(() => _selectedCategory = category);
-                HapticFeedback.lightImpact();
-              },
-              backgroundColor: Colors.transparent,
-              selectedColor: const Color(0xFF6B46C1),
-              side: BorderSide(
-                color: isSelected ? const Color(0xFF6B46C1) : const Color(0xFF6B46C1).withOpacity(0.30),
-                width: isSelected ? 2 : 1,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
-          );
-        },
       ),
     );
   }
@@ -248,7 +138,7 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> with SingleTickerProv
           ),
         );
       }
-      return _isGridView ? _buildGridView(list) : _buildListView(list);
+      return _buildListView(list);
     });
   }
 
@@ -259,72 +149,21 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> with SingleTickerProv
         delegate: SliverChildBuilderDelegate(
           (_, i) {
             final item = list[i];
-            return TweenAnimationBuilder<double>(
-              duration: Duration(milliseconds: 300 + (i * 50)),
-              tween: Tween(begin: 0.0, end: 1.0),
-              builder: (_, v, child) => Transform.translate(offset: Offset(0, 20 * (1 - v)), child: Opacity(opacity: v, child: child)),
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: EnhancedAsmaAllahCard(item: item, onTap: () => _openDetails(item)),
-              ),
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: EnhancedAsmaAllahCard(item: item, onTap: () => _openDetails(item)),
             );
           },
           childCount: list.length,
         ),
       ),
     );
-  }
-
-  Widget _buildGridView(List<AsmaAllahModel> list) {
-    return SliverPadding(
-      padding: const EdgeInsets.all(16),
-      sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 1.0,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-        ),
-        delegate: SliverChildBuilderDelegate(
-          (_, i) {
-            final item = list[i];
-            return TweenAnimationBuilder<double>(
-              duration: Duration(milliseconds: 300 + (i * 50)),
-              tween: Tween(begin: 0.0, end: 1.0),
-              builder: (_, v, child) => Transform.scale(scale: v, child: Opacity(opacity: v, child: child)),
-              child: AsmaAllahGridCard(item: item, onTap: () => _openDetails(item)),
-            );
-          },
-          childCount: list.length,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFloatingActionButton() {
-    return FloatingActionButton(
-      onPressed: _scrollToRandom,
-      backgroundColor: const Color(0xFF6B46C1),
-      child: const Icon(Icons.casino, color: Colors.white),
-      tooltip: 'اسم عشوائي',
-    );
-  }
-
-  void _scrollToRandom() {
-    final list = _getFilteredList();
-    if (list.isEmpty) return;
-    final randomIndex = DateTime.now().millisecondsSinceEpoch % list.length;
-    _openDetails(list[randomIndex]);
   }
 
   void _openDetails(AsmaAllahModel item) {
     HapticFeedback.lightImpact();
-    Navigator.of(context).push(PageRouteBuilder(
-      pageBuilder: (_, animation, __) => AsmaAllahDetailsScreen(item: item, service: _service),
-      transitionsBuilder: (_, animation, __, child) {
-        final tween = Tween(begin: const Offset(0, 1), end: Offset.zero).chain(CurveTween(curve: Curves.easeInOutCubic));
-        return SlideTransition(position: animation.drive(tween), child: child);
-      },
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => AsmaAllahDetailsScreen(item: item, service: _service),
     ));
   }
 }
