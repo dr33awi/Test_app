@@ -1,4 +1,4 @@
-// lib/features/asma_allah/screens/asma_allah_screen.dart
+// ============================================
 import 'package:athkar_app/app/di/service_locator.dart';
 import 'package:athkar_app/app/themes/app_theme.dart';
 import 'package:athkar_app/core/infrastructure/services/storage/storage_service.dart';
@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../models/asma_allah_model.dart';
 import '../services/asma_allah_service.dart';
 import '../widgets/asma_allah_widgets.dart';
+import '../extensions/asma_allah_extensions.dart';
 import 'asma_detail_screen.dart';
 
 class AsmaAllahScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class AsmaAllahScreen extends StatefulWidget {
 
 class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
   late AsmaAllahService _service;
+
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
@@ -67,9 +69,9 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
       floating: true,
       pinned: true,
       elevation: 0,
-      backgroundColor: const Color(0xFF2E7D32), // لون أخضر بدلاً من البنفسجي
+      backgroundColor: const Color(0xFF6B46C1),
       foregroundColor: Colors.white,
-      title: null,
+      title: null, // إزالة العنوان حسب الطلب
       actions: const [],
       flexibleSpace: const FlexibleSpaceBar(background: EnhancedAsmaAllahHeader()),
     );
@@ -86,7 +88,7 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
               decoration: BoxDecoration(
                 color: context.isDarkMode ? Colors.white.withOpacity(0.10) : Colors.grey[100],
                 borderRadius: BorderRadius.circular(25),
-                border: Border.all(color: const Color(0xFF2E7D32).withOpacity(0.20)), // لون أخضر
+                border: Border.all(color: const Color(0xFF6B46C1).withOpacity(0.20)),
               ),
               child: TextField(
                 controller: _searchController,
@@ -94,6 +96,7 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
                 decoration: InputDecoration(
                   hintText: 'ابحث عن اسم أو معنى...',
                   hintStyle: TextStyle(color: context.isDarkMode ? Colors.white54 : Colors.grey[600]),
+                  // إزالة أيقونة البحث حسب الطلب
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
                           icon: Icon(Icons.clear, color: Colors.grey[600]),
@@ -118,7 +121,7 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
     return Consumer<AsmaAllahService>(builder: (_, service, __) {
       if (service.isLoading) {
         return const SliverFillRemaining(
-          child: Center(child: AppLoading(type: LoadingType.circular, size: LoadingSize.large, color: Color(0xFF2E7D32))), // لون أخضر
+          child: Center(child: AppLoading(type: LoadingType.circular, size: LoadingSize.large, color: Color(0xFF6B46C1))),
         );
       }
       final list = _getFilteredList();
