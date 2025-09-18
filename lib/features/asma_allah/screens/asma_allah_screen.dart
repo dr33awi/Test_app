@@ -96,7 +96,7 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> with SingleTickerProv
 
   SliverAppBar _buildEnhancedSliverAppBar() {
     return SliverAppBar(
-      expandedHeight: 260,
+      expandedHeight: 280,
       floating: true,
       pinned: true,
       elevation: 0,
@@ -104,25 +104,104 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> with SingleTickerProv
       foregroundColor: Colors.white,
       title: AnimatedOpacity(
         opacity: _searchQuery.isEmpty ? 1.0 : 0.0,
-        duration: const Duration(milliseconds: 200),
-        child: const Text('أسماء الله الحسنى', style: TextStyle(fontFamily: 'Cairo', fontWeight: FontWeight.bold)),
+        duration: const Duration(milliseconds: 300),
+        child: ShaderMask(
+          shaderCallback: (bounds) => const LinearGradient(
+            colors: [Colors.white, Color(0xFFFFC107), Colors.white],
+          ).createShader(bounds),
+          child: const Text(
+            'أسماء الله الحسنى',
+            style: TextStyle(
+              fontFamily: 'Cairo',
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              fontSize: 20,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
       ),
       actions: [
         Container(
-          margin: const EdgeInsets.only(left: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(color: Colors.white.withOpacity(0.20), borderRadius: BorderRadius.circular(20)),
-          child: Row(children: [
-            const Icon(Icons.format_list_numbered, size: 18),
-            const SizedBox(width: 4),
-            Consumer<AsmaAllahService>(builder: (_, __, ___) {
-              final filteredCount = _getFilteredList().length;
-              return Text('$filteredCount', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16));
-            }),
-          ]),
+          margin: const EdgeInsets.only(left: 12, top: 8, bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.white.withValues(alpha: 0.25),
+                Colors.white.withValues(alpha: 0.15),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(25),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.3),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.format_list_numbered,
+                size: 20,
+                color: Colors.white.withValues(alpha: 0.9),
+              ),
+              const SizedBox(width: 6),
+              Consumer<AsmaAllahService>(
+                builder: (_, __, ___) {
+                  final filteredCount = _getFilteredList().length;
+                  return TweenAnimationBuilder<int>(
+                    duration: const Duration(milliseconds: 300),
+                    tween: IntTween(begin: 0, end: filteredCount),
+                    builder: (context, value, child) {
+                      return Text(
+                        '$value',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 18,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ],
-      flexibleSpace: const FlexibleSpaceBar(background: EnhancedAsmaAllahHeader()),
+      flexibleSpace: FlexibleSpaceBar(
+        background: Stack(
+          children: [
+            const EnhancedAsmaAllahHeader(),
+            // Additional overlay for smooth transition
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.transparent,
+                      const Color(0xFF6B46C1).withValues(alpha: 0.1),
+                    ],
+                    stops: const [0.0, 0.7, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -133,55 +212,135 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> with SingleTickerProv
         children: [
           Expanded(
             child: Container(
-              height: 50,
+              height: 56,
               decoration: BoxDecoration(
-                color: context.isDarkMode ? Colors.white.withOpacity(0.10) : Colors.grey[100],
-                borderRadius: BorderRadius.circular(25),
-                border: Border.all(color: const Color(0xFF6B46C1).withOpacity(0.20)),
+                gradient: LinearGradient(
+                  colors: [
+                    context.isDarkMode 
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.grey[50]!,
+                    context.isDarkMode 
+                        ? Colors.white.withValues(alpha: 0.12)
+                        : Colors.grey[100]!,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(
+                  color: _searchQuery.isNotEmpty
+                      ? const Color(0xFF6B46C1).withValues(alpha: 0.6)
+                      : const Color(0xFF6B46C1).withValues(alpha: 0.2),
+                  width: _searchQuery.isNotEmpty ? 2 : 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF6B46C1).withValues(alpha: 0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: TextField(
                 controller: _searchController,
-                style: context.bodyMedium,
+                style: context.bodyMedium?.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
                 decoration: InputDecoration(
-                  hintText: 'ابحث عن اسم أو معنى...',
-                  hintStyle: TextStyle(color: context.isDarkMode ? Colors.white54 : Colors.grey[600]),
-                  prefixIcon: Icon(Icons.search, color: const Color(0xFF6B46C1).withOpacity(0.70)),
+                  hintText: 'ابحث في الأسماء أو المعاني...',
+                  hintStyle: TextStyle(
+                    color: context.isDarkMode ? Colors.white54 : Colors.grey[600],
+                    fontSize: 15,
+                  ),
+                  prefixIcon: Container(
+                    padding: const EdgeInsets.all(12),
+                    child: Icon(
+                      Icons.search,
+                      color: _searchQuery.isNotEmpty
+                          ? const Color(0xFF6B46C1)
+                          : const Color(0xFF6B46C1).withValues(alpha: 0.7),
+                      size: 22,
+                    ),
+                  ),
                   suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: Icon(Icons.clear, color: Colors.grey[600]),
-                          onPressed: () {
-                            _searchController.clear();
-                            HapticFeedback.lightImpact();
-                          },
+                      ? AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          margin: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[600]?.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.clear,
+                              color: Colors.grey[600],
+                              size: 20,
+                            ),
+                            onPressed: () {
+                              _searchController.clear();
+                              HapticFeedback.lightImpact();
+                            },
+                          ),
                         )
                       : null,
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 ),
               ),
             ),
           ),
           const SizedBox(width: 12),
-          Container(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [Color(0xFF6B46C1), Color(0xFF9F7AEA)]),
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [BoxShadow(color: const Color(0xFF6B46C1).withOpacity(0.30), blurRadius: 8, offset: const Offset(0, 4))],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(15),
-                onTap: () {
-                  setState(() => _isGridView = !_isGridView);
-                  HapticFeedback.lightImpact();
-                },
-                child: const Padding(
-                  padding: EdgeInsets.all(12),
-                  child: Icon(Icons.grid_view, color: Colors.white),
+          // Enhanced toggle button with better animation
+          TweenAnimationBuilder<double>(
+            duration: const Duration(milliseconds: 300),
+            tween: Tween(begin: 0.0, end: 1.0),
+            builder: (context, value, child) {
+              return Transform.scale(
+                scale: 0.8 + (value * 0.2),
+                child: Container(
+                  height: 56,
+                  width: 56,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF6B46C1),
+                        const Color(0xFF9F7AEA),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF6B46C1).withValues(alpha: 0.4),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(18),
+                      onTap: () {
+                        setState(() => _isGridView = !_isGridView);
+                        HapticFeedback.mediumImpact();
+                      },
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: Icon(
+                          _isGridView ? Icons.view_list : Icons.grid_view,
+                          key: ValueKey(_isGridView),
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ],
       ),
@@ -190,7 +349,7 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> with SingleTickerProv
 
   Widget _buildCategoryChips() {
     return SizedBox(
-      height: 50,
+      height: 60,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
@@ -198,28 +357,106 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> with SingleTickerProv
         itemBuilder: (_, i) {
           final category = _categories[i];
           final isSelected = _selectedCategory == category;
+          
           return Padding(
-            padding: const EdgeInsets.only(left: 8),
-            child: FilterChip(
-              label: Text(
-                category,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : const Color(0xFF6B46C1),
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-              selected: isSelected,
-              onSelected: (_) {
-                setState(() => _selectedCategory = category);
-                HapticFeedback.lightImpact();
+            padding: const EdgeInsets.only(left: 10),
+            child: TweenAnimationBuilder<double>(
+              duration: Duration(milliseconds: 200 + (i * 50)),
+              tween: Tween(begin: 0.0, end: 1.0),
+              builder: (context, value, child) {
+                return Transform.scale(
+                  scale: 0.8 + (value * 0.2),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                    decoration: BoxDecoration(
+                      gradient: isSelected
+                          ? const LinearGradient(
+                              colors: [Color(0xFF6B46C1), Color(0xFF9F7AEA)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : LinearGradient(
+                              colors: [
+                                context.isDarkMode 
+                                    ? Colors.white.withValues(alpha: 0.08)
+                                    : Colors.grey[100]!,
+                                context.isDarkMode 
+                                    ? Colors.white.withValues(alpha: 0.12)
+                                    : Colors.grey[50]!,
+                              ],
+                            ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isSelected 
+                            ? Colors.transparent
+                            : const Color(0xFF6B46C1).withValues(alpha: 0.3),
+                        width: isSelected ? 0 : 1.5,
+                      ),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: const Color(0xFF6B46C1).withValues(alpha: 0.4),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
+                              ),
+                            ]
+                          : [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: () {
+                          setState(() => _selectedCategory = category);
+                          HapticFeedback.lightImpact();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (isSelected) ...[
+                                Icon(
+                                  Icons.check_circle,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 6),
+                              ],
+                              Text(
+                                category,
+                                style: TextStyle(
+                                  color: isSelected 
+                                      ? Colors.white 
+                                      : const Color(0xFF6B46C1),
+                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                                  fontSize: 14,
+                                  shadows: isSelected 
+                                      ? [
+                                          Shadow(
+                                            color: Colors.black.withValues(alpha: 0.3),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 1),
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
               },
-              backgroundColor: Colors.transparent,
-              selectedColor: const Color(0xFF6B46C1),
-              side: BorderSide(
-                color: isSelected ? const Color(0xFF6B46C1) : const Color(0xFF6B46C1).withOpacity(0.30),
-                width: isSelected ? 2 : 1,
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
           );
         },
@@ -260,12 +497,25 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> with SingleTickerProv
           (_, i) {
             final item = list[i];
             return TweenAnimationBuilder<double>(
-              duration: Duration(milliseconds: 300 + (i * 50)),
+              duration: Duration(milliseconds: 400 + (i * 100)),
               tween: Tween(begin: 0.0, end: 1.0),
-              builder: (_, v, child) => Transform.translate(offset: Offset(0, 20 * (1 - v)), child: Opacity(opacity: v, child: child)),
+              curve: Curves.easeOutCubic,
+              builder: (_, v, child) => Transform.translate(
+                offset: Offset(0, 30 * (1 - v)),
+                child: Transform.scale(
+                  scale: 0.8 + (0.2 * v),
+                  child: Opacity(
+                    opacity: v,
+                    child: child,
+                  ),
+                ),
+              ),
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: EnhancedAsmaAllahCard(item: item, onTap: () => _openDetails(item)),
+                padding: const EdgeInsets.only(bottom: 16),
+                child: EnhancedAsmaAllahCard(
+                  item: item,
+                  onTap: () => _openDetails(item),
+                ),
               ),
             );
           },
@@ -281,18 +531,31 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> with SingleTickerProv
       sliver: SliverGrid(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 1.0,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
+          childAspectRatio: 0.9,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
         ),
         delegate: SliverChildBuilderDelegate(
           (_, i) {
             final item = list[i];
             return TweenAnimationBuilder<double>(
-              duration: Duration(milliseconds: 300 + (i * 50)),
+              duration: Duration(milliseconds: 400 + (i * 80)),
               tween: Tween(begin: 0.0, end: 1.0),
-              builder: (_, v, child) => Transform.scale(scale: v, child: Opacity(opacity: v, child: child)),
-              child: AsmaAllahGridCard(item: item, onTap: () => _openDetails(item)),
+              curve: Curves.easeOutBack,
+              builder: (_, v, child) => Transform.scale(
+                scale: 0.6 + (0.4 * v),
+                child: Transform.rotate(
+                  angle: (1 - v) * 0.2,
+                  child: Opacity(
+                    opacity: v,
+                    child: child,
+                  ),
+                ),
+              ),
+              child: AsmaAllahGridCard(
+                item: item,
+                onTap: () => _openDetails(item),
+              ),
             );
           },
           childCount: list.length,
@@ -302,11 +565,69 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> with SingleTickerProv
   }
 
   Widget _buildFloatingActionButton() {
-    return FloatingActionButton(
-      onPressed: _scrollToRandom,
-      backgroundColor: const Color(0xFF6B46C1),
-      child: const Icon(Icons.casino, color: Colors.white),
-      tooltip: 'اسم عشوائي',
+    return TweenAnimationBuilder<double>(
+      duration: const Duration(milliseconds: 800),
+      tween: Tween(begin: 0.0, end: 1.0),
+      builder: (context, value, child) {
+        return Transform.scale(
+          scale: 0.5 + (value * 0.5),
+          child: Transform.rotate(
+            angle: (1 - value) * math.pi * 2,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF6B46C1), Color(0xFF9F7AEA)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF6B46C1).withValues(alpha: 0.4),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: FloatingActionButton(
+                onPressed: _scrollToRandom,
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Background glow effect
+                    Container(
+                      width: 35,
+                      height: 35,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    // Icon with animation
+                    TweenAnimationBuilder<double>(
+                      duration: const Duration(seconds: 2),
+                      tween: Tween(begin: 0.0, end: 2 * math.pi),
+                      builder: (context, rotationValue, child) {
+                        return Transform.rotate(
+                          angle: rotationValue,
+                          child: const Icon(
+                            Icons.casino,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                tooltip: 'اسم عشوائي',
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -318,13 +639,42 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> with SingleTickerProv
   }
 
   void _openDetails(AsmaAllahModel item) {
-    HapticFeedback.lightImpact();
-    Navigator.of(context).push(PageRouteBuilder(
-      pageBuilder: (_, animation, __) => AsmaAllahDetailsScreen(item: item, service: _service),
-      transitionsBuilder: (_, animation, __, child) {
-        final tween = Tween(begin: const Offset(0, 1), end: Offset.zero).chain(CurveTween(curve: Curves.easeInOutCubic));
-        return SlideTransition(position: animation.drive(tween), child: child);
-      },
-    ));
+    HapticFeedback.mediumImpact();
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => 
+            AsmaAllahDetailsScreen(item: item, service: _service),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          // Enhanced page transition with multiple effects
+          const begin = Offset(0.0, 1.0);
+          const end = Offset.zero;
+          const curve = Curves.easeOutCubic;
+
+          final slideAnimation = animation.drive(
+            Tween(begin: begin, end: end).chain(CurveTween(curve: curve)),
+          );
+
+          final scaleAnimation = animation.drive(
+            Tween(begin: 0.8, end: 1.0).chain(CurveTween(curve: curve)),
+          );
+
+          final fadeAnimation = animation.drive(
+            Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve)),
+          );
+
+          return SlideTransition(
+            position: slideAnimation,
+            child: ScaleTransition(
+              scale: scaleAnimation,
+              child: FadeTransition(
+                opacity: fadeAnimation,
+                child: child,
+              ),
+            ),
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 600),
+      ),
+    );
   }
 }
