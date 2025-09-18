@@ -1,41 +1,49 @@
-// lib/features/asma_allah/screens/asma_detail_screen.dart
-
+// lib/features/asma_allah/screens/asma_allah_details_screen.dart
 import 'package:athkar_app/app/themes/widgets/core/islamic_pattern_painter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
-import '../../../app/themes/app_theme.dart';
+import 'package:athkar_app/app/themes/app_theme.dart';
 import '../models/asma_allah_model.dart';
+import '../services/asma_allah_service.dart';
 
-class AsmaDetailScreen extends StatefulWidget {
-  final AsmaAllahModel asmaAllah;
-  final VoidCallback onFavoriteToggle;
-
-  const AsmaDetailScreen({
+/// صفحة تفاصيل اسم من أسماء الله الحسنى
+class AsmaAllahDetailsScreen extends StatefulWidget {
+  final AsmaAllahModel item;
+  final AsmaAllahService service;
+  
+  const AsmaAllahDetailsScreen({
     super.key,
-    required this.asmaAllah,
-    required this.onFavoriteToggle,
+    required this.item,
+    required this.service,
   });
-
+  
   @override
-  State<AsmaDetailScreen> createState() => _AsmaDetailScreenState();
+  State<AsmaAllahDetailsScreen> createState() => _AsmaAllahDetailsScreenState();
 }
 
-class _AsmaDetailScreenState extends State<AsmaDetailScreen> 
+class _AsmaAllahDetailsScreenState extends State<AsmaAllahDetailsScreen>
     with SingleTickerProviderStateMixin {
-  
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _slideAnimation;
+  late Animation<double> _scaleAnimation;
   
-  int dhikrCount = 0;
+  late AsmaAllahModel _currentItem;
+  late PageController _pageController;
   
   @override
   void initState() {
     super.initState();
     
+    _currentItem = widget.item;
+    _pageController = PageController(
+      initialPage: widget.item.id - 1,
+    );
+    
+    // تهيئة الأنيميشن
     _animationController = AnimationController(
-      duration: ThemeConstants.durationSlow,
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
     
@@ -44,7 +52,7 @@ class _AsmaDetailScreenState extends State<AsmaDetailScreen>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: Curves.easeIn,
+      curve: const Interval(0.0, 0.6),
     ));
     
     _slideAnimation = Tween<double>(
@@ -52,7 +60,15 @@ class _AsmaDetailScreenState extends State<AsmaDetailScreen>
       end: 0.0,
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: Curves.easeOut,
+      curve: const Interval(0.2, 0.8, curve: Curves.easeOut),
+    ));
+    
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutBack,
     ));
     
     _animationController.forward();
@@ -61,477 +77,401 @@ class _AsmaDetailScreenState extends State<AsmaDetailScreen>
   @override
   void dispose() {
     _animationController.dispose();
+    _pageController.dispose();
     super.dispose();
-  }
-  
-  void _incrementDhikr() {
-    setState(() {
-      dhikrCount++;
-    });
-    HapticFeedback.lightImpact();
-  }
-  
-  void _resetDhikr() {
-    setState(() {
-      dhikrCount = 0;
-    });
-    HapticFeedback.mediumImpact();
-  }
-  
-  void _copyName() {
-    Clipboard.setData(ClipboardData(text: widget.asmaAllah.name));
-    context.showSuccessSnackBar('تم نسخ الاسم');
-    HapticFeedback.mediumImpact();
-  }
-  
-  void _shareName() {
-    final text = '''
-أسماء الله الحسنى
-
-${widget.asmaAllah.name}
-${widget.asmaAllah.transliteration}
-
-المعنى: ${widget.asmaAllah.meaning}
-
-${widget.asmaAllah.explanation}
-
-الفوائد: ${widget.asmaAllah.benefits}
-
-من تطبيق الأذكار
-''';
-    Share.share(text);
-    HapticFeedback.lightImpact();
   }
   
   @override
   Widget build(BuildContext context) {
+    final color = _currentItem.getColor();
+    
     return Scaffold(
-      backgroundColor: context.backgroundColor,
-      body: CustomScrollView(
-        slivers: [
-          // AppBar
-          SliverAppBar(
-            expandedHeight: 300,
-            pinned: true,
-            backgroundColor: const Color(0xFF6B46C1),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // خلفية متدرجة
-                  Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0xFF6B46C1),
-                          Color(0xFF9F7AEA),
-                        ],
-                      ),
-                    ),
-                  ),
-                  
-                  // نمط إسلامي
-                  CustomPaint(
-                    painter: IslamicPatternPainter(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      patternType: PatternType.floral,
-                      rotation: 0,
-                      opacity: 0.15,
-                    ),
-                  ),
-                  
-                  // محتوى الرأس
-                  SafeArea(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // رقم الاسم
-                          Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.3),
-                                width: 2,
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                widget.asmaAllah.id.toString().padLeft(2, '0'),
-                                style: context.headlineSmall?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: ThemeConstants.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          
-                          ThemeConstants.space4.h,
-                          
-                          // الاسم بالعربية
-                          Text(
-                            widget.asmaAllah.name,
-                            style: context.displayMedium?.copyWith(
-                              color: Colors.white,
-                              fontWeight: ThemeConstants.bold,
-                              fontSize: 42,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black.withValues(alpha: 0.3),
-                                  offset: const Offset(0, 2),
-                                  blurRadius: 4,
-                                ),
-                              ],
-                            ),
-                          ),
-                          
-                          ThemeConstants.space2.h,
-                          
-                          // النطق
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: ThemeConstants.space4,
-                              vertical: ThemeConstants.space2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
-                            ),
-                            child: Text(
-                              widget.asmaAllah.transliteration,
-                              style: context.bodyLarge?.copyWith(
-                                color: Colors.white,
-                                fontWeight: ThemeConstants.medium,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+      backgroundColor: color,
+      body: Stack(
+        children: [
+          // الخلفية بنمط إسلامي
+          Positioned.fill(
+            child: CustomPaint(
+              painter: IslamicPatternPainter(
+                rotation: 0,
+                color: Colors.white,
+                patternType: PatternType.geometric,
+                opacity: 0.08,
               ),
             ),
-            
-            // أزرار الإجراءات
-            actions: [
-              IconButton(
-                icon: Icon(
-                  widget.asmaAllah.isFavorite ? Icons.favorite : Icons.favorite_border,
-                  color: Colors.white,
-                ),
-                onPressed: () {
-                  widget.onFavoriteToggle();
-                  setState(() {});
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.share, color: Colors.white),
-                onPressed: _shareName,
-              ),
-            ],
           ),
           
           // المحتوى
-          SliverToBoxAdapter(
-            child: AnimatedBuilder(
-              animation: _animationController,
-              builder: (context, child) {
-                return FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: Transform.translate(
-                    offset: Offset(0, _slideAnimation.value),
-                    child: Padding(
-                      padding: const EdgeInsets.all(ThemeConstants.space4),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // بطاقة المعنى
-                          _buildCard(
-                            title: 'المعنى',
-                            icon: Icons.book_outlined,
-                            content: widget.asmaAllah.meaning,
-                            color: const Color(0xFF6B46C1),
-                          ),
-                          
-                          ThemeConstants.space4.h,
-                          
-                          // بطاقة الشرح
-                          _buildCard(
-                            title: 'الشرح التفصيلي',
-                            icon: Icons.description_outlined,
-                            content: widget.asmaAllah.explanation,
-                            color: const Color(0xFF9F7AEA),
-                          ),
-                          
-                          ThemeConstants.space4.h,
-                          
-                          // بطاقة الفوائد
-                          _buildCard(
-                            title: 'الفوائد والآثار',
-                            icon: Icons.star_outline,
-                            content: widget.asmaAllah.benefits,
-                            color: const Color(0xFF805AD5),
-                          ),
-                          
-                          ThemeConstants.space4.h,
-                          
-                          // بطاقة المرجع
-                          if (widget.asmaAllah.reference.isNotEmpty)
-                            _buildCard(
-                              title: 'المرجع من القرآن',
-                              icon: Icons.menu_book,
-                              content: widget.asmaAllah.reference,
-                              color: const Color(0xFF6B46C1),
-                              isQuran: true,
-                            ),
-                          
-                          ThemeConstants.space4.h,
-                          
-                          // عداد الذكر
-                          _buildDhikrCounter(),
-                          
-                          ThemeConstants.space4.h,
-                          
-                          // أزرار الإجراءات
-                          _buildActionButtons(),
-                          
-                          ThemeConstants.space8.h,
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildCard({
-    required String title,
-    required IconData icon,
-    required String content,
-    required Color color,
-    bool isQuran = false,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.cardColor,
-        borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // رأس البطاقة
-          Container(
-            padding: const EdgeInsets.all(ThemeConstants.space4),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(ThemeConstants.radiusLg),
-                topRight: Radius.circular(ThemeConstants.radiusLg),
-              ),
-            ),
-            child: Row(
+          SafeArea(
+            child: Column(
               children: [
-                Icon(icon, color: color, size: 24),
-                ThemeConstants.space3.w,
-                Text(
-                  title,
-                  style: context.titleMedium?.copyWith(
-                    color: color,
-                    fontWeight: ThemeConstants.bold,
+                // الهيدر
+                _buildHeader(),
+                
+                // المحتوى الرئيسي
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentItem = widget.service.asmaAllahList[index];
+                      });
+                      _animationController.forward(from: 0);
+                    },
+                    itemCount: widget.service.asmaAllahList.length,
+                    itemBuilder: (context, index) {
+                      return _buildContent(widget.service.asmaAllahList[index]);
+                    },
                   ),
                 ),
+                
+                // الفوتر مع الإجراءات
+                _buildFooter(),
               ],
             ),
           ),
-          
-          // المحتوى
-          Padding(
-            padding: const EdgeInsets.all(ThemeConstants.space4),
-            child: Text(
-              content,
-              style: context.bodyLarge?.copyWith(
-                fontFamily: isQuran ? ThemeConstants.fontFamilyQuran : null,
-                height: isQuran ? 2.0 : 1.6,
-                fontSize: isQuran ? 20 : 16,
-              ),
-              textAlign: isQuran ? TextAlign.center : TextAlign.start,
-            ),
-          ),
         ],
       ),
     );
   }
   
-  Widget _buildDhikrCounter() {
+  Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(ThemeConstants.space5),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF6B46C1).withValues(alpha: 0.1),
-            const Color(0xFF9F7AEA).withValues(alpha: 0.1),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
-        border: Border.all(
-          color: const Color(0xFF6B46C1).withValues(alpha: 0.3),
-        ),
-      ),
-      child: Column(
+      padding: const EdgeInsets.all(ThemeConstants.space4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            'عداد الذكر',
-            style: context.titleMedium?.copyWith(
-              fontWeight: ThemeConstants.bold,
-            ),
+          // زر الرجوع
+          IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back_ios),
+            color: Colors.white,
           ),
           
-          ThemeConstants.space3.h,
-          
-          // العداد
-          GestureDetector(
-            onTap: _incrementDhikr,
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: const Color(0xFF6B46C1),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF6B46C1).withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  dhikrCount.toString(),
-                  style: context.displaySmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: ThemeConstants.bold,
-                    fontSize: 36,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          
-          ThemeConstants.space3.h,
-          
-          // معلومات الذكر
+          // الرقم
           Container(
             padding: const EdgeInsets.symmetric(
               horizontal: ThemeConstants.space4,
               vertical: ThemeConstants.space2,
             ),
             decoration: BoxDecoration(
-              color: context.cardColor,
-              borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
             ),
             child: Text(
-              'عدد مرات الذكر المستحب: ${widget.asmaAllah.dhikrCount}',
-              style: context.bodyMedium?.copyWith(
-                color: const Color(0xFF6B46C1),
-                fontWeight: ThemeConstants.medium,
+              'الاسم ${_currentItem.id} من 99',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
           
-          ThemeConstants.space3.h,
-          
-          // أزرار التحكم
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          // مساحة فارغة بدلاً من زر المفضلة
+          const SizedBox(width: 48),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildContent(AsmaAllahModel item) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(ThemeConstants.space5),
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Transform.translate(
+          offset: Offset(0, _slideAnimation.value),
+          child: Column(
             children: [
-              // زر الإعادة
-              TextButton.icon(
-                onPressed: _resetDhikr,
-                icon: const Icon(Icons.refresh),
-                label: const Text('إعادة تعيين'),
-                style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFF6B46C1),
+              // الأيقونة
+              ScaleTransition(
+                scale: _scaleAnimation,
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    item.getIcon(),
+                    size: 50,
+                    color: Colors.white,
+                  ),
                 ),
               ),
               
-              ThemeConstants.space4.w,
+              ThemeConstants.space5.h,
               
-              // زر الزيادة
-              ElevatedButton.icon(
-                onPressed: _incrementDhikr,
-                icon: const Icon(Icons.add),
-                label: const Text('ذكر'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6B46C1),
-                  foregroundColor: Colors.white,
+              // الاسم الكبير
+              ScaleTransition(
+                scale: _scaleAnimation,
+                child: Text(
+                  item.name,
+                  style: const TextStyle(
+                    fontSize: 48,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontFamily: 'Cairo',
+                    height: 1.2,
+                  ),
                 ),
               ),
+              
+              ThemeConstants.space5.h,
+              
+              // بطاقة المعنى
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(ThemeConstants.space5),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.95),
+                  borderRadius: BorderRadius.circular(ThemeConstants.radiusXl),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    // عنوان المعنى
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.book,
+                          color: item.getColor(),
+                          size: 20,
+                        ),
+                        ThemeConstants.space2.w,
+                        Text(
+                          'المعنى',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: item.getColor(),
+                            fontFamily: 'Cairo',
+                          ),
+                        ),
+                      ],
+                    ),
+                    
+                    ThemeConstants.space4.h,
+                    const Divider(),
+                    ThemeConstants.space4.h,
+                    
+                    // نص المعنى
+                    Text(
+                      item.meaning,
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: ThemeConstants.lightTextPrimary,
+                        height: 1.8,
+                        fontFamily: 'Cairo',
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              
+              // المرجع إن وجد
+              if (item.reference != null) ...[
+                ThemeConstants.space4.h,
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(ThemeConstants.space4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.95),
+                    borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.format_quote,
+                            color: item.getColor(),
+                            size: 20,
+                          ),
+                          ThemeConstants.space2.w,
+                          Text(
+                            'من القرآن الكريم',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: item.getColor(),
+                              fontFamily: 'Cairo',
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      ThemeConstants.space3.h,
+                      
+                      Text(
+                        '﴿${item.reference}﴾',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: ThemeConstants.lightTextPrimary,
+                          fontFamily: 'Amiri',
+                          height: 1.8,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildFooter() {
+    return Container(
+      padding: const EdgeInsets.all(ThemeConstants.space4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(ThemeConstants.radiusXl),
+          topRight: Radius.circular(ThemeConstants.radiusXl),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          // زر النسخ
+          _ActionButton(
+            icon: Icons.copy,
+            label: 'نسخ',
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              _copyToClipboard();
+            },
+          ),
+          
+          // زر المشاركة
+          _ActionButton(
+            icon: Icons.share,
+            label: 'مشاركة',
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              _share();
+            },
+          ),
+          
+          // زر السابق
+          _ActionButton(
+            icon: Icons.arrow_back,
+            label: 'السابق',
+            onPressed: _currentItem.id > 1
+                ? () {
+                    HapticFeedback.lightImpact();
+                    _pageController.previousPage(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  }
+                : null,
+          ),
+          
+          // زر التالي
+          _ActionButton(
+            icon: Icons.arrow_forward,
+            label: 'التالي',
+            onPressed: _currentItem.id < 99
+                ? () {
+                    HapticFeedback.lightImpact();
+                    _pageController.nextPage(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  }
+                : null,
           ),
         ],
       ),
     );
   }
   
-  Widget _buildActionButtons() {
-    return Row(
-      children: [
-        // زر النسخ
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: _copyName,
-            icon: const Icon(Icons.copy),
-            label: const Text('نسخ الاسم'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF6B46C1),
-              side: const BorderSide(color: Color(0xFF6B46C1)),
-              padding: const EdgeInsets.symmetric(
-                vertical: ThemeConstants.space3,
+  void _copyToClipboard() {
+    final text = '''${_currentItem.name}
+    
+المعنى: ${_currentItem.meaning}
+${_currentItem.reference != null ? '\nالآية: ${_currentItem.reference}' : ''}''';
+    
+    Clipboard.setData(ClipboardData(text: text));
+    
+    context.showSuccessSnackBar('تم النسخ إلى الحافظة');
+  }
+  
+  void _share() {
+    final text = '''${_currentItem.name}
+    
+المعنى: ${_currentItem.meaning}
+${_currentItem.reference != null ? '\nالآية: ${_currentItem.reference}' : ''}
+
+من تطبيق أذكاري''';
+    
+    Share.share(text);
+  }
+}
+
+/// زر إجراء في الفوتر
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+  
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    this.onPressed,
+  });
+  
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: ThemeConstants.space3,
+            vertical: ThemeConstants.space2,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: onPressed != null 
+                    ? Colors.white 
+                    : Colors.white.withValues(alpha: 0.3),
               ),
-            ),
+              ThemeConstants.space1.h,
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: onPressed != null 
+                      ? Colors.white 
+                      : Colors.white.withValues(alpha: 0.3),
+                  fontFamily: 'Cairo',
+                ),
+              ),
+            ],
           ),
         ),
-        
-        ThemeConstants.space3.w,
-        
-        // زر المشاركة
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: _shareName,
-            icon: const Icon(Icons.share),
-            label: const Text('مشاركة'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6B46C1),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                vertical: ThemeConstants.space3,
-              ),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
