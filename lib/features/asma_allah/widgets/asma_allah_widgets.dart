@@ -1,20 +1,18 @@
 // lib/features/asma_allah/widgets/asma_allah_widgets.dart
 import 'package:athkar_app/app/themes/widgets/core/islamic_pattern_painter.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:athkar_app/app/themes/app_theme.dart';
 import '../models/asma_allah_model.dart';
 
 // Extension methods لإضافة الوظائف المطلوبة
 extension AsmaAllahExtensions on AsmaAllahModel {
-  /// الحصول على اللون حسب الترتيب
+  /// الحصول على اللون حسب الترتيب - ألوان جديدة
   Color getColor() {
-    // تدرج ألوان جميل لكل اسم
     final colors = [
-      const Color(0xFF6B46C1), // بنفسجي
-      const Color(0xFF9F7AEA), // بنفسجي فاتح
-      const Color(0xFF5D7052), // أخضر زيتي
-      const Color(0xFF7A8B6F), // أخضر زيتي فاتح
+      const Color(0xFF2E7D32), // أخضر داكن
+      const Color(0xFF43A047), // أخضر
+      const Color(0xFF1976D2), // أزرق
+      const Color(0xFF42A5F5), // أزرق فاتح
       const Color(0xFFB8860B), // ذهبي
       const Color(0xFFDAA520), // ذهبي فاتح
       const Color(0xFF8B6F47), // بني دافئ
@@ -26,13 +24,12 @@ extension AsmaAllahExtensions on AsmaAllahModel {
   
   /// الحصول على أيقونة
   IconData getIcon() {
-    // أيقونات متنوعة حسب المعنى
     if (name.contains('رحم') || name.contains('رحيم')) return Icons.favorite;
     if (name.contains('عزيز') || name.contains('قوي')) return Icons.shield;
     if (name.contains('حكيم') || name.contains('عليم')) return Icons.auto_awesome;
     if (name.contains('سميع') || name.contains('بصير')) return Icons.visibility;
     if (name.contains('غفور') || name.contains('غفار')) return Icons.healing;
-    if (name.contains('ملك') || name.contains('مالك')) return Icons.star_purple500;
+    if (name.contains('ملك') || name.contains('مالك')) return Icons.star;
     if (name.contains('خالق') || name.contains('بارئ')) return Icons.brush;
     if (name.contains('رزاق')) return Icons.card_giftcard;
     if (name.contains('حفيظ') || name.contains('حافظ')) return Icons.security;
@@ -42,9 +39,7 @@ extension AsmaAllahExtensions on AsmaAllahModel {
   }
 }
 
-// ============================================================================
-// EnhancedAsmaAllahCard - بطاقة محسنة لاسم من أسماء الله الحسنى
-// ============================================================================
+// بطاقة محسنة لاسم من أسماء الله الحسنى
 class EnhancedAsmaAllahCard extends StatelessWidget {
   final AsmaAllahModel item;
   final VoidCallback onTap;
@@ -66,16 +61,16 @@ class EnhancedAsmaAllahCard extends StatelessWidget {
         child: Container(
           height: 120,
           decoration: BoxDecoration(
-            color: context.cardColor, // خلفية مسطحة بدون تدرج أو ظل
+            color: context.cardColor,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: color.withValues(alpha: 0.25), width: 1),
+            border: Border.all(color: color.withOpacity(0.25), width: 1),
           ),
           child: Row(
             children: [
               Container(
                 width: 70,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
+                  color: color.withOpacity(0.15),
                   borderRadius: const BorderRadius.only(
                     topRight: Radius.circular(20),
                     bottomRight: Radius.circular(20),
@@ -87,10 +82,17 @@ class EnhancedAsmaAllahCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.25),
+                        color: Colors.white.withOpacity(0.25),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Text('${item.id}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                      child: Text(
+                        '${item.id}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16
+                        )
+                      ),
                     ),
                   ],
                 ),
@@ -135,10 +137,7 @@ class EnhancedAsmaAllahCard extends StatelessWidget {
   }
 }
 
-
-// ============================================================================
-// EnhancedAsmaAllahHeader - هيدر محسن للصفحة
-// ============================================================================
+// هيدر محسن للصفحة - بدون أنيميشن
 class EnhancedAsmaAllahHeader extends StatelessWidget {
   const EnhancedAsmaAllahHeader({super.key});
 
@@ -149,23 +148,24 @@ class EnhancedAsmaAllahHeader extends StatelessWidget {
         Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color(0xFF6B46C1), Color(0xFF9F7AEA), Color(0xFF6B46C1)],
+              colors: [Color(0xFF2E7D32), Color(0xFF43A047), Color(0xFF2E7D32)], // ألوان خضراء
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
             ),
           ),
         ),
+        // زخرفة ثابتة بدون أنيميشن
         Positioned.fill(
           child: CustomPaint(
             painter: IslamicPatternPainter(
-              rotation: 0, // ثابت بدون حركة
+              rotation: 0,
               color: Colors.white,
               patternType: PatternType.geometric,
               opacity: 0.08,
             ),
           ),
         ),
-        // دوائر ثابتة بسيطة
+        // دائرة زخرفية واحدة
         Positioned(
           left: 10,
           top: 40,
@@ -174,7 +174,7 @@ class EnhancedAsmaAllahHeader extends StatelessWidget {
             height: 120,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
+              border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
             ),
           ),
         ),
@@ -189,9 +189,9 @@ class EnhancedAsmaAllahHeader extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
+                      color: Colors.white.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                      border: Border.all(color: Colors.white.withOpacity(0.3)),
                     ),
                     child: const Text(
                       '﴿وَلِلَّهِ الْأَسْمَاءُ الْحُسْنَىٰ فَادْعُوهُ بِهَا﴾',
@@ -201,7 +201,11 @@ class EnhancedAsmaAllahHeader extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     'تسعة وتسعون اسماً من أحصاها دخل الجنة',
-                    style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.9), fontFamily: 'Cairo'),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.9),
+                      fontFamily: 'Cairo'
+                    ),
                   ),
                 ],
               ),
@@ -210,72 +214,5 @@ class EnhancedAsmaAllahHeader extends StatelessWidget {
         ),
       ],
     );
-  }
-}
-
-// ============================================================================
-// AsmaAllahCard - بطاقة اسم من أسماء الله الحسنى (الأصلية محسنة)
-// ============================================================================
-class AsmaAllahCard extends StatelessWidget {
-  final AsmaAllahModel item;
-  final VoidCallback onTap;
-  
-  const AsmaAllahCard({
-    super.key,
-    required this.item,
-    required this.onTap,
-  });
-  
-  @override
-  Widget build(BuildContext context) {
-    return EnhancedAsmaAllahCard(
-      item: item,
-      onTap: onTap,
-    );
-  }
-}
-
-// ============================================================================
-// AsmaAllahSearchBar - شريط البحث
-// ============================================================================
-class AsmaAllahSearchBar extends StatelessWidget {
-  final TextEditingController controller;
-  final ValueChanged<String> onChanged;
-  final VoidCallback onClear;
-  
-  const AsmaAllahSearchBar({
-    super.key,
-    required this.controller,
-    required this.onChanged,
-    required this.onClear,
-  });
-  
-  @override
-  Widget build(BuildContext context) {
-    return AppTextField(
-      controller: controller,
-      hint: 'ابحث في الأسماء أو المعاني...',
-      onChanged: onChanged,
-      textInputAction: TextInputAction.search,
-      // تمت إزالة الأيقونات بناءً على الطلب
-      filled: true,
-      fillColor: context.isDarkMode 
-          ? Colors.white.withValues(alpha: 0.05)
-          : const Color(0xFF6B46C1).withValues(alpha: 0.05),
-      borderColor: const Color(0xFF6B46C1).withValues(alpha: 0.2),
-      focusedBorderColor: const Color(0xFF6B46C1),
-    );
-  }
-}
-
-// ============================================================================
-// AsmaAllahHeader - هيدر الصفحة (الأصلي)
-// ============================================================================
-class AsmaAllahHeader extends StatelessWidget {
-  const AsmaAllahHeader({super.key});
-  
-  @override
-  Widget build(BuildContext context) {
-    return const EnhancedAsmaAllahHeader();
   }
 }
