@@ -1,4 +1,4 @@
-// lib/features/asma_allah/widgets/asma_allah_widgets.dart
+// lib/features/asma_allah/widgets/asma_allah_widgets.dart - بدون بنفسجي
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:athkar_app/app/themes/app_theme.dart';
@@ -270,26 +270,26 @@ class _UnifiedAsmaAllahCardState extends State<UnifiedAsmaAllahCard>
             width: double.infinity,
             padding: const EdgeInsets.all(ThemeConstants.space3),
             decoration: BoxDecoration(
-              color: ThemeConstants.accent.withValues(alpha: 0.05),
+              color: ThemeConstants.tertiary.withValues(alpha: 0.05), // استخدام tertiary بدلاً من success
               borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
               border: Border.all(
-                color: ThemeConstants.accent.withValues(alpha: 0.15),
+                color: ThemeConstants.tertiary.withValues(alpha: 0.15), // استخدام tertiary بدلاً من success
                 width: 1,
               ),
             ),
             child: Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.menu_book_rounded,
                   size: 16,
-                  color: ThemeConstants.accent,
+                  color: ThemeConstants.tertiary, // استخدام tertiary بدلاً من success
                 ),
                 ThemeConstants.space2.w,
                 Expanded(
                   child: Text(
                     '﴿${widget.item.reference}﴾',
                     style: context.bodySmall?.copyWith(
-                      color: ThemeConstants.accent,
+                      color: ThemeConstants.tertiary, // استخدام tertiary بدلاً من success
                       fontFamily: ThemeConstants.fontFamilyQuran,
                       height: 1.8,
                     ),
@@ -414,7 +414,7 @@ ${widget.item.reference != null ? 'من القرآن الكريم: ﴿${widget.i
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('تم نسخ الاسم بنجاح'),
-        backgroundColor: ThemeConstants.success,
+        backgroundColor: ThemeConstants.primary, // استخدام primary بدلاً من success
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
@@ -433,7 +433,7 @@ ${widget.item.reference != null ? 'من القرآن الكريم: ﴿${widget.i
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('ميزة المشاركة ستكون متوفرة قريباً'),
-        backgroundColor: ThemeConstants.info,
+        backgroundColor: ThemeConstants.accent, // استخدام accent بدلاً من info
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
@@ -523,7 +523,7 @@ class UnifiedAsmaAllahHeader extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [ThemeConstants.primary, ThemeConstants.primaryLight],
+          colors: [ThemeConstants.tertiary, ThemeConstants.tertiaryLight], // تغيير من primary إلى tertiary
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -548,7 +548,7 @@ class UnifiedAsmaAllahHeader extends StatelessWidget {
                       ),
                     ),
                     child: const Icon(
-                      Icons.star_purple500_outlined,
+                      Icons.star_outline, // تغيير الأيقونة من star_purple500_outlined
                       color: Colors.white,
                       size: ThemeConstants.iconLg,
                     ),

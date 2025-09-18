@@ -21,16 +21,13 @@ class ColorHelper {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
-      case 'asma_allah': // تحديث من 'quran' إلى 'asma_allah'
+      case 'asma_allah': // استخدام ألوان التطبيق الأساسية
         return const LinearGradient(
-          colors: [
-            Color(0xFF6B46C1), // بنفسجي مميز لأسماء الله الحسنى
-            Color(0xFF9F7AEA), // بنفسجي فاتح
-          ],
+          colors: [ThemeConstants.tertiary, ThemeConstants.tertiaryLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
-      case 'quran': // الاحتفاظ بالدعم القديم
+      case 'quran':
         return const LinearGradient(
           colors: [ThemeConstants.tertiary, ThemeConstants.tertiaryLight],
           begin: Alignment.topLeft,
@@ -93,10 +90,7 @@ class ColorHelper {
       case 'asma_allah':
       case 'أسماء الله':
         return const LinearGradient(
-          colors: [
-            Color(0xFF6B46C1),
-            Color(0xFF9F7AEA),
-          ],
+          colors: [ThemeConstants.tertiary, ThemeConstants.tertiaryLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
@@ -192,9 +186,9 @@ class ColorHelper {
         return ThemeConstants.primary;
       case 'athkar':
         return ThemeConstants.accent;
-      case 'asma_allah': // إضافة دعم أسماء الله الحسنى
-        return const Color(0xFF6B46C1);
-      case 'quran': // الاحتفاظ بالدعم القديم
+      case 'asma_allah': // استخدام الألوان الأساسية
+        return ThemeConstants.tertiary;
+      case 'quran':
         return ThemeConstants.tertiary;
       case 'qibla':
         return ThemeConstants.primaryDark;
@@ -207,17 +201,12 @@ class ColorHelper {
     }
   }
 
-  /// الحصول على مجموعة ألوان خاصة بأسماء الله الحسنى
+  /// الحصول على مجموعة ألوان خاصة بأسماء الله الحسنى (3 ألوان فقط)
   static List<Color> getAsmaAllahColors() {
     return [
-      const Color(0xFF6B46C1), // بنفسجي أساسي
-      const Color(0xFF9F7AEA), // بنفسجي فاتح
-      const Color(0xFF5D7052), // أخضر زيتي
-      const Color(0xFF7A8B6F), // أخضر زيتي فاتح
-      const Color(0xFFB8860B), // ذهبي
-      const Color(0xFFDAA520), // ذهبي فاتح
-      const Color(0xFF8B6F47), // بني دافئ
-      const Color(0xFFA68B5B), // بني فاتح
+      ThemeConstants.primary,    // اللون الأساسي
+      ThemeConstants.accent,     // اللون الثانوي
+      ThemeConstants.tertiary,   // اللون الثالث
     ];
   }
 

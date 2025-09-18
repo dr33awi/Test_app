@@ -25,13 +25,10 @@ class UnifiedAsmaAllahDetailsScreen extends StatefulWidget {
 }
 
 class _UnifiedAsmaAllahDetailsScreenState 
-    extends State<UnifiedAsmaAllahDetailsScreen>
-    with TickerProviderStateMixin {
+    extends State<UnifiedAsmaAllahDetailsScreen> {
   
   late AsmaAllahModel _currentItem;
   late PageController _pageController;
-  late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
   late int _currentIndex;
 
   @override
@@ -44,24 +41,11 @@ class _UnifiedAsmaAllahDetailsScreenState
     _currentItem = list[_currentIndex];
 
     _pageController = PageController(initialPage: _currentIndex);
-    
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-    
-    _fadeAnimation = CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeIn,
-    );
-    
-    _fadeController.forward();
   }
 
   @override
   void dispose() {
     _pageController.dispose();
-    _fadeController.dispose();
     super.dispose();
   }
 
@@ -79,10 +63,7 @@ class _UnifiedAsmaAllahDetailsScreenState
             child: Column(
               children: [
                 // شريط التطبيق المخصص
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: _buildUnifiedAppBar(),
-                ),
+                _buildUnifiedAppBar(),
                 
                 // المحتوى الرئيسي مع PageView
                 Expanded(
@@ -99,19 +80,13 @@ class _UnifiedAsmaAllahDetailsScreenState
                     },
                     itemBuilder: (_, index) {
                       final item = widget.service.asmaAllahList[index];
-                      return FadeTransition(
-                        opacity: _fadeAnimation,
-                        child: _buildContentPage(item),
-                      );
+                      return _buildContentPage(item);
                     },
                   ),
                 ),
                 
                 // شريط التنقل السفلي
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: _buildBottomNavigationBar(),
-                ),
+                _buildBottomNavigationBar(),
               ],
             ),
           ),
@@ -404,10 +379,10 @@ class _UnifiedAsmaAllahDetailsScreenState
       width: double.infinity,
       padding: const EdgeInsets.all(ThemeConstants.space5),
       decoration: BoxDecoration(
-        color: ThemeConstants.accent.withValues(alpha: 0.1),
+        color: ThemeConstants.tertiary.withValues(alpha: 0.1), // استخدام tertiary
         borderRadius: BorderRadius.circular(ThemeConstants.radius2xl),
         border: Border.all(
-          color: ThemeConstants.accent.withValues(alpha: 0.2),
+          color: ThemeConstants.tertiary.withValues(alpha: 0.2), // استخدام tertiary
           width: 1,
         ),
       ),
@@ -420,12 +395,12 @@ class _UnifiedAsmaAllahDetailsScreenState
               Container(
                 padding: const EdgeInsets.all(ThemeConstants.space2),
                 decoration: BoxDecoration(
-                  color: ThemeConstants.accent.withValues(alpha: 0.2),
+                  color: ThemeConstants.tertiary.withValues(alpha: 0.2), // استخدام tertiary
                   borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
                 ),
                 child: const Icon(
                   Icons.menu_book_rounded,
-                  color: ThemeConstants.accent,
+                  color: ThemeConstants.tertiary, // استخدام tertiary
                   size: ThemeConstants.iconMd,
                 ),
               ),
@@ -434,7 +409,7 @@ class _UnifiedAsmaAllahDetailsScreenState
                 'من القرآن الكريم',
                 style: context.titleLarge?.copyWith(
                   fontWeight: ThemeConstants.bold,
-                  color: ThemeConstants.accent,
+                  color: ThemeConstants.tertiary, // استخدام tertiary
                 ),
               ),
             ],
@@ -450,14 +425,14 @@ class _UnifiedAsmaAllahDetailsScreenState
               color: Colors.white,
               borderRadius: BorderRadius.circular(ThemeConstants.radiusXl),
               border: Border.all(
-                color: ThemeConstants.accent.withValues(alpha: 0.3),
+                color: ThemeConstants.tertiary.withValues(alpha: 0.3), // استخدام tertiary
                 width: 1,
               ),
             ),
             child: Text(
               '﴿${item.reference}﴾',
               style: context.titleLarge?.copyWith(
-                color: ThemeConstants.accent,
+                color: ThemeConstants.tertiary, // استخدام tertiary
                 fontFamily: ThemeConstants.fontFamilyQuran,
                 height: 2.0,
                 fontSize: 20,
@@ -501,7 +476,7 @@ class _UnifiedAsmaAllahDetailsScreenState
                 child: _buildActionButton(
                   icon: Icons.copy_rounded,
                   label: 'نسخ النص',
-                  color: ThemeConstants.primary,
+                  color: ThemeConstants.primary, // من الألوان الثلاث الأساسية
                   onPressed: () => _copyContent(item),
                 ),
               ),
@@ -510,7 +485,7 @@ class _UnifiedAsmaAllahDetailsScreenState
                 child: _buildActionButton(
                   icon: Icons.share_rounded,
                   label: 'مشاركة',
-                  color: ThemeConstants.accent,
+                  color: ThemeConstants.accent, // من الألوان الثلاث الأساسية
                   onPressed: () => _shareContent(item),
                 ),
               ),

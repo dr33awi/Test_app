@@ -267,6 +267,8 @@ class ThemeConstants {
   static const int defaultMinBatteryLevel = 15;
   static const int criticalBatteryLevel = 5;
 
+  static var accentSoft;
+
   // ===== دوال مساعدة =====
   
   /// الحصول على اللون حسب الثيم
