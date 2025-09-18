@@ -1,4 +1,4 @@
-// lib/app/themes/helpers/color_helper.dart
+// lib/features/home/widgets/color_helper.dart
 import 'package:athkar_app/app/themes/theme_constants.dart';
 import 'package:flutter/material.dart';
 
@@ -10,37 +10,46 @@ class ColorHelper {
   static LinearGradient getCategoryGradient(String categoryId) {
     switch (categoryId) {
       case 'prayer_times':
-        return LinearGradient(
+        return const LinearGradient(
           colors: [ThemeConstants.primary, ThemeConstants.primaryLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
       case 'athkar':
-        return LinearGradient(
+        return const LinearGradient(
           colors: [ThemeConstants.accent, ThemeConstants.accentLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
-      case 'quran':
-        return LinearGradient(
+      case 'asma_allah': // تحديث من 'quran' إلى 'asma_allah'
+        return const LinearGradient(
+          colors: [
+            Color(0xFF6B46C1), // بنفسجي مميز لأسماء الله الحسنى
+            Color(0xFF9F7AEA), // بنفسجي فاتح
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'quran': // الاحتفاظ بالدعم القديم
+        return const LinearGradient(
           colors: [ThemeConstants.tertiary, ThemeConstants.tertiaryLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
       case 'qibla':
-        return LinearGradient(
+        return const LinearGradient(
           colors: [ThemeConstants.primaryDark, ThemeConstants.primary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
       case 'tasbih':
-        return LinearGradient(
+        return const LinearGradient(
           colors: [ThemeConstants.accentDark, ThemeConstants.accent],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
       case 'dua':
-        return LinearGradient(
+        return const LinearGradient(
           colors: [ThemeConstants.tertiaryDark, ThemeConstants.tertiary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -55,29 +64,39 @@ class ColorHelper {
     switch (contentType.toLowerCase()) {
       case 'verse':
       case 'آية':
-        return LinearGradient(
+        return const LinearGradient(
           colors: [ThemeConstants.primary, ThemeConstants.primaryLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
       case 'hadith':
       case 'حديث':
-        return LinearGradient(
+        return const LinearGradient(
           colors: [ThemeConstants.accent, ThemeConstants.accentLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
       case 'dua':
       case 'دعاء':
-        return LinearGradient(
+        return const LinearGradient(
           colors: [ThemeConstants.tertiary, ThemeConstants.tertiaryLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
       case 'athkar':
       case 'أذكار':
-        return LinearGradient(
+        return const LinearGradient(
           colors: [ThemeConstants.accentDark, ThemeConstants.accent],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'asma_allah':
+      case 'أسماء الله':
+        return const LinearGradient(
+          colors: [
+            Color(0xFF6B46C1),
+            Color(0xFF9F7AEA),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         );
@@ -95,13 +114,13 @@ class ColorHelper {
         end: Alignment.bottomRight,
       );
     } else if (progress < 0.7) {
-      return LinearGradient(
+      return const LinearGradient(
         colors: [ThemeConstants.warning, ThemeConstants.accent],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
     } else {
-      return LinearGradient(
+      return const LinearGradient(
         colors: [ThemeConstants.success, ThemeConstants.primary],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
@@ -116,49 +135,49 @@ class ColorHelper {
     
     if (hour < 5) {
       // ليل
-      return LinearGradient(
+      return const LinearGradient(
         colors: [ThemeConstants.darkBackground, ThemeConstants.darkCard],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
     } else if (hour < 8) {
       // فجر
-      return LinearGradient(
+      return const LinearGradient(
         colors: [ThemeConstants.primaryDark, ThemeConstants.primary],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
     } else if (hour < 12) {
       // صباح
-      return LinearGradient(
+      return const LinearGradient(
         colors: [ThemeConstants.accent, ThemeConstants.accentLight],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
     } else if (hour < 15) {
       // ظهر
-      return LinearGradient(
+      return const LinearGradient(
         colors: [ThemeConstants.primary, ThemeConstants.primaryLight],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
     } else if (hour < 17) {
       // عصر
-      return LinearGradient(
+      return const LinearGradient(
         colors: [ThemeConstants.primaryLight, ThemeConstants.primarySoft],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
     } else if (hour < 20) {
       // مغرب
-      return LinearGradient(
+      return const LinearGradient(
         colors: [ThemeConstants.tertiary, ThemeConstants.tertiaryLight],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
     } else {
       // مساء
-      return LinearGradient(
+      return const LinearGradient(
         colors: [ThemeConstants.primaryDark, ThemeConstants.primary],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
@@ -173,7 +192,9 @@ class ColorHelper {
         return ThemeConstants.primary;
       case 'athkar':
         return ThemeConstants.accent;
-      case 'quran':
+      case 'asma_allah': // إضافة دعم أسماء الله الحسنى
+        return const Color(0xFF6B46C1);
+      case 'quran': // الاحتفاظ بالدعم القديم
         return ThemeConstants.tertiary;
       case 'qibla':
         return ThemeConstants.primaryDark;
@@ -184,6 +205,26 @@ class ColorHelper {
       default:
         return ThemeConstants.primary;
     }
+  }
+
+  /// الحصول على مجموعة ألوان خاصة بأسماء الله الحسنى
+  static List<Color> getAsmaAllahColors() {
+    return [
+      const Color(0xFF6B46C1), // بنفسجي أساسي
+      const Color(0xFF9F7AEA), // بنفسجي فاتح
+      const Color(0xFF5D7052), // أخضر زيتي
+      const Color(0xFF7A8B6F), // أخضر زيتي فاتح
+      const Color(0xFFB8860B), // ذهبي
+      const Color(0xFFDAA520), // ذهبي فاتح
+      const Color(0xFF8B6F47), // بني دافئ
+      const Color(0xFFA68B5B), // بني فاتح
+    ];
+  }
+
+  /// الحصول على لون من مجموعة أسماء الله الحسنى حسب الفهرس
+  static Color getAsmaAllahColorByIndex(int index) {
+    final colors = getAsmaAllahColors();
+    return colors[index % colors.length];
   }
 
   /// الحصول على لون حسب مستوى الأهمية
@@ -259,5 +300,49 @@ class ColorHelper {
       ],
       stops: const [0.0, 0.3, 0.7, 1.0],
     );
+  }
+
+  /// الحصول على تدرج خاص بأسماء الله الحسنى مع تأثير مضيء
+  static LinearGradient getAsmaAllahSpecialGradient(int index) {
+    final color = getAsmaAllahColorByIndex(index);
+    final lightColor = color.withValues(alpha: 0.8);
+    
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        color,
+        lightColor,
+        color.withValues(alpha: 0.9),
+      ],
+      stops: const [0.0, 0.5, 1.0],
+    );
+  }
+
+  /// الحصول على تدرج خاص للخلفيات
+  static LinearGradient getBackgroundGradient({bool isDarkMode = false}) {
+    if (isDarkMode) {
+      return LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          ThemeConstants.darkBackground,
+          ThemeConstants.darkSurface.withValues(alpha: 0.8),
+          ThemeConstants.darkBackground,
+        ],
+        stops: const [0.0, 0.3, 1.0],
+      );
+    } else {
+      return LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          ThemeConstants.lightBackground,
+          ThemeConstants.primarySoft.withValues(alpha: 0.1),
+          ThemeConstants.lightBackground,
+        ],
+        stops: const [0.0, 0.3, 1.0],
+      );
+    }
   }
 }

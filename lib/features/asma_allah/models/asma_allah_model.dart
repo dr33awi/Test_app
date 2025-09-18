@@ -1,5 +1,4 @@
 // lib/features/asma_allah/models/asma_allah_model.dart
-import 'package:flutter/material.dart';
 
 /// نموذج أسماء الله الحسنى - محدث
 class AsmaAllahModel {
