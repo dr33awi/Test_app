@@ -3,11 +3,10 @@ import 'package:athkar_app/app/themes/widgets/core/islamic_pattern_painter.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:athkar_app/app/themes/app_theme.dart';
-import 'package:athkar_app/app/themes/widgets/animations/animated_press.dart';
 import '../models/asma_allah_model.dart';
 
 // ============================================================================
-// AsmaAllahCard - بطاقة اسم من أسماء الله الحسنى (مبسطة)
+// AsmaAllahCard - بطاقة اسم من أسماء الله الحسنى (بدون أنيميشن)
 // ============================================================================
 class AsmaAllahCard extends StatelessWidget {
   final AsmaAllahModel item;
@@ -23,8 +22,9 @@ class AsmaAllahCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = item.getColor();
     
-    return AnimatedPress(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
       child: Container(
         decoration: BoxDecoration(
           color: context.cardColor,
@@ -168,17 +168,10 @@ class AsmaAllahSearchBar extends StatelessWidget {
 }
 
 // ============================================================================
-// AsmaAllahHeader - هيدر الصفحة
+// AsmaAllahHeader - هيدر الصفحة (بدون أنيميشن)
 // ============================================================================
 class AsmaAllahHeader extends StatelessWidget {
-  final Animation<double> fadeAnimation;
-  final Animation<double> scaleAnimation;
-  
-  const AsmaAllahHeader({
-    super.key,
-    required this.fadeAnimation,
-    required this.scaleAnimation,
-  });
+  const AsmaAllahHeader({super.key});
   
   @override
   Widget build(BuildContext context) {
@@ -212,55 +205,49 @@ class AsmaAllahHeader extends StatelessWidget {
         
         // المحتوى
         Center(
-          child: FadeTransition(
-            opacity: fadeAnimation,
-            child: ScaleTransition(
-              scale: scaleAnimation,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // الأيقونة
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.star_purple500,
-                      size: 40,
-                      color: Colors.white,
-                    ),
-                  ),
-                  
-                  ThemeConstants.space3.h,
-                  
-                  // العنوان
-                  const Text(
-                    'أسماء الله الحسنى',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontFamily: 'Cairo',
-                    ),
-                  ),
-                  
-                  ThemeConstants.space2.h,
-                  
-                  // الوصف
-                  const Text(
-                    'له الأسماء الحسنى فادعوه بها',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white70,
-                      fontFamily: 'Cairo',
-                    ),
-                  ),
-                ],
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // الأيقونة
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.star_purple500,
+                  size: 40,
+                  color: Colors.white,
+                ),
               ),
-            ),
+              
+              ThemeConstants.space3.h,
+              
+              // العنوان
+              const Text(
+                'أسماء الله الحسنى',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontFamily: 'Cairo',
+                ),
+              ),
+              
+              ThemeConstants.space2.h,
+              
+              // الوصف
+              const Text(
+                'له الأسماء الحسنى فادعوه بها',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white70,
+                  fontFamily: 'Cairo',
+                ),
+              ),
+            ],
           ),
         ),
       ],

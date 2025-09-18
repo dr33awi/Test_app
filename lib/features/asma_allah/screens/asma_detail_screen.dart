@@ -7,7 +7,7 @@ import 'package:athkar_app/app/themes/app_theme.dart';
 import '../models/asma_allah_model.dart';
 import '../services/asma_allah_service.dart';
 
-/// صفحة تفاصيل اسم من أسماء الله الحسنى
+/// صفحة تفاصيل اسم من أسماء الله الحسنى (بدون أنيميشن)
 class AsmaAllahDetailsScreen extends StatefulWidget {
   final AsmaAllahModel item;
   final AsmaAllahService service;
@@ -22,13 +22,7 @@ class AsmaAllahDetailsScreen extends StatefulWidget {
   State<AsmaAllahDetailsScreen> createState() => _AsmaAllahDetailsScreenState();
 }
 
-class _AsmaAllahDetailsScreenState extends State<AsmaAllahDetailsScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _slideAnimation;
-  late Animation<double> _scaleAnimation;
-  
+class _AsmaAllahDetailsScreenState extends State<AsmaAllahDetailsScreen> {
   late AsmaAllahModel _currentItem;
   late PageController _pageController;
   
@@ -40,43 +34,10 @@ class _AsmaAllahDetailsScreenState extends State<AsmaAllahDetailsScreen>
     _pageController = PageController(
       initialPage: widget.item.id - 1,
     );
-    
-    // تهيئة الأنيميشن
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-    
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.0, 0.6),
-    ));
-    
-    _slideAnimation = Tween<double>(
-      begin: 30.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.2, 0.8, curve: Curves.easeOut),
-    ));
-    
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutBack,
-    ));
-    
-    _animationController.forward();
   }
   
   @override
   void dispose() {
-    _animationController.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -116,7 +77,6 @@ class _AsmaAllahDetailsScreenState extends State<AsmaAllahDetailsScreen>
                       setState(() {
                         _currentItem = widget.service.asmaAllahList[index];
                       });
-                      _animationController.forward(from: 0);
                     },
                     itemCount: widget.service.asmaAllahList.length,
                     itemBuilder: (context, index) {
@@ -167,7 +127,7 @@ class _AsmaAllahDetailsScreenState extends State<AsmaAllahDetailsScreen>
             ),
           ),
           
-          // مساحة فارغة بدلاً من زر المفضلة
+          // مساحة فارغة
           const SizedBox(width: 48),
         ],
       ),
@@ -177,159 +137,147 @@ class _AsmaAllahDetailsScreenState extends State<AsmaAllahDetailsScreen>
   Widget _buildContent(AsmaAllahModel item) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(ThemeConstants.space5),
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Transform.translate(
-          offset: Offset(0, _slideAnimation.value),
-          child: Column(
-            children: [
-              // الأيقونة
-              ScaleTransition(
-                scale: _scaleAnimation,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    item.getIcon(),
-                    size: 50,
-                    color: Colors.white,
-                  ),
+      child: Column(
+        children: [
+          // الأيقونة
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              item.getIcon(),
+              size: 50,
+              color: Colors.white,
+            ),
+          ),
+          
+          ThemeConstants.space5.h,
+          
+          // الاسم الكبير
+          Text(
+            item.name,
+            style: const TextStyle(
+              fontSize: 48,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontFamily: 'Cairo',
+              height: 1.2,
+            ),
+          ),
+          
+          ThemeConstants.space5.h,
+          
+          // بطاقة المعنى
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(ThemeConstants.space5),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(ThemeConstants.radiusXl),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
                 ),
-              ),
-              
-              ThemeConstants.space5.h,
-              
-              // الاسم الكبير
-              ScaleTransition(
-                scale: _scaleAnimation,
-                child: Text(
-                  item.name,
-                  style: const TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontFamily: 'Cairo',
-                    height: 1.2,
-                  ),
-                ),
-              ),
-              
-              ThemeConstants.space5.h,
-              
-              // بطاقة المعنى
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(ThemeConstants.space5),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.95),
-                  borderRadius: BorderRadius.circular(ThemeConstants.radiusXl),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Column(
+              ],
+            ),
+            child: Column(
+              children: [
+                // عنوان المعنى
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // عنوان المعنى
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.book,
-                          color: item.getColor(),
-                          size: 20,
-                        ),
-                        ThemeConstants.space2.w,
-                        Text(
-                          'المعنى',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: item.getColor(),
-                            fontFamily: 'Cairo',
-                          ),
-                        ),
-                      ],
+                    Icon(
+                      Icons.book,
+                      color: item.getColor(),
+                      size: 20,
                     ),
-                    
-                    ThemeConstants.space4.h,
-                    const Divider(),
-                    ThemeConstants.space4.h,
-                    
-                    // نص المعنى
+                    ThemeConstants.space2.w,
                     Text(
-                      item.meaning,
+                      'المعنى',
                       style: TextStyle(
                         fontSize: 18,
-                        color: ThemeConstants.lightTextPrimary,
-                        height: 1.8,
+                        fontWeight: FontWeight.bold,
+                        color: item.getColor(),
                         fontFamily: 'Cairo',
                       ),
-                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
-              ),
-              
-              // المرجع إن وجد
-              if (item.reference != null) ...[
+                
                 ThemeConstants.space4.h,
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(ThemeConstants.space4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.95),
-                    borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
+                const Divider(),
+                ThemeConstants.space4.h,
+                
+                // نص المعنى
+                Text(
+                  item.meaning,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    color: ThemeConstants.lightTextPrimary,
+                    height: 1.8,
+                    fontFamily: 'Cairo',
                   ),
-                  child: Column(
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          
+          // المرجع إن وجد
+          if (item.reference != null) ...[
+            ThemeConstants.space4.h,
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(ThemeConstants.space4),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.format_quote,
-                            color: item.getColor(),
-                            size: 20,
-                          ),
-                          ThemeConstants.space2.w,
-                          Text(
-                            'من القرآن الكريم',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: item.getColor(),
-                              fontFamily: 'Cairo',
-                            ),
-                          ),
-                        ],
+                      Icon(
+                        Icons.format_quote,
+                        color: item.getColor(),
+                        size: 20,
                       ),
-                      
-                      ThemeConstants.space3.h,
-                      
+                      ThemeConstants.space2.w,
                       Text(
-                        '﴿${item.reference}﴾',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          color: ThemeConstants.lightTextPrimary,
-                          fontFamily: 'Amiri',
-                          height: 1.8,
+                        'من القرآن الكريم',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: item.getColor(),
+                          fontFamily: 'Cairo',
                         ),
-                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
-                ),
-              ],
-            ],
-          ),
-        ),
+                  
+                  ThemeConstants.space3.h,
+                  
+                  Text(
+                    '﴿${item.reference}﴾',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      color: ThemeConstants.lightTextPrimary,
+                      fontFamily: 'Amiri',
+                      height: 1.8,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

@@ -10,7 +10,7 @@ import '../models/asma_allah_model.dart';
 import '../widgets/asma_allah_widgets.dart';
 import 'package:athkar_app/features/asma_allah/screens/asma_detail_screen.dart';
 
-/// الصفحة الرئيسية لأسماء الله الحسنى (مبسطة)
+/// الصفحة الرئيسية لأسماء الله الحسنى (بدون أنيميشن)
 class AsmaAllahScreen extends StatefulWidget {
   const AsmaAllahScreen({super.key});
 
@@ -18,12 +18,7 @@ class AsmaAllahScreen extends StatefulWidget {
   State<AsmaAllahScreen> createState() => _AsmaAllahScreenState();
 }
 
-class _AsmaAllahScreenState extends State<AsmaAllahScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
-  
+class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
   // الخدمة
   late AsmaAllahService _service;
   
@@ -35,36 +30,10 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen>
     _service = AsmaAllahService(
       storage: getIt<StorageService>(),
     );
-    
-    // تهيئة الأنيميشن
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    );
-    
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.0, 0.6),
-    ));
-    
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutBack,
-    ));
-    
-    // بدء الأنيميشن
-    _animationController.forward();
   }
   
   @override
   void dispose() {
-    _animationController.dispose();
     _service.dispose();
     super.dispose();
   }
@@ -90,16 +59,16 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen>
   
   /// بناء شريط التطبيق
   Widget _buildSliverAppBar() {
-    return SliverAppBar(
+    return const SliverAppBar(
       expandedHeight: 220,
       floating: true,
       pinned: true,
-      backgroundColor: const Color(0xFF6B46C1),
+      backgroundColor: Color(0xFF6B46C1),
       foregroundColor: Colors.white,
       elevation: 0,
       
       // العنوان عند التصغير
-      title: const Text(
+      title: Text(
         'أسماء الله الحسنى',
         style: TextStyle(
           fontFamily: 'Cairo',
@@ -109,10 +78,7 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen>
       
       // المحتوى المرن
       flexibleSpace: FlexibleSpaceBar(
-        background: AsmaAllahHeader(
-          fadeAnimation: _fadeAnimation,
-          scaleAnimation: _scaleAnimation,
-        ),
+        background: AsmaAllahHeader(),
       ),
     );
   }
@@ -160,22 +126,13 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen>
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             final item = list[index];
-            return AnimationConfiguration.staggeredList(
-              position: index,
-              duration: const Duration(milliseconds: 375),
-              child: SlideAnimation(
-                verticalOffset: 50.0,
-                child: FadeInAnimation(
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: ThemeConstants.space3,
-                    ),
-                    child: AsmaAllahCard(
-                      item: item,
-                      onTap: () => _openDetails(item),
-                    ),
-                  ),
-                ),
+            return Padding(
+              padding: const EdgeInsets.only(
+                bottom: ThemeConstants.space3,
+              ),
+              child: AsmaAllahCard(
+                item: item,
+                onTap: () => _openDetails(item),
               ),
             );
           },
