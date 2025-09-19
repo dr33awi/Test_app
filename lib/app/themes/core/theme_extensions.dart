@@ -1,5 +1,4 @@
 // lib/app/themes/core/theme_extensions.dart
-import 'package:athkar_app/app/themes/text_styles.dart';
 import 'package:flutter/material.dart';
 import '../theme_constants.dart';
 
@@ -46,11 +45,6 @@ extension ThemeExtension on BuildContext {
   TextStyle? get labelLarge => textTheme.labelLarge;
   TextStyle? get labelMedium => textTheme.labelMedium;
   TextStyle? get labelSmall => textTheme.labelSmall;
-
-  // أنماط خاصة
-  TextStyle get quranStyle => AppTextStyles.quran;
-  TextStyle get athkarStyle => AppTextStyles.athkar;
-  TextStyle get duaStyle => AppTextStyles.dua;
 
   // معلومات الشاشة
   double get screenWidth => MediaQuery.sizeOf(this).width;

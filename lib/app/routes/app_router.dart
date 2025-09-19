@@ -37,7 +37,6 @@ class AppRouter {
   static const String prayerTimes = '/prayer-times';
   static const String athkar = '/athkar';
   static const String asmaAllah = '/asma-allah';  // إضافة مسار أسماء الله الحسنى
-  static const String quran = '/quran';  // الإبقاء عليه للتوافق
   static const String qibla = '/qibla';
   static const String tasbih = '/tasbih';
   static const String dua = '/dua';
@@ -96,9 +95,6 @@ class AppRouter {
         
       case asmaAllah:  // صفحة أسماء الله الحسنى
         return _slideRoute(const AsmaAllahScreen(), settings);
-        
-      case quran:  // الإبقاء عليه للتوافق
-        return _slideRoute(_buildComingSoonScreen('القرآن الكريم'), settings);
         
       case qibla:
         return _slideRoute(const QiblaScreen(), settings);

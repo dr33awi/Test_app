@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../app/themes/app_theme.dart';
+import '../../../app/themes/widgets/cards/app_card.dart' show AppCard;
 
 class QiblaAccuracyIndicator extends StatefulWidget {
   final double accuracy; // Accuracy from 0.0 to 100.0 (percentage)

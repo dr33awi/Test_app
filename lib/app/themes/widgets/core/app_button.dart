@@ -7,18 +7,13 @@ import '../../core/theme_extensions.dart';
 /// أنواع الأزرار
 enum ButtonType {
   primary,
-  secondary,
   outline,
-  text,
-  danger,
-  success,
 }
 
 /// أحجام الأزرار
 enum ButtonSize {
   small,
   medium,
-  large,
 }
 
 /// زر موحد للتطبيق
@@ -129,19 +124,6 @@ class AppButton extends StatelessWidget {
         );
         break;
         
-      case ButtonType.text:
-        button = TextButton(
-          onPressed: isLoading ? null : onPressed,
-          style: TextButton.styleFrom(
-            foregroundColor: foregroundColor,
-            padding: padding ?? buttonPadding,
-            minimumSize: Size(0, buttonHeight),
-            shape: shape,
-          ),
-          child: buttonChild,
-        );
-        break;
-        
       default:
         button = ElevatedButton(
           onPressed: isLoading ? null : onPressed,
@@ -177,14 +159,7 @@ class AppButton extends StatelessWidget {
     switch (type) {
       case ButtonType.primary:
         return customColor ?? context.primaryColor;
-      case ButtonType.secondary:
-        return customColor ?? context.colorScheme.secondary;
-      case ButtonType.danger:
-        return customColor ?? ThemeConstants.error;
-      case ButtonType.success:
-        return customColor ?? ThemeConstants.success;
       case ButtonType.outline:
-      case ButtonType.text:
         return Colors.transparent;
     }
   }
@@ -199,15 +174,7 @@ class AppButton extends StatelessWidget {
     switch (type) {
       case ButtonType.primary:
         return (customColor ?? context.primaryColor).contrastingTextColor;
-      case ButtonType.secondary:
-        return context.colorScheme.secondary.contrastingTextColor;
-      case ButtonType.danger:
-        return Colors.white;
-      case ButtonType.success:
-        return Colors.white;
       case ButtonType.outline:
-        return customColor ?? context.primaryColor;
-      case ButtonType.text:
         return customColor ?? context.primaryColor;
     }
   }
@@ -220,8 +187,6 @@ class AppButton extends StatelessWidget {
         return ThemeConstants.heightSm;
       case ButtonSize.medium:
         return ThemeConstants.heightMd;
-      case ButtonSize.large:
-        return ThemeConstants.heightLg;
     }
   }
 
@@ -237,11 +202,6 @@ class AppButton extends StatelessWidget {
           horizontal: ThemeConstants.space4,
           vertical: ThemeConstants.space3,
         );
-      case ButtonSize.large:
-        return const EdgeInsets.symmetric(
-          horizontal: ThemeConstants.space5,
-          vertical: ThemeConstants.space4,
-        );
     }
   }
 
@@ -251,8 +211,6 @@ class AppButton extends StatelessWidget {
         return AppTextStyles.buttonSmall;
       case ButtonSize.medium:
         return AppTextStyles.button;
-      case ButtonSize.large:
-        return AppTextStyles.button.copyWith(fontSize: 18);
     }
   }
 
@@ -298,24 +256,6 @@ factory AppButton.custom({
     textColor: textColor,
   );
 }
-  factory AppButton.secondary({
-    required String text,
-    required VoidCallback? onPressed,
-    IconData? icon,
-    bool isLoading = false,
-    bool isFullWidth = false,
-    ButtonSize size = ButtonSize.medium,
-  }) {
-    return AppButton(
-      text: text,
-      onPressed: onPressed,
-      type: ButtonType.secondary,
-      icon: icon,
-      isLoading: isLoading,
-      isFullWidth: isFullWidth,
-      size: size,
-    );
-  }
 
   factory AppButton.outline({
     required String text,
@@ -337,61 +277,30 @@ factory AppButton.custom({
       customColor: color,
     );
   }
+}
 
-  factory AppButton.text({
-    required String text,
-    required VoidCallback? onPressed,
-    IconData? icon,
-    bool isLoading = false,
-    ButtonSize size = ButtonSize.medium,
-    Color? color,
-  }) {
-    return AppButton(
-      text: text,
-      onPressed: onPressed,
-      type: ButtonType.text,
-      icon: icon,
-      isLoading: isLoading,
-      size: size,
-      customColor: color,
-    );
-  }
+/// زر الرجوع الموحد
+class AppBackButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+  final Color? color;
+  final double? size;
 
-  factory AppButton.danger({
-    required String text,
-    required VoidCallback? onPressed,
-    IconData? icon,
-    bool isLoading = false,
-    bool isFullWidth = false,
-    ButtonSize size = ButtonSize.medium,
-  }) {
-    return AppButton(
-      text: text,
-      onPressed: onPressed,
-      type: ButtonType.danger,
-      icon: icon,
-      isLoading: isLoading,
-      isFullWidth: isFullWidth,
-      size: size,
-    );
-  }
+  const AppBackButton({
+    super.key,
+    this.onPressed,
+    this.color,
+    this.size,
+  });
 
-  factory AppButton.success({
-    required String text,
-    required VoidCallback? onPressed,
-    IconData? icon,
-    bool isLoading = false,
-    bool isFullWidth = false,
-    ButtonSize size = ButtonSize.medium,
-  }) {
-    return AppButton(
-      text: text,
-      onPressed: onPressed,
-      type: ButtonType.success,
-      icon: icon,
-      isLoading: isLoading,
-      isFullWidth: isFullWidth,
-      size: size,
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onPressed ?? () => Navigator.of(context).pop(),
+      icon: Icon(
+        Icons.arrow_back_ios,
+        color: color ?? context.colorScheme.onSurface,
+        size: size ?? 24,
+      ),
     );
   }
 }

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../app/themes/app_theme.dart';
+import '../../../app/themes/widgets/cards/app_card.dart' show AppCard;
 import '../models/qibla_model.dart';
 
 /// بطاقة معلومات القبلة
