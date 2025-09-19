@@ -1,4 +1,4 @@
-// lib/features/asma_allah/screens/unified_asma_detail_screen.dart
+// lib/features/asma_allah/screens/asma_detail_screen.dart - محسن ومتناسق
 import 'dart:ui';
 import 'package:athkar_app/app/themes/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -53,81 +53,80 @@ class _UnifiedAsmaAllahDetailsScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: context.backgroundColor,
-      body: Stack(
-        children: [
-          // خلفية متدرجة موحدة
-          _buildUnifiedBackground(),
-          
-          // المحتوى الرئيسي
-          SafeArea(
-            child: Column(
-              children: [
-                // شريط التطبيق المخصص
-                _buildUnifiedAppBar(),
-                
-                // المحتوى الرئيسي مع PageView
-                Expanded(
-                  child: PageView.builder(
-                    controller: _pageController,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: widget.service.asmaAllahList.length,
-                    onPageChanged: (index) {
-                      setState(() {
-                        _currentIndex = index;
-                        _currentItem = widget.service.asmaAllahList[index];
-                      });
-                      HapticFeedback.selectionClick();
-                    },
-                    itemBuilder: (_, index) {
-                      final item = widget.service.asmaAllahList[index];
-                      return _buildContentPage(item);
-                    },
-                  ),
-                ),
-                
-                // شريط التنقل السفلي
-                _buildBottomNavigationBar(),
-              ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            // شريط التطبيق المحسن (متناسق مع صفحة الصلوات)
+            _buildEnhancedAppBar(),
+            
+            // المحتوى الرئيسي مع PageView
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                physics: const BouncingScrollPhysics(),
+                itemCount: widget.service.asmaAllahList.length,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentIndex = index;
+                    _currentItem = widget.service.asmaAllahList[index];
+                  });
+                  HapticFeedback.selectionClick();
+                },
+                itemBuilder: (_, index) {
+                  final item = widget.service.asmaAllahList[index];
+                  return _buildContentPage(item);
+                },
+              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUnifiedBackground() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: context.isDarkMode
-              ? [
-                  ThemeConstants.darkBackground,
-                  ThemeConstants.darkSurface.withValues(alpha: 0.9),
-                  ThemeConstants.darkBackground,
-                ]
-              : [
-                  ThemeConstants.lightBackground,
-                  _currentItem.getColor().withValues(alpha: 0.05),
-                  ThemeConstants.lightBackground,
-                ],
-          stops: const [0.0, 0.5, 1.0],
+            
+            // شريط التنقل السفلي
+            _buildBottomNavigationBar(),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildUnifiedAppBar() {
+  Widget _buildEnhancedAppBar() {
     final total = widget.service.asmaAllahList.length;
+    final color = _currentItem.getColor();
     
     return Container(
       padding: const EdgeInsets.all(ThemeConstants.space4),
       child: Row(
         children: [
-          // زر الرجوع الموحد
+          // زر الرجوع (متناسق مع صفحة الصلوات)
           AppBackButton(
             onPressed: () => Navigator.of(context).pop(),
+          ),
+          
+          ThemeConstants.space3.w,
+          
+          // أيقونة مميزة (نفس ستايل صفحة الصلوات)
+          Container(
+            padding: const EdgeInsets.all(ThemeConstants.space2),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [color, color.withOpacity(0.8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Text(
+              '${_currentItem.id}',
+              style: context.titleMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: ThemeConstants.bold,
+              ),
+            ),
           ),
           
           ThemeConstants.space3.w,
@@ -138,46 +137,75 @@ class _UnifiedAsmaAllahDetailsScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'اسم الله الحسنى',
-                  style: context.labelMedium?.copyWith(
-                    color: context.textSecondaryColor,
+                  _currentItem.name,
+                  style: context.titleLarge?.copyWith(
+                    fontWeight: ThemeConstants.bold,
+                    color: color,
+                    fontFamily: ThemeConstants.fontFamilyArabic,
                   ),
                 ),
                 Text(
-                  '${_currentItem.id} من $total',
-                  style: context.titleMedium?.copyWith(
-                    fontWeight: ThemeConstants.bold,
-                    color: _currentItem.getColor(),
+                  '${_currentIndex + 1} من $total',
+                  style: context.bodySmall?.copyWith(
+                    color: context.textSecondaryColor,
                   ),
                 ),
               ],
             ),
           ),
           
-          // مؤشر التقدم الدائري
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox(
-                width: 40,
-                height: 40,
-                child: CircularProgressIndicator(
-                  value: (_currentIndex + 1) / total,
-                  backgroundColor: context.dividerColor.withValues(alpha: 0.3),
-                  valueColor: AlwaysStoppedAnimation(_currentItem.getColor()),
-                  strokeWidth: 3,
-                ),
-              ),
-              Text(
-                '${_currentIndex + 1}',
-                style: context.labelSmall?.copyWith(
-                  fontWeight: ThemeConstants.bold,
-                  color: _currentItem.getColor(),
-                ),
-              ),
-            ],
+          // أزرار الإجراءات (نفس ستايل صفحة الصلوات)
+          _buildActionButton(
+            icon: Icons.copy_rounded,
+            onTap: () => _copyContent(_currentItem),
+          ),
+          
+          _buildActionButton(
+            icon: Icons.share_rounded,
+            onTap: () => _shareContent(_currentItem),
+            isSecondary: true,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required VoidCallback onTap,
+    bool isSecondary = false,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(left: ThemeConstants.space2),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+          child: Container(
+            padding: const EdgeInsets.all(ThemeConstants.space2),
+            decoration: BoxDecoration(
+              color: context.cardColor,
+              borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+              border: Border.all(
+                color: context.dividerColor.withValues(alpha: 0.3),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(
+              icon,
+              color: isSecondary ? context.textSecondaryColor : _currentItem.getColor(),
+              size: ThemeConstants.iconMd,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -202,13 +230,8 @@ class _UnifiedAsmaAllahDetailsScreenState
             _buildReferenceCard(item),
           ],
           
-          ThemeConstants.space4.h,
-          
-          // بطاقة الإجراءات
-          _buildActionsCard(item),
-          
           // مساحة إضافية في الأسفل
-          ThemeConstants.space12.h,
+          ThemeConstants.space8.h,
         ],
       ),
     );
@@ -219,79 +242,40 @@ class _UnifiedAsmaAllahDetailsScreenState
     
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(ThemeConstants.space6),
+      padding: const EdgeInsets.all(ThemeConstants.space4),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [color, color.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(ThemeConstants.radius2xl),
+        borderRadius: BorderRadius.circular(ThemeConstants.radiusXl),
         boxShadow: [
           BoxShadow(
             color: color.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Column(
-        children: [
-          // رقم الاسم
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: ThemeConstants.space4,
-              vertical: ThemeConstants.space2,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.3),
-                width: 1,
+      child: Center(
+        child: Text(
+          item.name,
+          style: context.displayMedium?.copyWith(
+            color: Colors.white,
+            fontWeight: ThemeConstants.bold,
+            fontFamily: ThemeConstants.fontFamilyArabic,
+            height: 1,
+            shadows: [
+              Shadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                offset: const Offset(0, 2),
+                blurRadius: 4,
               ),
-            ),
-            child: Text(
-              'الاسم ${item.id}',
-              style: context.titleMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: ThemeConstants.bold,
-              ),
-            ),
+            ],
           ),
-          
-          ThemeConstants.space4.h,
-          
-          // اسم الله بخط كبير
-          Container(
-            padding: const EdgeInsets.all(ThemeConstants.space4),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(ThemeConstants.radiusXl),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.3),
-                width: 1,
-              ),
-            ),
-            child: Text(
-              item.name,
-              style: context.displaySmall?.copyWith(
-                color: Colors.white,
-                fontWeight: ThemeConstants.bold,
-                fontFamily: ThemeConstants.fontFamilyArabic,
-                height: 1,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    offset: const Offset(0, 2),
-                    blurRadius: 4,
-                  ),
-                ],
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
@@ -348,12 +332,13 @@ class _UnifiedAsmaAllahDetailsScreenState
           
           // خط فاصل
           Container(
-            height: 1,
+            height: 2,
             width: 60,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [item.getColor(), Colors.transparent],
               ),
+              borderRadius: BorderRadius.circular(1),
             ),
           ),
           
@@ -379,10 +364,10 @@ class _UnifiedAsmaAllahDetailsScreenState
       width: double.infinity,
       padding: const EdgeInsets.all(ThemeConstants.space5),
       decoration: BoxDecoration(
-        color: ThemeConstants.tertiary.withValues(alpha: 0.1), // استخدام tertiary
+        color: ThemeConstants.tertiary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(ThemeConstants.radius2xl),
         border: Border.all(
-          color: ThemeConstants.tertiary.withValues(alpha: 0.2), // استخدام tertiary
+          color: ThemeConstants.tertiary.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -395,12 +380,12 @@ class _UnifiedAsmaAllahDetailsScreenState
               Container(
                 padding: const EdgeInsets.all(ThemeConstants.space2),
                 decoration: BoxDecoration(
-                  color: ThemeConstants.tertiary.withValues(alpha: 0.2), // استخدام tertiary
+                  color: ThemeConstants.tertiary.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
                 ),
                 child: const Icon(
                   Icons.menu_book_rounded,
-                  color: ThemeConstants.tertiary, // استخدام tertiary
+                  color: ThemeConstants.tertiary,
                   size: ThemeConstants.iconMd,
                 ),
               ),
@@ -409,7 +394,7 @@ class _UnifiedAsmaAllahDetailsScreenState
                 'من القرآن الكريم',
                 style: context.titleLarge?.copyWith(
                   fontWeight: ThemeConstants.bold,
-                  color: ThemeConstants.tertiary, // استخدام tertiary
+                  color: ThemeConstants.tertiary,
                 ),
               ),
             ],
@@ -425,14 +410,21 @@ class _UnifiedAsmaAllahDetailsScreenState
               color: Colors.white,
               borderRadius: BorderRadius.circular(ThemeConstants.radiusXl),
               border: Border.all(
-                color: ThemeConstants.tertiary.withValues(alpha: 0.3), // استخدام tertiary
+                color: ThemeConstants.tertiary.withValues(alpha: 0.3),
                 width: 1,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: ThemeConstants.tertiary.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Text(
               '﴿${item.reference}﴾',
               style: context.titleLarge?.copyWith(
-                color: ThemeConstants.tertiary, // استخدام tertiary
+                color: ThemeConstants.tertiary,
                 fontFamily: ThemeConstants.fontFamilyQuran,
                 height: 2.0,
                 fontSize: 20,
@@ -445,89 +437,10 @@ class _UnifiedAsmaAllahDetailsScreenState
     );
   }
 
-  Widget _buildActionsCard(AsmaAllahModel item) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(ThemeConstants.space4),
-      decoration: BoxDecoration(
-        color: context.surfaceColor,
-        borderRadius: BorderRadius.circular(ThemeConstants.radiusXl),
-        border: Border.all(
-          color: context.dividerColor.withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'الإجراءات',
-            style: context.titleMedium?.copyWith(
-              fontWeight: ThemeConstants.bold,
-            ),
-          ),
-          
-          ThemeConstants.space3.h,
-          
-          // أزرار الإجراءات
-          Row(
-            children: [
-              Expanded(
-                child: _buildActionButton(
-                  icon: Icons.copy_rounded,
-                  label: 'نسخ النص',
-                  color: ThemeConstants.primary, // من الألوان الثلاث الأساسية
-                  onPressed: () => _copyContent(item),
-                ),
-              ),
-              ThemeConstants.space3.w,
-              Expanded(
-                child: _buildActionButton(
-                  icon: Icons.share_rounded,
-                  label: 'مشاركة',
-                  color: ThemeConstants.accent, // من الألوان الثلاث الأساسية
-                  onPressed: () => _shareContent(item),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onPressed,
-  }) {
-    return ElevatedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, size: ThemeConstants.iconSm),
-      label: Text(label),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color.withValues(alpha: 0.1),
-        foregroundColor: color,
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(
-          horizontal: ThemeConstants.space3,
-          vertical: ThemeConstants.space3,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
-          side: BorderSide(
-            color: color.withValues(alpha: 0.2),
-            width: 1,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildBottomNavigationBar() {
     final canPrev = _currentIndex > 0;
     final canNext = _currentIndex < widget.service.asmaAllahList.length - 1;
+    final color = _currentItem.getColor();
     
     return Container(
       padding: const EdgeInsets.all(ThemeConstants.space4),
@@ -539,6 +452,13 @@ class _UnifiedAsmaAllahDetailsScreenState
             width: 1,
           ),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -546,17 +466,45 @@ class _UnifiedAsmaAllahDetailsScreenState
           Expanded(
             child: ElevatedButton.icon(
               onPressed: canPrev ? _goToPrevious : null,
-              icon: const Icon(Icons.chevron_right_rounded),
+              icon: const Icon(Icons.chevron_left_rounded),
               label: const Text('السابق'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: context.surfaceColor,
+                backgroundColor: canPrev ? context.surfaceColor : context.surfaceColor.withOpacity(0.5),
                 foregroundColor: canPrev 
                     ? context.textPrimaryColor 
-                    : context.textSecondaryColor,
+                    : context.textSecondaryColor.withOpacity(0.5),
                 elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: ThemeConstants.space3),
                 side: BorderSide(
                   color: context.dividerColor.withValues(alpha: 0.3),
                 ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                ),
+              ),
+            ),
+          ),
+          
+          ThemeConstants.space3.w,
+          
+          // مؤشر الصفحة
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: ThemeConstants.space3,
+              vertical: ThemeConstants.space2,
+            ),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
+              border: Border.all(
+                color: color.withValues(alpha: 0.2),
+              ),
+            ),
+            child: Text(
+              '${_currentIndex + 1} / ${widget.service.asmaAllahList.length}',
+              style: context.labelMedium?.copyWith(
+                color: color,
+                fontWeight: ThemeConstants.bold,
               ),
             ),
           ),
@@ -567,19 +515,24 @@ class _UnifiedAsmaAllahDetailsScreenState
           Expanded(
             child: ElevatedButton.icon(
               onPressed: canNext ? _goToNext : null,
-              icon: const Icon(Icons.chevron_left_rounded),
+              icon: const Icon(Icons.chevron_right_rounded),
               label: const Text('التالي'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: canNext ? _currentItem.getColor() : context.surfaceColor,
+                backgroundColor: canNext ? color : context.surfaceColor.withOpacity(0.5),
                 foregroundColor: canNext 
                     ? Colors.white 
-                    : context.textSecondaryColor,
-                elevation: 0,
+                    : context.textSecondaryColor.withOpacity(0.5),
+                elevation: canNext ? 2 : 0,
+                padding: const EdgeInsets.symmetric(vertical: ThemeConstants.space3),
                 side: canNext 
                     ? null
                     : BorderSide(
                         color: context.dividerColor.withValues(alpha: 0.3),
                       ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                ),
+                shadowColor: canNext ? color.withValues(alpha: 0.3) : null,
               ),
             ),
           ),

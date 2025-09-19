@@ -1,30 +1,31 @@
-// lib/features/asma_allah/widgets/asma_allah_widgets.dart - بدون بنفسجي
+// lib/features/asma_allah/widgets/asma_allah_widgets.dart - مبسط ومحسن
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:athkar_app/app/themes/app_theme.dart';
 import '../models/asma_allah_model.dart';
 import '../extensions/asma_allah_extensions.dart';
 
 // ============================================================================
-// UnifiedAsmaAllahCard - البطاقة الموحدة الجديدة
+// CompactAsmaAllahCard - البطاقة المضغوطة الموحدة
 // ============================================================================
-class UnifiedAsmaAllahCard extends StatefulWidget {
+class CompactAsmaAllahCard extends StatefulWidget {
   final AsmaAllahModel item;
   final VoidCallback onTap;
-  final bool showActions;
+  final bool showQuickActions;
 
-  const UnifiedAsmaAllahCard({
+  const CompactAsmaAllahCard({
     super.key,
     required this.item,
     required this.onTap,
-    this.showActions = false,
+    this.showQuickActions = false,
   });
 
   @override
-  State<UnifiedAsmaAllahCard> createState() => _UnifiedAsmaAllahCardState();
+  State<CompactAsmaAllahCard> createState() => _CompactAsmaAllahCardState();
 }
 
-class _UnifiedAsmaAllahCardState extends State<UnifiedAsmaAllahCard>
+class _CompactAsmaAllahCardState extends State<CompactAsmaAllahCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
@@ -34,7 +35,7 @@ class _UnifiedAsmaAllahCardState extends State<UnifiedAsmaAllahCard>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 150),
+      duration: const Duration(milliseconds: 120),
       vsync: this,
     );
     
@@ -62,51 +63,47 @@ class _UnifiedAsmaAllahCardState extends State<UnifiedAsmaAllahCard>
       builder: (context, child) {
         return Transform.scale(
           scale: _scaleAnimation.value,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(ThemeConstants.radiusXl),
-              boxShadow: [
-                BoxShadow(
-                  color: _isPressed 
-                      ? color.withValues(alpha: 0.3)
-                      : Colors.black.withValues(alpha: 0.08),
-                  blurRadius: _isPressed ? 12 : 8,
-                  offset: Offset(0, _isPressed ? 4 : 6),
-                  spreadRadius: _isPressed ? 2 : 0,
-                ),
-              ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(ThemeConstants.radiusXl),
-              child: InkWell(
-                onTap: widget.onTap,
-                onTapDown: (_) {
-                  setState(() => _isPressed = true);
-                  _controller.forward();
-                  HapticFeedback.lightImpact();
-                },
-                onTapUp: (_) {
-                  setState(() => _isPressed = false);
-                  _controller.reverse();
-                },
-                onTapCancel: () {
-                  setState(() => _isPressed = false);
-                  _controller.reverse();
-                },
-                borderRadius: BorderRadius.circular(ThemeConstants.radiusXl),
-                child: Container(
-                  padding: const EdgeInsets.all(ThemeConstants.space4),
-                  decoration: BoxDecoration(
-                    color: context.cardColor,
-                    borderRadius: BorderRadius.circular(ThemeConstants.radiusXl),
-                    border: Border.all(
-                      color: color.withValues(alpha: 0.2),
-                      width: 1,
-                    ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
+            child: InkWell(
+              onTap: widget.onTap,
+              onTapDown: (_) {
+                setState(() => _isPressed = true);
+                _controller.forward();
+                HapticFeedback.lightImpact();
+              },
+              onTapUp: (_) {
+                setState(() => _isPressed = false);
+                _controller.reverse();
+              },
+              onTapCancel: () {
+                setState(() => _isPressed = false);
+                _controller.reverse();
+              },
+              borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
+              child: Container(
+                padding: const EdgeInsets.all(ThemeConstants.space3),
+                decoration: BoxDecoration(
+                  color: context.cardColor,
+                  borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
+                  border: Border.all(
+                    color: _isPressed 
+                        ? color.withOpacity(0.4)
+                        : color.withOpacity(0.2),
+                    width: 1,
                   ),
-                  child: _buildCardContent(color),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _isPressed 
+                          ? color.withValues(alpha: 0.1)
+                          : Colors.black.withValues(alpha: 0.04),
+                      blurRadius: _isPressed ? 12 : 8,
+                      offset: Offset(0, _isPressed ? 4 : 2),
+                    ),
+                  ],
                 ),
+                child: _buildCardContent(color),
               ),
             ),
           ),
@@ -118,32 +115,32 @@ class _UnifiedAsmaAllahCardState extends State<UnifiedAsmaAllahCard>
   Widget _buildCardContent(Color color) {
     return Column(
       children: [
-        // الرأس مع الترقيم والأيقونة
+        // الصف الرئيسي
         Row(
           children: [
-            // رقم الاسم
+            // الرقم مع الخلفية الملونة
             Container(
-              width: 48,
-              height: 48,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [color, color.withValues(alpha: 0.8)],
+                  colors: [color, color.withOpacity(0.8)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
+                borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
                 boxShadow: [
                   BoxShadow(
                     color: color.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
               child: Center(
                 child: Text(
                   '${widget.item.id}',
-                  style: context.titleMedium?.copyWith(
+                  style: context.titleSmall?.copyWith(
                     color: Colors.white,
                     fontWeight: ThemeConstants.bold,
                   ),
@@ -153,39 +150,32 @@ class _UnifiedAsmaAllahCardState extends State<UnifiedAsmaAllahCard>
             
             ThemeConstants.space3.w,
             
-            // اسم الله
+            // محتوى الاسم والمعلومات
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // اسم الله
                   Text(
                     widget.item.name,
-                    style: context.headlineSmall?.copyWith(
+                    style: context.titleMedium?.copyWith(
                       color: color,
                       fontWeight: ThemeConstants.bold,
                       fontFamily: ThemeConstants.fontFamilyArabic,
-                      height: 1.2,
                     ),
                   ),
                   
                   ThemeConstants.space1.h,
                   
-                  // مؤشر المعنى
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 14,
-                        color: context.textSecondaryColor.withValues(alpha: 0.7),
-                      ),
-                      ThemeConstants.space1.w,
-                      Text(
-                        'اضغط لمعرفة المعنى',
-                        style: context.labelSmall?.copyWith(
-                          color: context.textSecondaryColor.withValues(alpha: 0.8),
-                        ),
-                      ),
-                    ],
+                  // معاينة المعنى
+                  Text(
+                    _getTruncatedText(widget.item.meaning, 50),
+                    style: context.bodySmall?.copyWith(
+                      color: context.textSecondaryColor,
+                      height: 1.3,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -193,107 +183,51 @@ class _UnifiedAsmaAllahCardState extends State<UnifiedAsmaAllahCard>
             
             // أيقونة التفاعل
             Container(
-              padding: const EdgeInsets.all(ThemeConstants.space2),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
               ),
               child: Icon(
                 Icons.chevron_left_rounded,
                 color: color,
-                size: ThemeConstants.iconMd,
+                size: 18,
               ),
             ),
           ],
         ),
         
-        ThemeConstants.space4.h,
-        
-        // معاينة المعنى
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(ThemeConstants.space4),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
-            border: Border.all(
-              color: color.withValues(alpha: 0.15),
-              width: 1,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // عنوان المعنى
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: ThemeConstants.space2,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
-                    ),
-                    child: Text(
-                      'المعنى',
-                      style: context.labelSmall?.copyWith(
-                        color: color,
-                        fontWeight: ThemeConstants.semiBold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              
-              ThemeConstants.space2.h,
-              
-              // نص المعنى مختصر
-              Text(
-                _getTruncatedMeaning(widget.item.meaning),
-                style: context.bodyMedium?.copyWith(
-                  color: context.textPrimaryColor,
-                  height: 1.6,
-                ),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-        
         // المرجع القرآني إذا وُجد
         if (widget.item.reference != null) ...[
-          ThemeConstants.space3.h,
+          ThemeConstants.space2.h,
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(ThemeConstants.space3),
+            padding: const EdgeInsets.all(ThemeConstants.space2),
             decoration: BoxDecoration(
-              color: ThemeConstants.tertiary.withValues(alpha: 0.05), // استخدام tertiary بدلاً من success
-              borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+              color: ThemeConstants.tertiary.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
               border: Border.all(
-                color: ThemeConstants.tertiary.withValues(alpha: 0.15), // استخدام tertiary بدلاً من success
+                color: ThemeConstants.tertiary.withValues(alpha: 0.15),
                 width: 1,
               ),
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.menu_book_rounded,
-                  size: 16,
-                  color: ThemeConstants.tertiary, // استخدام tertiary بدلاً من success
+                  size: 14,
+                  color: ThemeConstants.tertiary,
                 ),
-                ThemeConstants.space2.w,
+                ThemeConstants.space1.w,
                 Expanded(
                   child: Text(
                     '﴿${widget.item.reference}﴾',
-                    style: context.bodySmall?.copyWith(
-                      color: ThemeConstants.tertiary, // استخدام tertiary بدلاً من success
+                    style: context.labelSmall?.copyWith(
+                      color: ThemeConstants.tertiary,
                       fontFamily: ThemeConstants.fontFamilyQuran,
-                      height: 1.8,
+                      height: 1.5,
                     ),
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -302,8 +236,8 @@ class _UnifiedAsmaAllahCardState extends State<UnifiedAsmaAllahCard>
           ),
         ],
         
-        // أزرار الإجراءات السريعة إذا كانت مطلوبة
-        if (widget.showActions) ...[
+        // أزرار الإجراءات السريعة
+        if (widget.showQuickActions) ...[
           ThemeConstants.space3.h,
           _buildQuickActions(color),
         ],
@@ -318,8 +252,8 @@ class _UnifiedAsmaAllahCardState extends State<UnifiedAsmaAllahCard>
           child: _buildActionButton(
             icon: Icons.copy_rounded,
             label: 'نسخ',
-            color: context.textSecondaryColor,
-            onTap: () => _copyName(),
+            color: ThemeConstants.primary,
+            onTap: _copyName,
           ),
         ),
         ThemeConstants.space2.w,
@@ -328,7 +262,7 @@ class _UnifiedAsmaAllahCardState extends State<UnifiedAsmaAllahCard>
             icon: Icons.share_rounded,
             label: 'مشاركة',
             color: color,
-            onTap: () => _shareName(),
+            onTap: _shareName,
           ),
         ),
       ],
@@ -343,18 +277,18 @@ class _UnifiedAsmaAllahCardState extends State<UnifiedAsmaAllahCard>
   }) {
     return Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+      borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+        borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
         child: Container(
           padding: const EdgeInsets.symmetric(
-            horizontal: ThemeConstants.space3,
-            vertical: ThemeConstants.space2,
+            horizontal: ThemeConstants.space2,
+            vertical: ThemeConstants.space1,
           ),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+            borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
             border: Border.all(
               color: color.withValues(alpha: 0.2),
               width: 1,
@@ -365,13 +299,13 @@ class _UnifiedAsmaAllahCardState extends State<UnifiedAsmaAllahCard>
             children: [
               Icon(
                 icon,
-                size: 16,
+                size: 14,
                 color: color,
               ),
               ThemeConstants.space1.w,
               Text(
                 label,
-                style: context.labelMedium?.copyWith(
+                style: context.labelSmall?.copyWith(
                   color: color,
                   fontWeight: ThemeConstants.medium,
                 ),
@@ -383,15 +317,15 @@ class _UnifiedAsmaAllahCardState extends State<UnifiedAsmaAllahCard>
     );
   }
 
-  String _getTruncatedMeaning(String meaning) {
-    if (meaning.length <= 100) return meaning;
+  String _getTruncatedText(String text, int maxLength) {
+    if (text.length <= maxLength) return text;
     
-    final words = meaning.split(' ');
+    final words = text.split(' ');
     final truncatedWords = <String>[];
     var currentLength = 0;
     
     for (final word in words) {
-      if (currentLength + word.length + 1 <= 100) {
+      if (currentLength + word.length + 1 <= maxLength) {
         truncatedWords.add(word);
         currentLength += word.length + 1;
       } else {
@@ -411,48 +345,216 @@ ${widget.item.reference != null ? 'من القرآن الكريم: ﴿${widget.i
 
     Clipboard.setData(ClipboardData(text: text));
     
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('تم نسخ الاسم بنجاح'),
-        backgroundColor: ThemeConstants.primary, // استخدام primary بدلاً من success
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
-        ),
-        margin: const EdgeInsets.all(ThemeConstants.space4),
-      ),
-    );
-    
+    context.showSuccessSnackBar('تم نسخ الاسم بنجاح');
     HapticFeedback.mediumImpact();
   }
 
   void _shareName() {
-    // يمكن إضافة وظيفة المشاركة هنا
-    HapticFeedback.lightImpact();
+    final content = '''${widget.item.name}
+
+المعنى: ${widget.item.meaning}
+
+${widget.item.reference != null ? 'من القرآن الكريم: ﴿${widget.item.reference}﴾\n\n' : ''}من تطبيق أذكاري - أسماء الله الحسنى''';
+
+    Share.share(
+      content,
+      subject: 'أسماء الله الحسنى - ${widget.item.name}',
+    );
     
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('ميزة المشاركة ستكون متوفرة قريباً'),
-        backgroundColor: ThemeConstants.accent, // استخدام accent بدلاً من info
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
-        ),
-        margin: const EdgeInsets.all(ThemeConstants.space4),
-      ),
+    HapticFeedback.lightImpact();
+  }
+}
+
+// ============================================================================
+// LoadingCard - بطاقة التحميل
+// ============================================================================
+class AsmaAllahLoadingCard extends StatefulWidget {
+  const AsmaAllahLoadingCard({super.key});
+
+  @override
+  State<AsmaAllahLoadingCard> createState() => _AsmaAllahLoadingCardState();
+}
+
+class _AsmaAllahLoadingCardState extends State<AsmaAllahLoadingCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _shimmerAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat();
+    
+    _shimmerAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _shimmerAnimation,
+      builder: (context, child) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: ThemeConstants.space2),
+          padding: const EdgeInsets.all(ThemeConstants.space3),
+          decoration: BoxDecoration(
+            color: context.cardColor,
+            borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
+            border: Border.all(
+              color: context.dividerColor.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Row(
+            children: [
+              // شكل الرقم
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: context.textSecondaryColor.withValues(
+                    alpha: 0.1 + (_shimmerAnimation.value * 0.1),
+                  ),
+                  borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                ),
+              ),
+              
+              ThemeConstants.space3.w,
+              
+              // شكل النص
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      height: 20,
+                      width: double.infinity * 0.4,
+                      decoration: BoxDecoration(
+                        color: context.textSecondaryColor.withValues(
+                          alpha: 0.1 + (_shimmerAnimation.value * 0.1),
+                        ),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    ThemeConstants.space1.h,
+                    Container(
+                      height: 14,
+                      width: double.infinity * 0.8,
+                      decoration: BoxDecoration(
+                        color: context.textSecondaryColor.withValues(
+                          alpha: 0.05 + (_shimmerAnimation.value * 0.05),
+                        ),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    ThemeConstants.space1.h,
+                    Container(
+                      height: 14,
+                      width: double.infinity * 0.6,
+                      decoration: BoxDecoration(
+                        color: context.textSecondaryColor.withValues(
+                          alpha: 0.05 + (_shimmerAnimation.value * 0.05),
+                        ),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
 
 // ============================================================================
-// SearchBar موحد لأسماء الله الحسنى
+// للتوافق مع الكود الموجود - Wrappers
 // ============================================================================
-class UnifiedAsmaAllahSearchBar extends StatelessWidget {
+
+/// البطاقة المحسنة - للتوافق مع الكود الموجود
+class EnhancedAsmaAllahCard extends StatelessWidget {
+  final AsmaAllahModel item;
+  final VoidCallback onTap;
+
+  const EnhancedAsmaAllahCard({
+    super.key,
+    required this.item,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CompactAsmaAllahCard(
+      item: item,
+      onTap: onTap,
+    );
+  }
+}
+
+/// البطاقة الموحدة - للتوافق مع الكود الموجود
+class UnifiedAsmaAllahCard extends StatelessWidget {
+  final AsmaAllahModel item;
+  final VoidCallback onTap;
+  final bool showActions;
+
+  const UnifiedAsmaAllahCard({
+    super.key,
+    required this.item,
+    required this.onTap,
+    this.showActions = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CompactAsmaAllahCard(
+      item: item,
+      onTap: onTap,
+      showQuickActions: showActions,
+    );
+  }
+}
+
+/// البطاقة الأساسية - للتوافق مع الكود الموجود
+class AsmaAllahCard extends StatelessWidget {
+  final AsmaAllahModel item;
+  final VoidCallback onTap;
+  
+  const AsmaAllahCard({
+    super.key,
+    required this.item,
+    required this.onTap,
+  });
+  
+  @override
+  Widget build(BuildContext context) {
+    return CompactAsmaAllahCard(
+      item: item,
+      onTap: onTap,
+    );
+  }
+}
+
+// ============================================================================
+// Search Bar المحسن
+// ============================================================================
+class EnhancedAsmaAllahSearchBar extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final VoidCallback onClear;
   
-  const UnifiedAsmaAllahSearchBar({
+  const EnhancedAsmaAllahSearchBar({
     super.key,
     required this.controller,
     required this.onChanged,
@@ -471,9 +573,9 @@ class UnifiedAsmaAllahSearchBar extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -482,21 +584,31 @@ class UnifiedAsmaAllahSearchBar extends StatelessWidget {
         onChanged: onChanged,
         style: context.bodyMedium,
         decoration: InputDecoration(
-          hintText: 'ابحث في الأسماء أو المعاني...',
+          hintText: 'ابحث في أسماء الله الحسنى أو معانيها...',
           hintStyle: TextStyle(
             color: context.textSecondaryColor.withValues(alpha: 0.7),
           ),
-          prefixIcon: Icon(
-            Icons.search_rounded,
-            color: context.textSecondaryColor,
-            size: ThemeConstants.iconMd,
+          prefixIcon: Container(
+            padding: const EdgeInsets.all(12),
+            child: Icon(
+              Icons.search_rounded,
+              color: context.textSecondaryColor,
+              size: ThemeConstants.iconMd,
+            ),
           ),
           suffixIcon: controller.text.isNotEmpty
               ? IconButton(
-                  icon: Icon(
-                    Icons.clear_rounded,
-                    color: context.textSecondaryColor,
-                    size: ThemeConstants.iconMd,
+                  icon: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: context.textSecondaryColor.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.clear_rounded,
+                      color: context.textSecondaryColor,
+                      size: 16,
+                    ),
                   ),
                   onPressed: onClear,
                 )
@@ -504,195 +616,10 @@ class UnifiedAsmaAllahSearchBar extends StatelessWidget {
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: ThemeConstants.space4,
-            vertical: ThemeConstants.space3,
+            vertical: ThemeConstants.space4,
           ),
         ),
       ),
     );
-  }
-}
-
-// ============================================================================
-// Header موحد لأسماء الله الحسنى
-// ============================================================================
-class UnifiedAsmaAllahHeader extends StatelessWidget {
-  const UnifiedAsmaAllahHeader({super.key});
-  
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [ThemeConstants.tertiary, ThemeConstants.tertiaryLight], // تغيير من primary إلى tertiary
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(ThemeConstants.space4),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              // الأيقونة والعنوان
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(ThemeConstants.space3),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.star_outline, // تغيير الأيقونة من star_purple500_outlined
-                      color: Colors.white,
-                      size: ThemeConstants.iconLg,
-                    ),
-                  ),
-                  
-                  ThemeConstants.space3.w,
-                  
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'أسماء الله الحسنى',
-                          style: context.headlineSmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: ThemeConstants.bold,
-                          ),
-                        ),
-                        Text(
-                          'تسعة وتسعون اسماً من أحصاها دخل الجنة',
-                          style: context.bodyMedium?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.9),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              
-              ThemeConstants.space3.h,
-              
-              // الآية القرآنية
-              Container(
-                padding: const EdgeInsets.all(ThemeConstants.space3),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Text(
-                  '﴿وَلِلَّهِ الْأَسْمَاءُ الْحُسْنَىٰ فَادْعُوهُ بِهَا﴾',
-                  style: context.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontFamily: ThemeConstants.fontFamilyQuran,
-                    height: 1.8,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ============================================================================
-// للتوافق مع الكود الموجود - Wrappers للعناصر القديمة
-// ============================================================================
-
-/// البطاقة المحسنة - للتوافق مع الكود الموجود
-class EnhancedAsmaAllahCard extends StatelessWidget {
-  final AsmaAllahModel item;
-  final VoidCallback onTap;
-
-  const EnhancedAsmaAllahCard({
-    super.key,
-    required this.item,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return UnifiedAsmaAllahCard(
-      item: item,
-      onTap: onTap,
-    );
-  }
-}
-
-/// الهيدر المحسن - للتوافق مع الكود الموجود
-class EnhancedAsmaAllahHeader extends StatelessWidget {
-  const EnhancedAsmaAllahHeader({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const UnifiedAsmaAllahHeader();
-  }
-}
-
-/// البطاقة الأساسية - للتوافق مع الكود الموجود
-class AsmaAllahCard extends StatelessWidget {
-  final AsmaAllahModel item;
-  final VoidCallback onTap;
-  
-  const AsmaAllahCard({
-    super.key,
-    required this.item,
-    required this.onTap,
-  });
-  
-  @override
-  Widget build(BuildContext context) {
-    return UnifiedAsmaAllahCard(
-      item: item,
-      onTap: onTap,
-    );
-  }
-}
-
-/// شريط البحث - للتوافق مع الكود الموجود
-class AsmaAllahSearchBar extends StatelessWidget {
-  final TextEditingController controller;
-  final ValueChanged<String> onChanged;
-  final VoidCallback onClear;
-  
-  const AsmaAllahSearchBar({
-    super.key,
-    required this.controller,
-    required this.onChanged,
-    required this.onClear,
-  });
-  
-  @override
-  Widget build(BuildContext context) {
-    return UnifiedAsmaAllahSearchBar(
-      controller: controller,
-      onChanged: onChanged,
-      onClear: onClear,
-    );
-  }
-}
-
-/// الهيدر الأساسي - للتوافق مع الكود الموجود
-class AsmaAllahHeader extends StatelessWidget {
-  const AsmaAllahHeader({super.key});
-  
-  @override
-  Widget build(BuildContext context) {
-    return const UnifiedAsmaAllahHeader();
   }
 }
