@@ -1,4 +1,4 @@
-// lib/features/athkar/services/athkar_service.dart (محسن ونظيف)
+// lib/features/athkar/services/athkar_service.dart (مُحدث بدون التقدم والإحصائيات)
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/material.dart';
@@ -199,7 +199,7 @@ class AthkarService {
     }
   }
 
-  // ==================== إدارة التقدم ====================
+  // ==================== إدارة التقدم الفردي ====================
 
   /// الحصول على تقدم فئة معينة
   Future<AthkarProgress> getCategoryProgress(String categoryId) async {
@@ -281,77 +281,6 @@ class AthkarService {
         error: e,
       );
       rethrow;
-    }
-  }
-
-  /// حساب نسبة الإكمال لفئة
-  Future<int> getCategoryCompletionPercentage(String categoryId) async {
-    try {
-      final category = await getCategoryById(categoryId);
-      if (category == null) return 0;
-
-      final progress = await getCategoryProgress(categoryId);
-      
-      int totalRequired = 0;
-      int totalCompleted = 0;
-
-      for (final item in category.athkar) {
-        totalRequired += item.count;
-        final completed = progress.itemProgress[item.id] ?? 0;
-        totalCompleted += completed.clamp(0, item.count);
-      }
-
-      if (totalRequired == 0) return 0;
-      return ((totalCompleted / totalRequired) * 100).round();
-    } catch (e) {
-      _logger.error(
-        message: '[AthkarService] Failed to calculate completion',
-        error: e,
-      );
-      return 0;
-    }
-  }
-
-  /// الحصول على إحصائيات عامة
-  Future<Map<String, dynamic>> getOverallStatistics() async {
-    try {
-      final categories = await loadCategories();
-      int totalCategories = categories.length;
-      int completedCategories = 0;
-      int totalAthkar = 0;
-      int completedAthkar = 0;
-
-      for (final category in categories) {
-        totalAthkar += category.athkar.length;
-        final percentage = await getCategoryCompletionPercentage(category.id);
-        
-        if (percentage >= 100) {
-          completedCategories++;
-        }
-        
-        final progress = await getCategoryProgress(category.id);
-        for (final item in category.athkar) {
-          if (progress.itemProgress[item.id] == item.count) {
-            completedAthkar++;
-          }
-        }
-      }
-
-      return {
-        'totalCategories': totalCategories,
-        'completedCategories': completedCategories,
-        'totalAthkar': totalAthkar,
-        'completedAthkar': completedAthkar,
-        'overallPercentage': totalAthkar > 0 
-            ? ((completedAthkar / totalAthkar) * 100).round()
-            : 0,
-      };
-    } catch (e) {
-      _logger.error(
-        message: '[AthkarService] Failed to get statistics',
-        error: e,
-      );
-      return {};
     }
   }
 

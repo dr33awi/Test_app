@@ -145,6 +145,10 @@ class CategoryUtils {
   }
 
   /// الحصول على لون من الثيم بناءً على نوع الفئة
+// إصلاح لون أيقونة أدعية النوم في CategoryUtils
+// lib/features/athkar/utils/category_utils.dart
+
+  /// الحصول على لون من الثيم بناءً على نوع الفئة
   static Color getCategoryThemeColor(String categoryId) {
     switch (categoryId.toLowerCase()) {
       // أذكار الأوقات
@@ -159,7 +163,7 @@ class CategoryUtils {
       case 'sleep':
       case 'النوم':
       case 'نوم':
-        return const Color(0xFF2D352D); // داكن أنيق للليل
+        return const Color(0xFF5A7AA0); // أزرق فاتح بدلاً من الداكن
       case 'wakeup':
       case 'wake_up':
       case 'الاستيقاظ':

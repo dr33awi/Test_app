@@ -1,4 +1,4 @@
-// lib/features/athkar/screens/athkar_details_screen.dart (محسن مع ميزة حجم الخط)
+// lib/features/athkar/screens/athkar_details_screen.dart (مُحدث بدون شريط التقدم)
 import 'package:athkar_app/features/athkar/utils/athkar_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,7 +10,6 @@ import '../../../core/infrastructure/services/utils/extensions/string_extensions
 import '../services/athkar_service.dart';
 import '../models/athkar_model.dart';
 import '../widgets/athkar_item_card.dart';
-import '../widgets/athkar_progress_bar.dart';
 import '../utils/category_utils.dart';
 import 'notification_settings_screen.dart';
 
@@ -35,11 +34,10 @@ class _AthkarDetailsScreenState extends State<AthkarDetailsScreen> {
   final Map<int, int> _counts = {};
   final Set<int> _completedItems = {};
   List<AthkarItem> _visibleItems = [];
-  int _totalProgress = 0;
   bool _loading = true;
   bool _allCompleted = false;
   bool _wasCompletedOnLoad = false;
-  double _fontSize = 18.0; // NEW: حجم الخط
+  double _fontSize = 18.0; // حجم الخط
 
   @override
   void initState() {
@@ -66,7 +64,7 @@ class _AthkarDetailsScreenState extends State<AthkarDetailsScreen> {
       // تحميل التقدم المحفوظ
       final savedProgress = _loadSavedProgress();
       
-      // تحميل حجم الخط المحفوظ (NEW)
+      // تحميل حجم الخط المحفوظ
       _fontSize = await _service.getSavedFontSize();
       
       // Check if category was already completed when loading
@@ -98,7 +96,7 @@ class _AthkarDetailsScreenState extends State<AthkarDetailsScreen> {
             }
           }
           _updateVisibleItems();
-          _calculateProgress();
+          _checkCompletion();
         }
         _loading = false;
       });
@@ -106,7 +104,6 @@ class _AthkarDetailsScreenState extends State<AthkarDetailsScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
-      // استخدام app_snackbar.dart بدلاً من athkar_extensions.dart
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('حدث خطأ في تحميل الأذكار'),
@@ -139,7 +136,7 @@ class _AthkarDetailsScreenState extends State<AthkarDetailsScreen> {
     await _storage.setMap(key, data);
   }
 
-  void _calculateProgress() {
+  void _checkCompletion() {
     if (_category == null) return;
     
     int completed = 0;
@@ -152,7 +149,6 @@ class _AthkarDetailsScreenState extends State<AthkarDetailsScreen> {
     }
     
     setState(() {
-      _totalProgress = total > 0 ? ((completed / total) * 100).round() : 0;
       _allCompleted = completed >= total && total > 0;
     });
   }
@@ -172,7 +168,7 @@ class _AthkarDetailsScreenState extends State<AthkarDetailsScreen> {
           _updateVisibleItems(); // إخفاء الذكر المكتمل
         }
       }
-      _calculateProgress();
+      _checkCompletion();
     });
     
     _saveProgress();
@@ -186,7 +182,7 @@ class _AthkarDetailsScreenState extends State<AthkarDetailsScreen> {
       _counts[item.id] = 0;
       _completedItems.remove(item.id);
       _updateVisibleItems();
-      _calculateProgress();
+      _checkCompletion();
     });
     
     _saveProgress();
@@ -210,7 +206,6 @@ ${_category!.athkar.map((item) => '✓ ${item.text.truncate(50)}').join('\n')}
       _counts.clear();
       _completedItems.clear();
       _allCompleted = false;
-      _totalProgress = 0;
       _wasCompletedOnLoad = false;
       _updateVisibleItems();
     });
@@ -238,7 +233,7 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
     await Share.share(text);
   }
 
-  // NEW: إظهار حوار حجم الخط
+  // إظهار حوار حجم الخط
   void _showFontSizeDialog() {
     showDialog(
       context: context,
@@ -270,7 +265,7 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
     );
   }
 
-  // NEW: بناء خيار حجم الخط
+  // بناء خيار حجم الخط
   Widget _buildFontSizeOption(String label, double size) {
     final isSelected = _fontSize == size;
     
@@ -342,7 +337,7 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
         body: SafeArea(
           child: Column(
             children: [
-              // Custom AppBar محسن
+              // Custom AppBar
               _buildCustomAppBar(context, 'جاري تحميل الأذكار...'),
               
               // Loading content
@@ -365,7 +360,7 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
         body: SafeArea(
           child: Column(
             children: [
-              // Custom AppBar محسن
+              // Custom AppBar
               _buildCustomAppBar(context, 'الأذكار'),
               
               // Error content
@@ -388,16 +383,8 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
       body: SafeArea(
         child: Column(
           children: [
-            // Custom AppBar محسن
+            // Custom AppBar
             _buildCustomAppBar(context, category.title, category: category),
-            
-            // شريط التقدم
-            AthkarProgressBar(
-              progress: _totalProgress,
-              color: CategoryUtils.getCategoryThemeColor(category.id),
-              completedCount: _completedItems.length,
-              totalCount: category.athkar.length,
-            ),
             
             // قائمة الأذكار
             Expanded(
@@ -410,7 +397,6 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
   }
 
   Widget _buildCustomAppBar(BuildContext context, String title, {AthkarCategory? category}) {
-    // استخدام نفس التدرج المستخدم في CategoryGrid لفئة prayer_times
     const gradient = LinearGradient(
       colors: [ThemeConstants.primary, ThemeConstants.primaryLight],
       begin: Alignment.topLeft,
@@ -421,14 +407,14 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
       padding: const EdgeInsets.all(ThemeConstants.space4),
       child: Row(
         children: [
-          // زر الرجوع - مطابق لـ athkar_categories_screen
+          // زر الرجوع
           AppBackButton(
             onPressed: () => Navigator.of(context).pop(),
           ),
           
           ThemeConstants.space3.w,
           
-          // الأيقونة الجانبية مع نفس التدرج المستخدم في CategoryGrid
+          // الأيقونة الجانبية
           Container(
             padding: const EdgeInsets.all(ThemeConstants.space2),
             decoration: BoxDecoration(
@@ -467,7 +453,7 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
                 ),
                 if (category != null)
                   Text(
-                    'التقدم: ${_completedItems.length}/${category.athkar.length} - $_totalProgress%',
+                    '${category.athkar.length} ذكر - ${_completedItems.length} مكتمل',
                     style: context.bodySmall?.copyWith(
                       color: context.textSecondaryColor,
                     ),
@@ -485,7 +471,7 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
           
           // الأزرار
           if (category != null) ...[
-            // NEW: زر حجم الخط
+            // زر حجم الخط
             Container(
               margin: const EdgeInsets.only(left: ThemeConstants.space2),
               child: Material(
@@ -677,7 +663,7 @@ ${item.source != null ? 'المصدر: ${item.source}' : ''}
               isCompleted: isCompleted,
               number: number,
               color: CategoryUtils.getCategoryThemeColor(category.id),
-              fontSize: _fontSize, // NEW: تمرير حجم الخط
+              fontSize: _fontSize,
               onTap: () => _onItemTap(item),
               onLongPress: () => _onItemLongPress(item),
               onShare: () => _shareItem(item),

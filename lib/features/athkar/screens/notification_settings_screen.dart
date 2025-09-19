@@ -1,4 +1,4 @@
-// lib/features/athkar/screens/notification_settings_screen.dart (مُصلح)
+// lib/features/athkar/screens/notification_settings_screen.dart (ألوان الأيقونات فقط)
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../app/di/service_locator.dart';
@@ -8,6 +8,7 @@ import '../../../core/infrastructure/services/storage/storage_service.dart';
 import '../services/athkar_service.dart';
 import '../models/athkar_model.dart';
 import '../constants/athkar_constants.dart';
+import '../utils/category_utils.dart';
 import '../../../core/infrastructure/services/notifications/notification_manager.dart';
 import '../../../core/infrastructure/services/notifications/models/notification_models.dart';
 
@@ -135,7 +136,6 @@ class _AthkarNotificationSettingsScreenState
 
   Future<void> _migrateSettings(int fromVersion) async {
     debugPrint('ترقية إعدادات الأذكار من الإصدار $fromVersion');
-    // يمكن إضافة منطق الترقية هنا عند الحاجة
   }
 
   Future<void> _saveInitialSettings(List<String> autoEnabledIds) async {
@@ -796,6 +796,10 @@ class _AthkarNotificationSettingsScreenState
         AthkarConstants.getDefaultTimeForCategory(category.id);
     final isAutoEnabled = AthkarConstants.shouldAutoEnable(category.id);
     final isEssential = AthkarConstants.isEssentialCategory(category.id);
+    
+    // الحصول على اللون والأيقونة المطابقة من CategoryUtils (فقط للأيقونات)
+    final categoryColor = CategoryUtils.getCategoryThemeColor(category.id);
+    final categoryIcon = CategoryUtils.getCategoryIcon(category.id);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: ThemeConstants.space3),
@@ -806,17 +810,17 @@ class _AthkarNotificationSettingsScreenState
           children: [
             Row(
               children: [
-                // أيقونة الفئة
+                // أيقونة الفئة بلون مطابق فقط
                 Container(
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: category.color.withValues(alpha: 0.1),
+                    color: categoryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
                   ),
                   child: Icon(
-                    category.icon,
-                    color: category.color,
+                    categoryIcon,
+                    color: categoryColor,
                     size: ThemeConstants.iconMd,
                   ),
                 ),
