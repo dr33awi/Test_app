@@ -1,478 +1,275 @@
-// lib/app/themes/theme_constants.dart (منظف)
+// lib/app/themes/neumorphism_theme_constants.dart
 import 'package:flutter/material.dart';
 
-/// كل ثوابت الثيم في ملف واحد - منظف من القيم غير المستخدمة
+/// Neumorphism (Soft UI) Theme Constants
+/// This file defines all colors, shadows, and styling for the Neumorphism design system
 class ThemeConstants {
   ThemeConstants._();
 
-  // ===== الألوان الأساسية - الهوية البصرية الجديدة =====
-  static const Color primary = Color(0xFF5D7052); // أخضر زيتي أنيق
-  static const Color primaryLight = Color(0xFF7A8B6F); // أخضر زيتي فاتح
-  static const Color primaryDark = Color(0xFF445A3B); // أخضر زيتي داكن
-  static const Color primarySoft = Color(0xFF8FA584); // أخضر زيتي ناعم
-
-  // ===== الألوان الثانوية =====
-  static const Color accent = Color(0xFFB8860B); // ذهبي دافئ
-  static const Color accentLight = Color(0xFFDAA520); // ذهبي فاتح
-  static const Color accentDark = Color(0xFF996515); // ذهبي داكن
+  // ==================== Color Palette ====================
   
-  // ===== اللون الثالث =====
-  static const Color tertiary = Color(0xFF8B6F47); // بني دافئ
-  static const Color tertiaryLight = Color(0xFFA68B5B); // بني فاتح
-  static const Color tertiaryDark = Color(0xFF6B5637); // بني داكن
+  // Primary Colors (Soft Green Palette)
+  static const Color primary = Color(0xFF4A9B8E);           // Soft teal-green
+  static const Color primaryLight = Color(0xFF6FB5A8);      // Lighter green
+  static const Color primaryDark = Color(0xFF2F7A6B);       // Darker green
+  static const Color primarySoft = Color(0xFFE8F5F3);       // Very light green for surfaces
+  
+  // Background Colors
+  static const Color lightBackground = Color(0xFFF0F2F5);    // Soft off-white
+  static const Color darkBackground = Color(0xFF1C1E22);     // Dark mode background
+  static const Color cardBackground = Color(0xFFFAFBFC);     // Card background
+  static const Color darkCardBackground = Color(0xFF252832); // Dark mode card
+  
+  // Surface Colors
+  static const Color lightSurface = Color(0xFFFFFFFF);       // Pure white
+  static const Color darkSurface = Color(0xFF2A2D35);        // Dark surface
+  static const Color elevatedSurface = Color(0xFFF8F9FA);    // Slightly elevated
+  
+  // Text Colors
+  static const Color textPrimary = Color(0xFF2D3748);        // Dark text
+  static const Color textSecondary = Color(0xFF718096);      // Secondary text
+  static const Color textHint = Color(0xFFA0AEC0);          // Hint text
+  static const Color textOnPrimary = Color(0xFFFFFFFF);      // White text on primary
+  
 
-  // ===== الألوان الدلالية =====
-  static const Color success = Color(0xFF5D7052); // نفس اللون الأساسي للتناسق
-  static const Color error = Color(0xFFB85450); // أحمر مخملي ناعم
-  static const Color warning = Color(0xFFD4A574); // برتقالي دافئ
-  static const Color info = Color(0xFF6B8E9F); // أزرق رمادي
-
-  // ===== ألوان الوضع الفاتح =====
-  static const Color lightBackground = Color(0xFFFAFAF8); // خلفية دافئة
-  static const Color lightSurface = Color(0xFFF5F5F0); // سطح دافئ
-  static const Color lightCard = Color(0xFFFFFFFF); // بطاقات بيضاء
-  static const Color lightDivider = Color(0xFFE0DDD4); // فواصل دافئة
-  static const Color lightTextPrimary = Color(0xFF2D2D2D); // نص أساسي
-  static const Color lightTextSecondary = Color(0xFF5F5F5F); // نص ثانوي
-  static const Color lightTextHint = Color(0xFF8F8F8F); // نص تلميحي
-
-  // ===== ألوان الوضع الداكن =====
-  static const Color darkBackground = Color(0xFF1A1F1A); // خلفية داكنة دافئة
-  static const Color darkSurface = Color(0xFF242B24); // سطح داكن
-  static const Color darkCard = Color(0xFF2D352D); // بطاقات داكنة
-  static const Color darkDivider = Color(0xFF3A453A); // فواصل داكنة
-  static const Color darkTextPrimary = Color(0xFFF5F5F0); // نص فاتح
-  static const Color darkTextSecondary = Color(0xFFBDBDB0); // نص ثانوي
-  static const Color darkTextHint = Color(0xFF8A8A80); // نص تلميحي
-
-  // ===== الخطوط =====
-  static const String fontFamilyArabic = 'Cairo';
-  static const String fontFamilyQuran = 'Amiri';
-  static const String fontFamily = fontFamilyArabic;
-
-  // ===== أوزان الخطوط =====
+  // ==================== Shadows ====================
+  
+  // Light Mode Shadows
+  static const List<BoxShadow> lightElevated = [
+    BoxShadow(
+      color: Color(0x0D000000),                             // 5% black
+      offset: Offset(3, 3),
+      blurRadius: 6,
+      spreadRadius: 0,
+    ),
+    BoxShadow(
+      color: Color(0xFFFFFFFF),                             // Pure white
+      offset: Offset(-3, -3),
+      blurRadius: 6,
+      spreadRadius: 0,
+    ),
+  ];
+  
+  static const List<BoxShadow> lightPressed = [
+    BoxShadow(
+      color: Color(0x1A000000),                             // 10% black - inset effect
+      offset: Offset(2, 2),
+      blurRadius: 4,
+      spreadRadius: -1,
+    ),
+  ];
+  
+  static const List<BoxShadow> lightFloating = [
+    BoxShadow(
+      color: Color(0x14000000),                             // 8% black
+      offset: Offset(4, 4),
+      blurRadius: 12,
+      spreadRadius: 0,
+    ),
+    BoxShadow(
+      color: Color(0xFFFFFFFF),                             // Pure white
+      offset: Offset(-4, -4),
+      blurRadius: 12,
+      spreadRadius: 0,
+    ),
+  ];
+  
+  // Dark Mode Shadows
+  static const List<BoxShadow> darkElevated = [
+    BoxShadow(
+      color: Color(0x33000000),                             // 20% black
+      offset: Offset(3, 3),
+      blurRadius: 6,
+      spreadRadius: 0,
+    ),
+    BoxShadow(
+      color: Color(0x0DFFFFFF),                             // 5% white
+      offset: Offset(-3, -3),
+      blurRadius: 6,
+      spreadRadius: 0,
+    ),
+  ];
+  
+  static const List<BoxShadow> darkPressed = [
+    BoxShadow(
+      color: Color(0x4D000000),                             // 30% black - inset effect
+      offset: Offset(2, 2),
+      blurRadius: 4,
+      spreadRadius: -1,
+    ),
+  ];
+  
+  static const List<BoxShadow> darkFloating = [
+    BoxShadow(
+      color: Color(0x40000000),                             // 25% black
+      offset: Offset(4, 4),
+      blurRadius: 12,
+      spreadRadius: 0,
+    ),
+    BoxShadow(
+      color: Color(0x1AFFFFFF),                             // 10% white
+      offset: Offset(-4, -4),
+      blurRadius: 12,
+      spreadRadius: 0,
+    ),
+  ];
+  
+  // ==================== Border Radius ====================
+  
+  static const double radiusXs = 4.0;                       // Extra small radius
+  static const double radiusSm = 8.0;                       // Small radius
+  static const double radiusMd = 12.0;                      // Medium radius
+  static const double radiusLg = 16.0;                      // Large radius
+  static const double radiusXl = 20.0;                      // Extra large radius
+  static const double radius2xl = 24.0;                     // 2X large radius
+  static const double radius3xl = 32.0;                     // 3X large radius
+  static const double radiusFull = 9999.0;                  // Full radius (circle)
+  
+  // ==================== Spacing ====================
+  
+  static const double space1 = 4.0;                         // 4px
+  static const double space2 = 8.0;                         // 8px
+  static const double space3 = 12.0;                        // 12px
+  static const double space4 = 16.0;                        // 16px
+  static const double space5 = 20.0;                        // 20px
+  static const double space6 = 24.0;                        // 24px
+  static const double space7 = 28.0;                        // 28px
+  static const double space8 = 32.0;                        // 32px
+  static const double space10 = 40.0;                       // 40px
+  static const double space12 = 48.0;                       // 48px
+  static const double space16 = 64.0;                       // 64px
+  
+  // ==================== Typography ====================
+  
+  static const String fontFamily = 'Cairo';                 // Primary font
+  static const String fontFamilySecondary = 'Tajawal';      // Secondary font
+  static const String fontFamilyQuran = 'Amiri';            // Quran/Arabic text
+  
+  // Font Weights
   static const FontWeight light = FontWeight.w300;
   static const FontWeight regular = FontWeight.w400;
   static const FontWeight medium = FontWeight.w500;
   static const FontWeight semiBold = FontWeight.w600;
   static const FontWeight bold = FontWeight.w700;
-
-  // ===== أحجام النصوص =====
-  static const double textSizeXs = 11.0;
-  static const double textSizeSm = 12.0;
-  static const double textSizeMd = 14.0;
-  static const double textSizeLg = 16.0;
-  static const double textSizeXl = 18.0;
-  static const double textSize2xl = 20.0;
-  static const double textSize3xl = 24.0;
-  static const double textSize4xl = 28.0;
-  static const double textSize5xl = 32.0;
-
-  // ===== المسافات =====
-  static const double space0 = 0.0;
-  static const double space1 = 4.0;   // xs
-  static const double space2 = 8.0;   // sm
-  static const double space3 = 12.0;  // md
-  static const double space4 = 16.0;  // lg
-  static const double space5 = 20.0;  // xl
-  static const double space6 = 24.0;  // 2xl
-  static const double space8 = 32.0;  // 3xl
-  static const double space10 = 40.0; // 4xl
-  static const double space12 = 48.0; // 5xl
-  static const double space16 = 64.0; // 6xl
-
-  // ===== نصف القطر =====
-  static const double radiusNone = 0.0;
-  static const double radiusXs = 4.0;
-  static const double radiusSm = 8.0;
-  static const double radiusMd = 12.0;
-  static const double radiusLg = 16.0;
-  static const double radiusXl = 20.0;
-  static const double radius2xl = 24.0;
-  static const double radius3xl = 28.0;
-  static const double radiusFull = 999.0;
-
-  // ===== الحدود =====
-  static const double borderNone = 0.0;
-  static const double borderThin = 0.5;
-  static const double borderLight = 1.0;
-  static const double borderMedium = 1.5;
-  static const double borderThick = 2.0;
-  static const double borderHeavy = 3.0;
-
-  // ===== نقاط التوقف للتصميم المتجاوب =====
-  static const double breakpointMobile = 600.0;
-  static const double breakpointTablet = 1024.0;
-  static const double breakpointDesktop = 1440.0;
-  static const double breakpointWide = 1920.0;
+  static const FontWeight extraBold = FontWeight.w800;
   
-  // ===== أحجام الأيقونات =====
-  static const double iconXs = 16.0;
-  static const double iconSm = 20.0;
-  static const double iconMd = 24.0;
-  static const double iconLg = 32.0;
-  static const double iconXl = 40.0;
-  static const double icon2xl = 48.0;
-  static const double icon3xl = 56.0;
-
-  // ===== الارتفاعات =====
-  static const double heightXs = 32.0;
-  static const double heightSm = 36.0;
-  static const double heightMd = 40.0;
-  static const double heightLg = 48.0;
-  static const double heightXl = 56.0;
-  static const double height2xl = 64.0;
-  static const double height3xl = 72.0;
-
-  // ===== مكونات خاصة =====
-  static const double appBarHeight = 64.0;
-  static const double bottomNavHeight = 64.0;
-  static const double buttonHeight = 52.0;
-  static const double inputHeight = 56.0;
-  static const double fabSize = 56.0;
-  static const double fabSizeMini = 40.0;
-
-  // ===== Avatar Sizes =====
-  static const double avatarSm = 32.0;
-  static const double avatarMd = 40.0;
-  static const double avatarLg = 56.0;
-  static const double avatarXl = 64.0;
-
-  // ===== الظلال =====
-  static const double elevationNone = 0.0;
-  static const double elevation1 = 1.0;
-  static const double elevation2 = 2.0;
-  static const double elevation4 = 4.0;
-  static const double elevation6 = 6.0;
-  static const double elevation8 = 8.0;
-  static const double elevation12 = 12.0;
-  static const double elevation16 = 16.0;
-
-  // ===== الشفافية =====
-  static const double opacity5 = 0.05;
-  static const double opacity10 = 0.10;
-  static const double opacity20 = 0.20;
-  static const double opacity30 = 0.30;
-  static const double opacity40 = 0.40;
-  static const double opacity50 = 0.50;
-  static const double opacity60 = 0.60;
-  static const double opacity70 = 0.70;
-  static const double opacity80 = 0.80;
-  static const double opacity90 = 0.90;
-
-  // ===== مدد الحركات =====
-  static const Duration durationInstant = Duration(milliseconds: 100);
-  static const Duration durationFast = Duration(milliseconds: 200);
-  static const Duration durationNormal = Duration(milliseconds: 300);
+  // Font Sizes
+  static const double fontXs = 12.0;                        // Extra small
+  static const double fontSm = 14.0;                        // Small
+  static const double fontBase = 16.0;                      // Base size
+  static const double fontLg = 18.0;                        // Large
+  static const double fontXl = 20.0;                        // Extra large
+  static const double font2xl = 24.0;                       // 2X large
+  static const double font3xl = 30.0;                       // 3X large
+  static const double font4xl = 36.0;                       // 4X large
+  
+  // ==================== Icons ====================
+  
+  static const double iconXs = 16.0;                        // Extra small icon
+  static const double iconSm = 20.0;                        // Small icon
+  static const double iconMd = 24.0;                        // Medium icon
+  static const double iconLg = 32.0;                        // Large icon
+  static const double iconXl = 40.0;                        // Extra large icon
+  static const double icon2xl = 48.0;                       // 2X large icon
+  
+  // ==================== Animation ====================
+  
+  static const Duration durationFast = Duration(milliseconds: 150);
+  static const Duration durationNormal = Duration(milliseconds: 250);
   static const Duration durationSlow = Duration(milliseconds: 400);
-  static const Duration durationVerySlow = Duration(milliseconds: 600);
-  static const Duration durationExtraSlow = Duration(milliseconds: 1000);
-
-  // ===== منحنيات الحركة =====
+  static const Duration durationSlowest = Duration(milliseconds: 600);
+  
   static const Curve curveDefault = Curves.easeInOut;
-  static const Curve curveSharp = Curves.easeInOutCubic;
-  static const Curve curveSmooth = Curves.easeInOutQuint;
-  static const Curve curveBounce = Curves.elasticOut;
-  static const Curve curveOvershoot = Curves.easeOutBack;
-  static const Curve curveAnticipate = Curves.easeInBack;
-
-  // ===== التدرجات اللونية الأساسية =====
+  static const Curve curveEmphasized = Curves.easeOutCubic;
+  static const Curve curveDecelerated = Curves.easeOut;
+  static const Curve curveAccelerated = Curves.easeIn;
+  
+  // ==================== Gradients ====================
+  
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primaryLight, primary],
+    colors: [primary, primaryLight],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-
-  static const LinearGradient accentGradient = LinearGradient(
-    colors: [accentLight, accent],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  static const LinearGradient tertiaryGradient = LinearGradient(
-    colors: [tertiaryLight, tertiary],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  // ===== الظلال الجاهزة =====
-  static List<BoxShadow> shadowSm = [
-    BoxShadow(
-      color: primary.withOpacity(opacity5),
-      blurRadius: 4,
-      offset: const Offset(0, 2),
-    ),
-  ];
-
-  static List<BoxShadow> shadowMd = [
-    BoxShadow(
-      color: primary.withOpacity(opacity10),
-      blurRadius: 8,
-      offset: const Offset(0, 4),
-    ),
-  ];
-
-  static List<BoxShadow> shadowLg = [
-    BoxShadow(
-      color: primary.withOpacity(opacity10),
-      blurRadius: 16,
-      offset: const Offset(0, 8),
-    ),
-  ];
-
-  static List<BoxShadow> shadowXl = [
-    BoxShadow(
-      color: primary.withOpacity(opacity20),
-      blurRadius: 24,
-      offset: const Offset(0, 12),
-    ),
-  ];
-
-  static List<BoxShadow> shadowInner = [
-    BoxShadow(
-      color: primary.withOpacity(opacity10),
-      blurRadius: 4,
-      offset: const Offset(0, -2),
-      spreadRadius: -2,
-    ),
-  ];
-
-  // ===== الأيقونات =====
-  // أيقونات الصلاة
-  static const IconData iconPrayer = Icons.mosque;
-  static const IconData iconPrayerTime = Icons.access_time;
-  static const IconData iconQibla = Icons.explore;
-  static const IconData iconAdhan = Icons.volume_up;
-
-  // أيقونات الأذكار
-  static const IconData iconAthkar = Icons.menu_book;
-  static const IconData iconMorningAthkar = Icons.wb_sunny;
-  static const IconData iconEveningAthkar = Icons.nights_stay;
-  static const IconData iconSleepAthkar = Icons.bedtime;
-
-  // أيقونات عامة
-  static const IconData iconFavorite = Icons.favorite;
-  static const IconData iconFavoriteOutline = Icons.favorite_border;
-  static const IconData iconShare = Icons.share;
-  static const IconData iconCopy = Icons.content_copy;
-  static const IconData iconSettings = Icons.settings;
-  static const IconData iconNotifications = Icons.notifications;
-
-  // ===== ثوابت الإشعارات =====
-  static const Duration defaultCacheDuration = Duration(hours: 24);
-  static const Duration splashDuration = Duration(seconds: 2);
-  static const Duration debounceDelay = Duration(milliseconds: 500);
   
-  // ===== إعدادات البطارية =====
-  static const int defaultMinBatteryLevel = 15;
-  static const int criticalBatteryLevel = 5;
-
-  static var accentSoft;
-
-  // ===== دوال مساعدة =====
+  static const LinearGradient surfaceGradient = LinearGradient(
+    colors: [lightSurface, elevatedSurface],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
   
-  /// الحصول على اللون حسب الثيم
-  static Color background(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? darkBackground
-        : lightBackground;
-  }
-
-  static Color surface(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? darkSurface
-        : lightSurface;
-  }
-
-  static Color card(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? darkCard
-        : lightCard;
-  }
-
-  static Color textPrimary(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? darkTextPrimary
-        : lightTextPrimary;
-  }
-
-  static Color textSecondary(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? darkTextSecondary
-        : lightTextSecondary;
-  }
-
-  static Color divider(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark
-        ? darkDivider
-        : lightDivider;
-  }
-
-  /// إنشاء تدرج مخصص
-  static LinearGradient customGradient({
-    required List<Color> colors,
-    AlignmentGeometry begin = Alignment.topLeft,
-    AlignmentGeometry end = Alignment.bottomRight,
-    List<double>? stops,
+  // ==================== Helper Methods ====================
+  
+  /// Get shadows based on theme mode and elevation type
+  static List<BoxShadow> getShadows({
+    required bool isDark,
+    ShadowType type = ShadowType.elevated,
   }) {
-    return LinearGradient(
-      colors: colors,
-      begin: begin,
-      end: end,
-      stops: stops,
+    switch (type) {
+      case ShadowType.elevated:
+        return isDark ? darkElevated : lightElevated;
+      case ShadowType.pressed:
+        return isDark ? darkPressed : lightPressed;
+      case ShadowType.floating:
+        return isDark ? darkFloating : lightFloating;
+    }
+  }
+  
+  /// Get background color based on theme mode
+  static Color getBackgroundColor(bool isDark) {
+    return isDark ? darkBackground : lightBackground;
+  }
+  
+  /// Get surface color based on theme mode
+  static Color getSurfaceColor(bool isDark) {
+    return isDark ? darkSurface : lightSurface;
+  }
+  
+  /// Get card background color based on theme mode
+  static Color getCardColor(bool isDark) {
+    return isDark ? darkCardBackground : cardBackground;
+  }
+  
+  /// Get text color based on theme mode
+  static Color getTextColor(bool isDark, {bool isSecondary = false}) {
+    if (isDark) {
+      return isSecondary ? const Color(0xFFA0AEC0) : const Color(0xFFFFFFFF);
+    } else {
+      return isSecondary ? textSecondary : textPrimary;
+    }
+  }
+  
+  /// Create a neumorphic container decoration
+  static BoxDecoration neumorphicDecoration({
+    required bool isDark,
+    ShadowType shadowType = ShadowType.elevated,
+    double borderRadius = radiusMd,
+    Color? backgroundColor,
+    bool isPressed = false,
+  }) {
+    return BoxDecoration(
+      color: backgroundColor ?? (isDark ? darkCardBackground : cardBackground),
+      borderRadius: BorderRadius.circular(borderRadius),
+      boxShadow: isPressed 
+          ? getShadows(isDark: isDark, type: ShadowType.pressed)
+          : getShadows(isDark: isDark, type: shadowType),
     );
   }
-
-  /// الحصول على ظل حسب الارتفاع
-  static List<BoxShadow> shadowForElevation(double elevation) {
-    if (elevation <= 0) return [];
-    if (elevation <= 2) return shadowSm;
-    if (elevation <= 4) return shadowMd;
-    if (elevation <= 8) return shadowLg;
-    return shadowXl;
+  
+  /// Create a neumorphic border
+  static Border? neumorphicBorder(bool isDark) {
+    return Border.all(
+      color: isDark 
+          ? const Color(0x1AFFFFFF) 
+          : const Color(0x1A000000),
+      width: 0.5,
+    );
   }
+}
 
-  /// الحصول على تدرج حسب وقت الصلاة
-  static LinearGradient prayerGradient(String prayerName) {
-    switch (prayerName.toLowerCase()) {
-      case 'fajr':
-      case 'الفجر':
-        return const LinearGradient(
-          colors: [Color(0xFF445A3B), Color(0xFF5D7052)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        );
-      case 'dhuhr':
-      case 'الظهر':
-        return const LinearGradient(
-          colors: [Color(0xFFDAA520), Color(0xFFB8860B)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        );
-      case 'asr':
-      case 'العصر':
-        return const LinearGradient(
-          colors: [Color(0xFF8FA584), Color(0xFF7A8B6F)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        );
-      case 'maghrib':
-      case 'المغرب':
-        return const LinearGradient(
-          colors: [Color(0xFFA68B5B), Color(0xFF8B6F47)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        );
-      case 'isha':
-      case 'العشاء':
-        return const LinearGradient(
-          colors: [Color(0xFF2D352D), Color(0xFF1A1F1A)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        );
-      default:
-        return primaryGradient;
-    }
-  }
-
-  /// الحصول على لون حسب اسم الصلاة
-  static Color getPrayerColor(String name) {
-    switch (name.toLowerCase()) {
-      case 'fajr':
-      case 'الفجر':
-        return const Color(0xFF445A3B); // أخضر زيتي داكن
-      case 'dhuhr':
-      case 'الظهر':
-        return const Color(0xFFB8860B); // ذهبي
-      case 'asr':
-      case 'العصر':
-        return const Color(0xFF7A8B6F); // أخضر زيتي فاتح
-      case 'maghrib':
-      case 'المغرب':
-        return const Color(0xFF8B6F47); // بني دافئ
-      case 'isha':
-      case 'العشاء':
-        return const Color(0xFF2D352D); // داكن أنيق
-      case 'sunrise':
-      case 'الشروق':
-        return const Color(0xFFDAA520); // ذهبي فاتح
-      default:
-        return primary; // اللون الأساسي
-    }
-  }
-
-  /// الحصول على أيقونة حسب اسم الصلاة
-  static IconData getPrayerIcon(String name) {
-    switch (name.toLowerCase()) {
-      case 'fajr':
-      case 'الفجر':
-        return Icons.dark_mode;
-      case 'dhuhr':
-      case 'الظهر':
-        return Icons.light_mode;
-      case 'asr':
-      case 'العصر':
-        return Icons.wb_cloudy;
-      case 'maghrib':
-      case 'المغرب':
-        return Icons.wb_twilight;
-      case 'isha':
-      case 'العشاء':
-        return Icons.bedtime;
-      case 'sunrise':
-      case 'الشروق':
-        return Icons.wb_sunny;
-      default:
-        return Icons.access_time;
-    }
-  }
-
-  /// الحصول على تدرج حسب الوقت
-  static LinearGradient getTimeBasedGradient() {
-    final hour = DateTime.now().hour;
-    
-    if (hour < 5) {
-      return const LinearGradient(
-        colors: [darkCard, darkBackground],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
-    } else if (hour < 8) {
-      return const LinearGradient(
-        colors: [primaryDark, primary],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
-    } else if (hour < 12) {
-      return const LinearGradient(
-        colors: [primaryLight, primarySoft],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
-    } else if (hour < 15) {
-      return const LinearGradient(
-        colors: [accent, accentLight],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
-    } else if (hour < 17) {
-      return const LinearGradient(
-        colors: [primarySoft, primaryLight],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
-    } else if (hour < 20) {
-      return const LinearGradient(
-        colors: [tertiary, tertiaryLight],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
-    } else {
-      return const LinearGradient(
-        colors: [primaryDark, primary],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
-    }
-  }
+/// Shadow types for neumorphic design
+enum ShadowType {
+  elevated,   // Normal elevation shadow
+  pressed,    // Pressed/inset shadow
+  floating,   // High elevation shadow
 }
