@@ -1,4 +1,4 @@
-// lib/features/dua/screens/dua_categories_screen.dart - محسن ومتناسق
+// lib/features/dua/screens/dua_categories_screen.dart - محسن ومتناسق مع إصلاح ألوان النوم
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../app/themes/app_theme.dart';
@@ -406,7 +406,8 @@ class _DuaCategoriesScreenState extends State<DuaCategoriesScreen> {
       case DuaType.prayer:
         return true; // أزرق - أيقونة بيضاء
       case DuaType.sleep:
-        return true; // رمادي - أيقونة بيضاء
+        // تحديد لون الأيقونة حسب الوضع واللون المستخدم
+        return context.isDarkMode ? true : true; // بيضاء في كلا الحالتين
       case DuaType.protection:
         return true; // أخضر - أيقونة بيضاء
       case DuaType.food:
@@ -427,7 +428,10 @@ class _DuaCategoriesScreenState extends State<DuaCategoriesScreen> {
       case DuaType.prayer:
         return ThemeConstants.primary; // الأساسي
       case DuaType.sleep:
-        return const Color(0xFF2D352D); // داكن للليل
+        // 🌙 إصلاح مشكلة أدعية النوم - لون يظهر في كلا الوضعين
+        return context.isDarkMode 
+            ? const Color(0xFF708090) // بنفسجي متوسط - يظهر بوضوح على الخلفية الداكنة
+            : const Color(0xFF2D352D); // الرمادي الأصلي للوضع النهاري
       case DuaType.protection:
         return ThemeConstants.accent; // الثانوي
       case DuaType.food:
