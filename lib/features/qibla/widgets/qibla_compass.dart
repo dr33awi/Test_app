@@ -46,7 +46,6 @@ class _QiblaCompassState extends State<QiblaCompass>
   late Animation<Color?> _qiblaColorAnimation;
 
   // حالة البوصلة
-  double _previousDirection = 0;
   double _smoothDirection = 0;
   bool _hasVibratedForQibla = false;
   bool _isPointingToQibla = false;
@@ -63,7 +62,7 @@ class _QiblaCompassState extends State<QiblaCompass>
   void initState() {
     super.initState();
     _initializeAnimations();
-    _previousDirection = widget.currentDirection;
+    _smoothDirection = widget.currentDirection;
     _smoothDirection = widget.currentDirection;
     _startSmoothingTimer();
   }
@@ -727,24 +726,24 @@ class EnhancedCompassPainter extends CustomPainter {
       fontWeight: FontWeight.bold,
     );
 
-    final directions = ['N', 'E', 'S', 'W'];
+    final directions = ['ش', 'ق', 'ج', 'غ']; // شمال، شرق، جنوب، غرب
     final positions = [
-      Offset(center.dx, center.dy - radius + 45), // N
-      Offset(center.dx + radius - 45, center.dy), // E
-      Offset(center.dx, center.dy + radius - 45), // S
-      Offset(center.dx - radius + 45, center.dy), // W
+      Offset(center.dx, center.dy - radius + 45), // شمال
+      Offset(center.dx + radius - 45, center.dy), // شرق
+      Offset(center.dx, center.dy + radius - 45), // جنوب
+      Offset(center.dx - radius + 45, center.dy), // غرب
     ];
 
     for (int i = 0; i < directions.length; i++) {
       final textSpan = TextSpan(text: directions[i], style: textStyle);
       final textPainter = TextPainter(
         text: textSpan,
-        textDirection: TextDirection.ltr,
+        textDirection: TextDirection.rtl, // تغيير إلى RTL للعربية
       );
       textPainter.layout();
       
       // رسم دائرة خلف النص
-      if (directions[i] == 'N') {
+      if (directions[i] == 'ش') { // تغيير من 'N' إلى 'ش'
         canvas.drawCircle(
           positions[i],
           18,

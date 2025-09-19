@@ -112,9 +112,9 @@ class TasbihService extends ChangeNotifier {
       if (statsData != null) {
         _dhikrStats = {};
         statsData.forEach((key, value) {
-          if (key is String && value is int) {
+          if (value is int) {
             _dhikrStats[key] = value;
-          } else if (key is String && value is num) {
+          } else if (value is num) {
             _dhikrStats[key] = value.toInt();
           }
         });

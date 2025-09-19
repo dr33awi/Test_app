@@ -21,6 +21,9 @@ export 'widgets/core/app_button.dart';
 export 'widgets/core/app_text_field.dart';
 export 'widgets/core/app_loading.dart';
 
+// Core helpers exports
+export 'core/helpers/unified_color_helper.dart';
+
 // Animation exports
 export 'package:flutter_staggered_animations/flutter_staggered_animations.dart'
     show

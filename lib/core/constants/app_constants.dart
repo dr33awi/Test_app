@@ -12,7 +12,7 @@ class AppConstants {
   
   // ===== اللغات =====
   static const String defaultLanguage = 'ar';
-  static const List<String> supportedLanguages = ['ar', 'en'];
+  static const List<String> supportedLanguages = ['ar'];
   
   // ===== مفاتيح التخزين الخاصة بالتطبيق =====
   static const String storagePrefix = 'athkar_';

@@ -219,7 +219,7 @@ class AppErrorHandler {
               Navigator.pop(context, true);
               onPrimaryAction?.call();
             },
-            child: Text(primaryButtonText ?? 'OK'),
+            child: Text(primaryButtonText ?? 'موافق'),
           ),
         ],
       ),
@@ -232,8 +232,8 @@ class AppErrorHandler {
     required String title,
     required String message,
     required VoidCallback onRetry,
-    String retryText = 'Retry',
-    String cancelText = 'Cancel',
+    String retryText = 'إعادة المحاولة',
+    String cancelText = 'إلغاء',
   }) async {
     return await showErrorDialog(
       context,
