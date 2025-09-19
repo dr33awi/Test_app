@@ -1,4 +1,4 @@
-// lib/features/athkar/screens/athkar_categories_screen.dart (مُحدث بدون التقدم الإجمالي)
+// lib/features/athkar/screens/athkar_categories_screen.dart - مُنظف
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../app/themes/app_theme.dart';
@@ -17,17 +17,12 @@ class AthkarCategoriesScreen extends StatefulWidget {
   State<AthkarCategoriesScreen> createState() => _AthkarCategoriesScreenState();
 }
 
-class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen> 
-    with SingleTickerProviderStateMixin {
+class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen> {
   late final AthkarService _service;
   late final PermissionService _permissionService;
   
   late Future<List<AthkarCategory>> _futureCategories;
   bool _notificationsEnabled = false;
-  
-  // للأنيميشن
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
@@ -35,24 +30,7 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen>
     _service = getIt<AthkarService>();
     _permissionService = getIt<PermissionService>();
     
-    // تهيئة الأنيميشن
-    _animationController = AnimationController(
-      duration: ThemeConstants.durationNormal,
-      vsync: this,
-    );
-    _fadeAnimation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeIn,
-    );
-    
     _initialize();
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 
   Future<void> _initialize() async {
@@ -82,123 +60,113 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen>
     return Scaffold(
       backgroundColor: context.backgroundColor,
       body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: Column(
-            children: [
-              // Custom AppBar
-              _buildCustomAppBar(context),
-              
-              // باقي المحتوى
-              Expanded(
-                child: RefreshIndicator(
-                  onRefresh: _refreshData,
-                  color: ThemeConstants.primary,
-                  child: CustomScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    slivers: [
-                      // مساحة علوية
-                      const SliverPadding(
-                        padding: EdgeInsets.only(top: ThemeConstants.space2),
-                      ),
-                      
-                      // العنوان التوضيحي
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: ThemeConstants.space4,
-                            vertical: ThemeConstants.space2,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'اختر فئة الأذكار',
-                                style: context.titleLarge?.copyWith(
-                                  fontWeight: ThemeConstants.bold,
-                                  color: context.textPrimaryColor,
-                                ),
+        child: Column(
+          children: [
+            _buildCustomAppBar(context),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _refreshData,
+                color: ThemeConstants.primary,
+                child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    const SliverPadding(
+                      padding: EdgeInsets.only(top: ThemeConstants.space2),
+                    ),
+                    
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: ThemeConstants.space4,
+                          vertical: ThemeConstants.space2,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'اختر فئة الأذكار',
+                              style: context.titleLarge?.copyWith(
+                                fontWeight: ThemeConstants.bold,
+                                color: context.textPrimaryColor,
                               ),
-                              ThemeConstants.space1.h,
-                              Text(
-                                'اقرأ الأذكار اليومية وحافظ على ذكر الله في كل وقت',
-                                style: context.bodyMedium?.copyWith(
-                                  color: context.textSecondaryColor,
-                                ),
+                            ),
+                            ThemeConstants.space1.h,
+                            Text(
+                              'اقرأ الأذكار اليومية وحافظ على ذكر الله في كل وقت',
+                              style: context.bodyMedium?.copyWith(
+                                color: context.textSecondaryColor,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                      
-                      // قائمة الفئات
-                      FutureBuilder<List<AthkarCategory>>(
-                        future: _futureCategories,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return SliverFillRemaining(
-                              child: Center(
-                                child: AppLoading.page(
-                                  message: 'جاري تحميل الأذكار...',
-                                ),
-                              ),
-                            );
-                          }
-                          
-                          if (snapshot.hasError) {
-                            return SliverFillRemaining(
-                              child: AppEmptyState.error(
-                                message: 'حدث خطأ في تحميل البيانات',
-                                onRetry: _refreshData,
-                              ),
-                            );
-                          }
-                          
-                          final categories = snapshot.data ?? [];
-                          
-                          if (categories.isEmpty) {
-                            return SliverFillRemaining(
-                              child: AppEmptyState.noData(
-                                message: 'لا توجد أذكار متاحة حالياً',
-                              ),
-                            );
-                          }
-                          
-                          return SliverPadding(
-                            padding: const EdgeInsets.all(ThemeConstants.space4),
-                            sliver: SliverGrid(
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                mainAxisSpacing: ThemeConstants.space4,
-                                crossAxisSpacing: ThemeConstants.space4,
-                                childAspectRatio: 0.8,
-                              ),
-                              delegate: SliverChildBuilderDelegate(
-                                (context, index) {
-                                  final category = categories[index];
-                                  
-                                  return AthkarCategoryCard(
-                                    category: category,
-                                    onTap: () => _openCategoryDetails(category),
-                                  );
-                                },
-                                childCount: categories.length,
+                    ),
+                    
+                    FutureBuilder<List<AthkarCategory>>(
+                      future: _futureCategories,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return SliverFillRemaining(
+                            child: Center(
+                              child: AppLoading.page(
+                                message: 'جاري تحميل الأذكار...',
                               ),
                             ),
                           );
-                        },
-                      ),
-                      
-                      // مساحة إضافية
-                      const SliverPadding(
-                        padding: EdgeInsets.only(bottom: ThemeConstants.space8),
-                      ),
-                    ],
-                  ),
+                        }
+                        
+                        if (snapshot.hasError) {
+                          return SliverFillRemaining(
+                            child: AppEmptyState.error(
+                              message: 'حدث خطأ في تحميل البيانات',
+                              onRetry: _refreshData,
+                            ),
+                          );
+                        }
+                        
+                        final categories = snapshot.data ?? [];
+                        
+                        if (categories.isEmpty) {
+                          return SliverFillRemaining(
+                            child: AppEmptyState.noData(
+                              message: 'لا توجد أذكار متاحة حالياً',
+                            ),
+                          );
+                        }
+                        
+                        return SliverPadding(
+                          padding: const EdgeInsets.all(ThemeConstants.space4),
+                          sliver: SliverGrid(
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: ThemeConstants.space4,
+                              crossAxisSpacing: ThemeConstants.space4,
+                              childAspectRatio: 0.8,
+                            ),
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final category = categories[index];
+                                
+                                return AthkarCategoryCard(
+                                  category: category,
+                                  onTap: () => _openCategoryDetails(category),
+                                );
+                              },
+                              childCount: categories.length,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    
+                    const SliverPadding(
+                      padding: EdgeInsets.only(bottom: ThemeConstants.space8),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -219,14 +187,12 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen>
       ),
       child: Row(
         children: [
-          // زر الرجوع
           AppBackButton(
             onPressed: () => Navigator.of(context).pop(),
           ),
           
           ThemeConstants.space3.w,
           
-          // الأيقونة الجانبية مع تدرج لوني
           Container(
             padding: const EdgeInsets.all(ThemeConstants.space2),
             decoration: BoxDecoration(
@@ -253,7 +219,6 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen>
           
           ThemeConstants.space3.w,
           
-          // العنوان والوصف
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,7 +240,6 @@ class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen>
             ),
           ),
           
-          // زر إعدادات الإشعارات
           Container(
             margin: const EdgeInsets.only(left: ThemeConstants.space2),
             child: Material(

@@ -1,4 +1,4 @@
-// lib/features/athkar/constants/athkar_constants.dart
+// lib/features/athkar/constants/athkar_constants.dart - مُنظف
 import 'package:flutter/material.dart';
 
 /// ثوابت موحدة لميزة الأذكار
@@ -68,7 +68,6 @@ class AthkarConstants {
   
   // ==================== حدود الكاش ====================
   static const int cacheValidityHours = 24;
-  static const int maxCachedCategories = 50;
 
   // ==================== دوال مساعدة ====================
   
@@ -89,7 +88,6 @@ class AthkarConstants {
   static bool shouldAutoEnable(String categoryId) {
     final lowerCaseId = categoryId.toLowerCase();
     
-    // التحقق من المطابقة الكاملة أو الجزئية
     for (final key in autoEnabledCategories) {
       if (lowerCaseId == key.toLowerCase() || lowerCaseId.contains(key)) {
         return true;
@@ -102,7 +100,6 @@ class AthkarConstants {
   static bool isEssentialCategory(String categoryId) {
     final lowerCaseId = categoryId.toLowerCase();
     
-    // التحقق من المطابقة الكاملة أو الجزئية
     for (final key in essentialCategories) {
       if (lowerCaseId == key.toLowerCase() || lowerCaseId.contains(key)) {
         return true;
