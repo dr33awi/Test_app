@@ -269,6 +269,8 @@ class ThemeConstants {
 
   static var opacity05;
 
+  static var accentSoft;
+
   // ===== دوال مساعدة =====
   
   /// الحصول على اللون حسب الثيم

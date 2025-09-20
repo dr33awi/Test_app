@@ -33,7 +33,7 @@ class AppRouter {
   // Feature Routes
   static const String prayerTimes = '/prayer-times';
   static const String athkar = '/athkar';
-  static const String quran = '/quran';  // للتوافق المستقبلي
+  static const String quran = '/asma_allah';  // للتوافق المستقبلي
   static const String qibla = '/qibla';
   static const String tasbih = '/tasbih';
   static const String dua = '/dua';
