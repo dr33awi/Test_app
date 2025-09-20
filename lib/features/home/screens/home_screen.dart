@@ -7,7 +7,7 @@ import 'dart:async';
 import '../../../app/themes/app_theme.dart';
 import '../widgets/category_grid.dart';
 import 'package:athkar_app/features/home/daily_quotes/daily_quotes_card.dart';
-import 'package:athkar_app/features/prayer_times/widgets/home_prayer_times_card.dart';
+import 'package:athkar_app/features/home/widgets/home_prayer_times_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

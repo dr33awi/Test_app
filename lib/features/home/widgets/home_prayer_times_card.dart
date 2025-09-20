@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import '../../../app/themes/app_theme.dart';
-import '../models/prayer_time_model.dart'; // استخدام النموذج الأصلي
-import '../services/prayer_times_service.dart';
-import '../utils/prayer_utils.dart';
-import 'shared/prayer_state_widgets.dart';
+import '../../prayer_times/models/prayer_time_model.dart'; // استخدام النموذج الأصلي
+import '../../prayer_times/services/prayer_times_service.dart';
+import '../../prayer_times/utils/prayer_utils.dart';
+import '../../prayer_times/widgets/shared/prayer_state_widgets.dart';
 import '../../../app/di/service_locator.dart';
 
 class PrayerTimesCard extends StatefulWidget {
