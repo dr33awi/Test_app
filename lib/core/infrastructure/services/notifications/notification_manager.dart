@@ -1,12 +1,12 @@
-// lib/core/infrastructure/services/notifications/notification_manager.dart (محدث)
+// lib/core/infrastructure/services/notifications/notification_manager.dart (مبسط)
 
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'notification_service.dart';
 import 'models/notification_models.dart';
 
-/// مدير مركزي للإشعارات
-/// يوفر واجهة سهلة لجميع أجزاء التطبيق
+/// مدير مركزي للإشعارات (مبسط)
+/// يحتوي فقط على الوظائف المستخدمة فعلياً
 class NotificationManager {
   final NotificationService _service;
   
@@ -126,45 +126,9 @@ class NotificationManager {
     await _service.cancelCategoryNotifications(NotificationCategory.athkar);
   }
   
-  // ========== إشعارات القرآن ==========
+  // ========== إشعارات بسيطة ==========
   
-  /// تذكير بالورد اليومي
-  Future<void> scheduleQuranReminder({
-    required TimeOfDay time,
-    String message = 'حان وقت قراءة وردك اليومي من القرآن الكريم',
-  }) async {
-    final now = DateTime.now();
-    var scheduledDate = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      time.hour,
-      time.minute,
-    );
-    
-    if (scheduledDate.isBefore(now)) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
-    }
-    
-    final notification = NotificationData(
-      id: 'quran_daily_wird',
-      title: 'الورد اليومي',
-      body: message,
-      category: NotificationCategory.quran,
-      priority: NotificationPriority.normal,
-      scheduledTime: scheduledDate,
-      repeatType: NotificationRepeat.daily,
-      payload: {
-        'type': 'daily_wird',
-      },
-    );
-    
-    await _service.scheduleNotification(notification);
-  }
-  
-  // ========== إشعارات عامة ==========
-  
-  /// عرض إشعار فوري
+  /// عرض إشعار فوري (الوظيفة الأساسية الوحيدة المطلوبة)
   Future<void> showInstantNotification({
     required String title,
     required String body,
@@ -183,30 +147,7 @@ class NotificationManager {
     await _service.showNotification(notification);
   }
   
-  /// جدولة تذكير مخصص
-  Future<void> scheduleCustomReminder({
-    required String id,
-    required String title,
-    required String body,
-    required DateTime scheduledTime,
-    NotificationRepeat? repeat,
-    Map<String, dynamic>? payload,
-  }) async {
-    final notification = NotificationData(
-      id: 'custom_$id',
-      title: title,
-      body: body,
-      category: NotificationCategory.reminder,
-      priority: NotificationPriority.normal,
-      scheduledTime: scheduledTime,
-      repeatType: repeat,
-      payload: payload,
-    );
-    
-    await _service.scheduleNotification(notification);
-  }
-  
-  // ========== الإعدادات ==========
+  // ========== الإعدادات الأساسية ==========
   
   /// تحديث إعدادات الإشعارات
   Future<void> updateSettings(NotificationSettings settings) async {
@@ -216,38 +157,7 @@ class NotificationManager {
   /// الحصول على الإعدادات الحالية
   Future<NotificationSettings> getSettings() => _service.getSettings();
   
-  /// تفعيل/تعطيل الإشعارات
-  Future<void> setEnabled(bool enabled) async {
-    final settings = await getSettings();
-    await updateSettings(settings.copyWith(enabled: enabled));
-  }
-  
-  /// تعيين وقت الهدوء
-  Future<void> setQuietTime({
-    TimeOfDay? start,
-    TimeOfDay? end,
-  }) async {
-    final settings = await getSettings();
-    await updateSettings(settings.copyWith(
-      quietTimeStart: start,
-      quietTimeEnd: end,
-    ));
-  }
-  
-  /// تعيين الحد الأدنى للبطارية
-  Future<void> setMinBatteryLevel(int? level) async {
-    final settings = await getSettings();
-    await updateSettings(settings.copyWith(
-      minBatteryLevel: level,
-    ));
-  }
-  
-  // ========== إدارة الإشعارات ==========
-  
-  /// الحصول على الإشعارات المجدولة
-  Future<List<NotificationData>> getScheduledNotifications() {
-    return _service.getScheduledNotifications();
-  }
+  // ========== إدارة بسيطة ==========
   
   /// إلغاء إشعار محدد
   Future<void> cancelNotification(String id) {
@@ -257,6 +167,11 @@ class NotificationManager {
   /// إلغاء جميع الإشعارات
   Future<void> cancelAllNotifications() {
     return _service.cancelAllNotifications();
+  }
+  
+  /// الحصول على الإشعارات المجدولة (للتوافق مع الكود الموجود)
+  Future<List<NotificationData>> getScheduledNotifications() {
+    return _service.getScheduledNotifications();
   }
   
   /// التنظيف

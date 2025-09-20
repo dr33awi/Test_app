@@ -1,103 +1,24 @@
-// lib/core/infrastructure/services/device/battery/battery_service_impl.dart
+// lib/core/infrastructure/services/device/battery/battery_service_impl.dart (مبسط)
 
 import 'dart:async';
-import 'dart:io';
 import 'package:battery_plus/battery_plus.dart' as battery_plus;
 import '../../logging/logger_service.dart';
-import '../../storage/storage_service.dart';
 import 'battery_service.dart';
 
-/// Implementation of battery service
+/// Implementation of battery service (مبسط)
 class BatteryServiceImpl implements BatteryService {
   final battery_plus.Battery _battery;
   final LoggerService? _logger;
-  final StorageService _storage;
   
-  static const String _minBatteryLevelKey = 'min_battery_level';
+  // حد أدنى افتراضي للبطارية
   static const int _defaultMinBatteryLevel = 15;
-  
-  StreamController<BatteryState>? _batteryStateController;
-  StreamSubscription<battery_plus.BatteryState>? _batteryStateSubscription;
-  Timer? _pollingTimer;
-  int _minimumBatteryLevel = _defaultMinBatteryLevel;
   
   BatteryServiceImpl({
     battery_plus.Battery? battery,
     LoggerService? logger,
-    required StorageService storage,
   })  : _battery = battery ?? battery_plus.Battery(),
-        _logger = logger,
-        _storage = storage {
-    _initialize();
-  }
-  
-  void _initialize() {
-    _logger?.debug(message: '[BatteryService] Initializing...');
-    
-    // Load saved minimum battery level
-    _minimumBatteryLevel = _storage.getInt(_minBatteryLevelKey) ?? _defaultMinBatteryLevel;
-    
-    // Initialize battery state monitoring
-    _initializeBatteryMonitoring();
-  }
-  
-  void _initializeBatteryMonitoring() {
-    _batteryStateController = StreamController<BatteryState>.broadcast(
-      onListen: _startMonitoring,
-      onCancel: _stopMonitoring,
-    );
-  }
-  
-  void _startMonitoring() {
-    _logger?.debug(message: '[BatteryService] Starting battery monitoring');
-    
-    // Start with immediate update
-    _updateBatteryState();
-    
-    // Set up periodic polling (every 60 seconds)
-    _pollingTimer = Timer.periodic(const Duration(seconds: 60), (_) {
-      _updateBatteryState();
-    });
-    
-    // Also listen to battery state changes if available
-    _batteryStateSubscription = _battery.onBatteryStateChanged.listen((state) {
-      _logger?.debug(
-        message: '[BatteryService] Battery state changed',
-        data: {'state': state.toString()},
-      );
-      _updateBatteryState();
-    });
-  }
-  
-  void _stopMonitoring() {
-    _logger?.debug(message: '[BatteryService] Stopping battery monitoring');
-    _pollingTimer?.cancel();
-    _batteryStateSubscription?.cancel();
-  }
-  
-  Future<void> _updateBatteryState() async {
-    try {
-      final state = await getCurrentBatteryState();
-      _batteryStateController?.add(state);
-      
-      _logger?.debug(
-        message: '[BatteryService] Battery state updated',
-        data: state.toJson(),
-      );
-      
-      // Log analytics event for critical battery levels
-      if (state.level <= 5 && !state.isCharging) {
-        _logger?.logEvent('critical_battery_level', parameters: {
-          'level': state.level,
-          'is_charging': state.isCharging,
-        });
-      }
-    } catch (e) {
-      _logger?.error(
-        message: '[BatteryService] Error updating battery state',
-        error: e,
-      );
-    }
+        _logger = logger {
+    _logger?.debug(message: '[BatteryService] Initializing (simplified)...');
   }
   
   @override
@@ -165,12 +86,12 @@ class BatteryServiceImpl implements BatteryService {
       final charging = await isCharging();
       final powerSaveMode = await isPowerSaveMode();
       
-      // Can send if:
-      // 1. Charging, or
-      // 2. Battery level is above minimum and not in power save mode, or
-      // 3. Battery level is above critical level (5%)
+      // يمكن الإرسال إذا:
+      // 1. الجهاز يشحن، أو
+      // 2. البطارية أعلى من الحد الأدنى وليس في وضع توفير الطاقة، أو
+      // 3. البطارية أعلى من المستوى الحرج (5%)
       final canSend = charging || 
-                     (batteryLevel >= _minimumBatteryLevel && !powerSaveMode) ||
+                     (batteryLevel >= _defaultMinBatteryLevel && !powerSaveMode) ||
                      batteryLevel >= 5;
       
       _logger?.debug(
@@ -178,7 +99,6 @@ class BatteryServiceImpl implements BatteryService {
         data: {
           'canSend': canSend,
           'batteryLevel': batteryLevel,
-          'minimumLevel': _minimumBatteryLevel,
           'isCharging': charging,
           'isPowerSaveMode': powerSaveMode,
         },
@@ -187,7 +107,6 @@ class BatteryServiceImpl implements BatteryService {
       if (!canSend) {
         _logger?.logEvent('notification_blocked_battery', parameters: {
           'battery_level': batteryLevel,
-          'minimum_level': _minimumBatteryLevel,
           'power_save_mode': powerSaveMode,
         });
       }
@@ -200,42 +119,6 @@ class BatteryServiceImpl implements BatteryService {
       );
       return true; // Allow notifications on error
     }
-  }
-  
-  @override
-  Future<void> setMinimumBatteryLevel(int level) async {
-    if (level < 0 || level > 100) {
-      _logger?.warning(
-        message: '[BatteryService] Invalid battery level',
-        data: {'level': level},
-      );
-      return;
-    }
-    
-    _minimumBatteryLevel = level;
-    await _storage.setInt(_minBatteryLevelKey, level);
-    
-    _logger?.info(
-      message: '[BatteryService] Minimum battery level updated',
-      data: {'level': level},
-    );
-    
-    _logger?.logEvent('battery_threshold_changed', parameters: {'new_level': level});
-  }
-  
-  @override
-  int getMinimumBatteryLevel() {
-    return _minimumBatteryLevel;
-  }
-  
-  @override
-  Stream<BatteryState> getBatteryStateStream() {
-    _batteryStateController ??= StreamController<BatteryState>.broadcast(
-      onListen: _startMonitoring,
-      onCancel: _stopMonitoring,
-    );
-    
-    return _batteryStateController!.stream;
   }
   
   @override
@@ -252,34 +135,7 @@ class BatteryServiceImpl implements BatteryService {
   }
   
   @override
-  Future<bool> isBatteryOptimizationEnabled() async {
-    if (!Platform.isAndroid) return false;
-    
-    try {
-      // This would require platform-specific implementation
-      // For now, we assume it's related to power save mode
-      return await isPowerSaveMode();
-    } catch (e) {
-      _logger?.error(
-        message: '[BatteryService] Error checking battery optimization',
-        error: e,
-      );
-      return false;
-    }
-  }
-  
-  @override
   Future<void> dispose() async {
-    _logger?.debug(message: '[BatteryService] Disposing...');
-    
-    await _batteryStateSubscription?.cancel();
-    _pollingTimer?.cancel();
-    await _batteryStateController?.close();
-    
-    _batteryStateController = null;
-    _batteryStateSubscription = null;
-    _pollingTimer = null;
-    
-    _logger?.info(message: '[BatteryService] Disposed');
+    _logger?.debug(message: '[BatteryService] Disposed (simplified)');
   }
 }

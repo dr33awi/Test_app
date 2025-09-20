@@ -1,4 +1,4 @@
-// lib/core/infrastructure/services/permissions/widgets/permission_status_widget.dart
+// lib/core/infrastructure/services/permissions/widgets/permission_status_widget.dart (مصحح)
 
 import 'package:flutter/material.dart';
 import '../permission_service.dart';
@@ -11,7 +11,7 @@ class PermissionStatusWidget extends StatelessWidget {
   final VoidCallback? onOpenSettings;
   
   const PermissionStatusWidget({
-    super.key, // استخدام super parameter
+    super.key,
     required this.permission,
     required this.status,
     this.onRequest,
@@ -85,42 +85,42 @@ class PermissionStatusWidget extends StatelessWidget {
   Color _getBackgroundColor(ThemeData theme) {
     switch (status) {
       case AppPermissionStatus.granted:
-        return Colors.green.withValues(alpha: 0.1); // استخدام withValues
+        return Colors.green.withValues(alpha: 0.1);
       case AppPermissionStatus.denied:
       case AppPermissionStatus.permanentlyDenied:
-        return Colors.red.withValues(alpha: 0.1); // استخدام withValues
+        return Colors.red.withValues(alpha: 0.1);
       case AppPermissionStatus.restricted:
-        return Colors.orange.withValues(alpha: 0.1); // استخدام withValues
+        return Colors.orange.withValues(alpha: 0.1);
       default:
-        return theme.cardTheme.color ?? Colors.grey.withValues(alpha: 0.1); // استخدام withValues
+        return theme.cardTheme.color ?? Colors.grey.withValues(alpha: 0.1);
     }
   }
   
   Color _getBorderColor(ThemeData theme) {
     switch (status) {
       case AppPermissionStatus.granted:
-        return Colors.green.withValues(alpha: 0.3); // استخدام withValues
+        return Colors.green.withValues(alpha: 0.3);
       case AppPermissionStatus.denied:
       case AppPermissionStatus.permanentlyDenied:
-        return Colors.red.withValues(alpha: 0.3); // استخدام withValues
+        return Colors.red.withValues(alpha: 0.3);
       case AppPermissionStatus.restricted:
-        return Colors.orange.withValues(alpha: 0.3); // استخدام withValues
+        return Colors.orange.withValues(alpha: 0.3);
       default:
-        return theme.dividerColor.withValues(alpha: 0.3); // استخدام withValues
+        return theme.dividerColor.withValues(alpha: 0.3);
     }
   }
   
   Color _getIconBackgroundColor(ThemeData theme) {
     switch (status) {
       case AppPermissionStatus.granted:
-        return Colors.green.withValues(alpha: 0.2); // استخدام withValues
+        return Colors.green.withValues(alpha: 0.2);
       case AppPermissionStatus.denied:
       case AppPermissionStatus.permanentlyDenied:
-        return Colors.red.withValues(alpha: 0.2); // استخدام withValues
+        return Colors.red.withValues(alpha: 0.2);
       case AppPermissionStatus.restricted:
-        return Colors.orange.withValues(alpha: 0.2); // استخدام withValues
+        return Colors.orange.withValues(alpha: 0.2);
       default:
-        return theme.dividerColor.withValues(alpha: 0.2); // استخدام withValues
+        return theme.dividerColor.withValues(alpha: 0.2);
     }
   }
   
@@ -154,19 +154,15 @@ class PermissionStatusWidget extends StatelessWidget {
   }
   
   String _getPermissionName() {
-    // يمكنك استخدام service للحصول على الاسم
+    // فقط الأذونات المستخدمة
     switch (permission) {
       case AppPermissionType.location:
         return 'الموقع';
       case AppPermissionType.notification:
         return 'الإشعارات';
-      case AppPermissionType.storage:
-        return 'التخزين';
-      case AppPermissionType.doNotDisturb:
-        return 'عدم الإزعاج';
       case AppPermissionType.batteryOptimization:
         return 'تحسين البطارية';
-      }
+    }
   }
   
   String _getStatusText() {

@@ -1,4 +1,4 @@
-// lib/core/error/error_handler.dart
+// lib/core/error/error_handler.dart (مع إصلاح المراجع)
 
 import 'dart:async';
 import 'dart:io';
@@ -49,7 +49,7 @@ class AppErrorHandler {
     }
   }
   
-  /// Map exceptions to failures
+  /// Map exceptions to failures (مبسط)
   Failure _mapErrorToFailure(dynamic error, StackTrace? stackTrace) {
     if (error is SocketException || error is NetworkException) {
       return NetworkFailure(
@@ -67,13 +67,6 @@ class AppErrorHandler {
     } else if (error is DataLoadException) {
       return StorageFailure(
         message: 'Error loading data: ${error.message}',
-        code: error.code,
-        originalError: error,
-        stackTrace: stackTrace,
-      );
-    } else if (error is DataUpdateException) {
-      return StorageFailure(
-        message: 'Error updating data: ${error.message}',
         code: error.code,
         originalError: error,
         stackTrace: stackTrace,

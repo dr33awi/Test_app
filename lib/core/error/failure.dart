@@ -1,4 +1,4 @@
-// lib/core/error/failure.dart
+// lib/core/error/failure.dart (مبسط)
 
 abstract class Failure {
   final String message;
@@ -17,7 +17,7 @@ abstract class Failure {
   String toString() => '$runtimeType(message: $message, code: $code)';
 }
 
-/// Network-related failures
+/// Network-related failures (أساسية)
 class NetworkFailure extends Failure {
   const NetworkFailure({
     required super.message,
@@ -27,7 +27,7 @@ class NetworkFailure extends Failure {
   });
 }
 
-/// Storage-related failures
+/// Storage-related failures (أساسية)
 class StorageFailure extends Failure {
   const StorageFailure({
     required super.message,
@@ -37,7 +37,7 @@ class StorageFailure extends Failure {
   });
 }
 
-/// Permission-related failures
+/// Permission-related failures (أساسية)
 class PermissionFailure extends Failure {
   final String permissionType;
   
@@ -50,7 +50,7 @@ class PermissionFailure extends Failure {
   });
 }
 
-/// Service-related failures
+/// Service-related failures (أساسية)
 class ServiceFailure extends Failure {
   final String serviceName;
   
@@ -63,7 +63,7 @@ class ServiceFailure extends Failure {
   });
 }
 
-/// Validation failures
+/// Validation failures (أساسية)
 class ValidationFailure extends Failure {
   final String field;
   
@@ -76,7 +76,7 @@ class ValidationFailure extends Failure {
   });
 }
 
-/// Unknown failures
+/// Unknown failures (احتياطية)
 class UnknownFailure extends Failure {
   const UnknownFailure({
     super.message = 'حدث خطأ غير متوقع',

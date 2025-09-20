@@ -2,14 +2,11 @@
 
 import 'dart:async';
 
-/// أنواع الأذونات المطلوبة فعلياً في التطبيق
+/// أنواع الأذونات المطلوبة فعلياً في التطبيق (تم حذف غير المستخدم)
 enum AppPermissionType {
   location,           // لحساب أوقات الصلاة
   notification,       // للتذكيرات
   batteryOptimization, // لضمان عمل التطبيق في الخلفية
-  // للتوافق مع الكود القديم - سيتم حذفها لاحقاً
-  storage,           // deprecated
-  doNotDisturb,      // deprecated
 }
 
 /// حالة الإذن

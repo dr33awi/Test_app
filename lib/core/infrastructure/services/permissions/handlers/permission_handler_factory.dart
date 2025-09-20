@@ -1,23 +1,18 @@
-// lib/core/infrastructure/services/permissions/handlers/permission_handler_factory.dart
+// lib/core/infrastructure/services/permissions/handlers/permission_handler_factory.dart (مصحح)
 
 import '../permission_service.dart';
 import 'permission_handler_base.dart';
 import 'location_handler.dart';
 import 'notification_handler.dart';
 import 'battery_handler.dart';
-import 'storage_handler.dart';
-import 'do_not_disturb_handler.dart';
 
-/// Factory للحصول على handler المناسب لكل إذن
+/// Factory للحصول على handler المناسب لكل إذن (مبسط)
 class PermissionHandlerFactory {
-  // جميع Handlers (بما في ذلك القديمة للتوافق)
+  // فقط Handlers المستخدمة فعلياً
   static final Map<AppPermissionType, PermissionHandlerBase> _handlers = {
     AppPermissionType.location: LocationPermissionHandler(),
     AppPermissionType.notification: NotificationPermissionHandler(),
     AppPermissionType.batteryOptimization: BatteryOptimizationHandler(),
-    // للتوافق مع الكود القديم
-    AppPermissionType.storage: StoragePermissionHandler(),
-    AppPermissionType.doNotDisturb: DoNotDisturbHandler(),
   };
   
   /// الحصول على handler لإذن محدد

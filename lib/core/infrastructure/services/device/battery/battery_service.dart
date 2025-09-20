@@ -1,6 +1,6 @@
-// lib/core/infrastructure/services/device/battery/battery_service.dart
+// lib/core/infrastructure/services/device/battery/battery_service.dart (مبسط)
 
-/// Battery state information
+/// Battery state information (مبسط)
 class BatteryState {
   final int level;
   final bool isCharging;
@@ -19,7 +19,7 @@ class BatteryState {
   };
 }
 
-/// Battery service interface
+/// Battery service interface (مبسط - فقط الأساسيات)
 abstract class BatteryService {
   /// Get current battery level (0-100)
   Future<int> getBatteryLevel();
@@ -31,22 +31,11 @@ abstract class BatteryService {
   Future<bool> isPowerSaveMode();
   
   /// Check if notifications can be sent based on battery state
+  /// (الوظيفة الوحيدة المستخدمة فعلياً)
   Future<bool> canSendNotification();
-  
-  /// Set minimum battery level for notifications
-  Future<void> setMinimumBatteryLevel(int level);
-  
-  /// Get minimum battery level for notifications
-  int getMinimumBatteryLevel();
-  
-  /// Get battery state stream
-  Stream<BatteryState> getBatteryStateStream();
   
   /// Get current battery state
   Future<BatteryState> getCurrentBatteryState();
-  
-  /// Check if battery optimization is enabled
-  Future<bool> isBatteryOptimizationEnabled();
   
   /// Dispose resources
   Future<void> dispose();

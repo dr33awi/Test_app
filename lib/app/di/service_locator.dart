@@ -228,7 +228,7 @@ class ServiceLocator {
         () => BatteryServiceImpl(
           battery: getIt<Battery>(),
           logger: getIt<LoggerService>(),
-          storage: getIt<StorageService>(),
+          
         ),
       );
     }

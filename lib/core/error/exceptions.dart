@@ -1,4 +1,4 @@
-// lib/core/error/exceptions.dart
+// lib/core/error/exceptions.dart (مبسط)
 
 /// استثناء أساسي للتطبيق
 class AppException implements Exception {
@@ -11,25 +11,21 @@ class AppException implements Exception {
   String toString() => 'AppException: $message${code != null ? ' (Code: $code)' : ''}';
 }
 
-/// استثناءات البيانات
-class DataLoadException extends AppException {
-  DataLoadException(super.message, {super.code});
+/// استثناءات الشبكة (أساسية)
+class NetworkException extends AppException {
+  NetworkException(super.message, {super.code});
 }
 
-class DataUpdateException extends AppException {
-  DataUpdateException(super.message, {super.code});
+/// استثناءات البيانات (أساسية)
+class DataLoadException extends AppException {
+  DataLoadException(super.message, {super.code});
 }
 
 class DataNotFoundException extends AppException {
   DataNotFoundException(super.message, {super.code});
 }
 
-/// استثناءات الشبكة
-class NetworkException extends AppException {
-  NetworkException(super.message, {super.code});
-}
-
-/// استثناءات الخدمات
+/// استثناءات الخدمات الأساسية فقط
 class LocationException extends AppException {
   LocationException(super.message, {super.code});
 }
@@ -46,7 +42,7 @@ class PermissionException extends AppException {
   PermissionException(super.message, {super.code});
 }
 
-/// استثناءات التحقق
+/// استثناءات التحقق (أساسية)
 class ValidationException extends AppException {
   final String? field;
   

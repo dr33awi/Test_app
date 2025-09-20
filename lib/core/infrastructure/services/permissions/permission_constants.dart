@@ -1,5 +1,5 @@
 // lib/core/infrastructure/services/permissions/permission_constants.dart
-// مصدر واحد لجميع معلومات الأذونات
+// مصدر واحد لجميع معلومات الأذونات (منظف)
 
 import 'package:flutter/material.dart';
 import 'permission_service.dart';
@@ -21,12 +21,12 @@ class PermissionInfo {
   });
 }
 
-/// ثوابت الأذونات - مصدر واحد للحقيقة
+/// ثوابت الأذونات - فقط الأذونات المستخدمة فعلياً
 class PermissionConstants {
   // منع إنشاء instance
   PermissionConstants._();
   
-  /// معلومات جميع الأذونات
+  /// معلومات الأذونات المستخدمة فقط
   static const Map<AppPermissionType, PermissionInfo> permissions = {
     AppPermissionType.notification: PermissionInfo(
       name: 'الإشعارات',
@@ -47,22 +47,7 @@ class PermissionConstants {
       description: 'لضمان عمل التذكيرات في الخلفية',
       icon: Icons.battery_charging_full,
       color: Colors.orange,
-      isCritical: true, // تم تغييرها إلى أساسية
-    ),
-    // للتوافق مع الكود القديم
-    AppPermissionType.storage: PermissionInfo(
-      name: 'التخزين',
-      description: 'لحفظ الأذكار المفضلة',
-      icon: Icons.storage,
-      color: Colors.purple,
-      isCritical: false,
-    ),
-    AppPermissionType.doNotDisturb: PermissionInfo(
-      name: 'عدم الإزعاج',
-      description: 'لتخصيص أوقات التذكير',
-      icon: Icons.do_not_disturb,
-      color: Colors.red,
-      isCritical: false,
+      isCritical: true,
     ),
   };
   
@@ -70,13 +55,11 @@ class PermissionConstants {
   static List<AppPermissionType> get criticalPermissions => [
     AppPermissionType.notification,
     AppPermissionType.location,
-    AppPermissionType.batteryOptimization, // أصبحت أساسية
+    AppPermissionType.batteryOptimization,
   ];
   
-  /// قائمة الأذونات الاختيارية (فقط الأذونات المستخدمة فعلاً)
-  static List<AppPermissionType> get optionalPermissions => [
-    // لا توجد أذونات اختيارية حالياً
-  ];
+  /// قائمة الأذونات الاختيارية (لا توجد حالياً)
+  static List<AppPermissionType> get optionalPermissions => [];
   
   /// الحصول على معلومات إذن محدد
   static PermissionInfo getInfo(AppPermissionType permission) {
