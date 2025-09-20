@@ -2,7 +2,6 @@
 import 'package:athkar_app/app/di/service_locator.dart';
 import 'package:athkar_app/app/themes/app_theme.dart';
 import 'package:athkar_app/core/infrastructure/services/storage/storage_service.dart';
-import 'package:athkar_app/core/infrastructure/services/logging/logger_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -28,10 +27,7 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
   @override
   void initState() {
     super.initState();
-    _service = AsmaAllahService(
-      storage: getIt<StorageService>(),
-      logger: getIt<LoggerService>(),
-    );
+    _service = AsmaAllahService(storage: getIt<StorageService>());
     _searchController.addListener(() => setState(() => _searchQuery = _searchController.text));
   }
 

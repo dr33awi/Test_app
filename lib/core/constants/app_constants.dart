@@ -12,7 +12,7 @@ class AppConstants {
   
   // ===== اللغات =====
   static const String defaultLanguage = 'ar';
-  static const List<String> supportedLanguages = ['ar'];
+  static const List<String> supportedLanguages = ['ar', 'en'];
   
   // ===== مفاتيح التخزين الخاصة بالتطبيق =====
   static const String storagePrefix = 'athkar_';
@@ -34,6 +34,7 @@ class AppConstants {
   static const bool enablePrayerTimes = true;
   static const bool enableQibla = true;
   static const bool enableTasbih = true;
+  static const bool enableQuran = true;
   static const bool enableDua = true;
   
   // ===== إعدادات افتراضية خاصة بالتطبيق =====
@@ -50,9 +51,11 @@ class AppConstants {
   // ===== مسارات الأصول =====
   static const String assetsPath = 'assets';
   static const String imagesPath = '$assetsPath/images';
+  static const String soundsPath = '$assetsPath/sounds';
   static const String dataPath = '$assetsPath/data';
   
   // ===== ملفات البيانات =====
   static const String athkarDataFile = '$dataPath/athkar.json';
   static const String duaDataFile = '$dataPath/dua.json';
+  static const String prayerTimesDataFile = '$dataPath/prayer_times.json';
 }

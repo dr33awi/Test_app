@@ -473,6 +473,8 @@ class _DuaCategoriesScreenState extends State<DuaCategoriesScreen> {
         return Icons.attach_money_rounded;
       case DuaType.knowledge:
         return Icons.school_rounded;
+      default:
+        return Icons.auto_awesome;
     }
   }
 

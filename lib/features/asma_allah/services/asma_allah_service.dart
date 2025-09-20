@@ -1,12 +1,14 @@
 // lib/features/asma_allah/services/asma_allah_service.dart
-import '../../../core/infrastructure/services/base_service.dart';
-import '../../../core/infrastructure/services/logging/logger_service.dart';
-import '../../../core/infrastructure/services/storage/storage_service.dart';
+import 'package:flutter/material.dart';
+import 'package:athkar_app/core/infrastructure/services/storage/storage_service.dart';
+import 'package:athkar_app/core/infrastructure/services/logging/logger_service.dart';
 import '../models/asma_allah_model.dart';
 import '../data/asma_allah_data.dart';
 
-/// خدمة إدارة أسماء الله الحسنى
-class AsmaAllahService extends BaseNotifierService {
+/// خدمة إدارة أسماء الله الحسنى (مبسطة)
+class AsmaAllahService extends ChangeNotifier {
+  final StorageService _storage;
+  
   // قائمة الأسماء
   List<AsmaAllahModel> _asmaAllahList = [];
   List<AsmaAllahModel> get asmaAllahList => _asmaAllahList;
@@ -15,18 +17,16 @@ class AsmaAllahService extends BaseNotifierService {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
   
-  @override
-  String get serviceName => 'AsmaAllah';
-  
   AsmaAllahService({
-    required LoggerService logger,
     required StorageService storage,
-  }) : super(logger: logger, storage: storage);
+    LoggerService? logger,
+  }) : _storage = storage {
+    _init();
+  }
   
-  @override
-  void onInitialize() {
-    super.onInitialize();
-    loadAsmaAllah();
+  /// تهيئة الخدمة
+  Future<void> _init() async {
+    await loadAsmaAllah();
   }
   
   /// تحميل أسماء الله الحسنى
@@ -39,10 +39,10 @@ class AsmaAllahService extends BaseNotifierService {
         .map((data) => AsmaAllahModel.fromJson(data))
         .toList();
       
-      logInfo('تم تحميل ${_asmaAllahList.length} من أسماء الله الحسنى');
+      debugPrint('AsmaAllah: تم تحميل ${_asmaAllahList.length} من أسماء الله الحسنى');
       
     } catch (e) {
-      logError('خطأ في تحميل أسماء الله الحسنى', e);
+      debugPrint('AsmaAllah Error: خطأ في تحميل أسماء الله الحسنى: $e');
     } finally {
       _setLoading(false);
     }
@@ -61,5 +61,10 @@ class AsmaAllahService extends BaseNotifierService {
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
+  }
+  
+  @override
+  void dispose() {
+    super.dispose();
   }
 }

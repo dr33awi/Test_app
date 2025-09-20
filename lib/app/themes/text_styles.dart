@@ -94,6 +94,28 @@ class AppTextStyles {
     fontFamily: ThemeConstants.fontFamily,
   );
 
+  // ===== أنماط خاصة بالمحتوى الإسلامي =====
+  static const TextStyle quran = TextStyle(
+    fontSize: 22,
+    fontWeight: ThemeConstants.regular,
+    height: 2.0,
+    fontFamily: ThemeConstants.fontFamilyQuran,
+  );
+
+  static const TextStyle athkar = TextStyle(
+    fontSize: ThemeConstants.textSizeXl,
+    fontWeight: ThemeConstants.regular,
+    height: 1.8,
+    fontFamily: ThemeConstants.fontFamily,
+  );
+
+  static const TextStyle dua = TextStyle(
+    fontSize: ThemeConstants.textSizeLg,
+    fontWeight: ThemeConstants.regular,
+    height: 1.7,
+    fontFamily: ThemeConstants.fontFamily,
+  );
+
   // ===== إنشاء TextTheme للتطبيق =====
 static TextTheme createTextTheme({
     required Color color,
@@ -126,6 +148,81 @@ static TextTheme createTextTheme({
       labelLarge: label1.copyWith(color: color),
       labelMedium: label2.copyWith(color: effectiveSecondaryColor),
       labelSmall: caption.copyWith(color: effectiveSecondaryColor),
+    );
+  }
+
+  // ===== أنماط مخصصة حسب السياق =====
+  
+  /// نص للعناوين الرئيسية في الصفحات
+  static TextStyle pageTitle(BuildContext context) {
+    return h2.copyWith(
+      color: ThemeConstants.textPrimary(context),
+    );
+  }
+
+  /// نص للعناوين الفرعية
+  static TextStyle sectionTitle(BuildContext context) {
+    return h4.copyWith(
+      color: ThemeConstants.textPrimary(context),
+    );
+  }
+
+  /// نص للمحتوى الرئيسي
+  static TextStyle contentText(BuildContext context) {
+    return body1.copyWith(
+      color: ThemeConstants.textPrimary(context),
+    );
+  }
+
+  /// نص للمعلومات الثانوية
+  static TextStyle secondaryText(BuildContext context) {
+    return body2.copyWith(
+      color: ThemeConstants.textSecondary(context),
+    );
+  }
+
+  /// نص للتلميحات
+  static TextStyle hintText(BuildContext context) {
+    return caption.copyWith(
+      color: ThemeConstants.textSecondary(context).withValues(alpha: 0.7),
+    );
+  }
+
+  /// نص للأخطاء
+  static TextStyle errorText(BuildContext context) {
+    return caption.copyWith(
+      color: ThemeConstants.error,
+    );
+  }
+
+  /// نص للنجاح
+  static TextStyle successText(BuildContext context) {
+    return body2.copyWith(
+      color: ThemeConstants.success,
+      fontWeight: ThemeConstants.medium,
+    );
+  }
+
+  /// نص للتحذيرات
+  static TextStyle warningText(BuildContext context) {
+    return body2.copyWith(
+      color: ThemeConstants.warning,
+      fontWeight: ThemeConstants.medium,
+    );
+  }
+
+  /// نص للمعلومات
+  static TextStyle infoText(BuildContext context) {
+    return body2.copyWith(
+      color: ThemeConstants.info,
+    );
+  }
+
+  /// نص للروابط
+  static TextStyle linkText(BuildContext context) {
+    return body2.copyWith(
+      color: ThemeConstants.primary,
+      decoration: TextDecoration.underline,
     );
   }
 }

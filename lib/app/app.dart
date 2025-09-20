@@ -24,9 +24,10 @@ class AthkarApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      locale: const Locale('ar'),
+      locale: Locale(language),
       supportedLocales: const [
-        Locale('ar'), // العربية فقط
+        Locale('ar'), // العربية
+        Locale('en'), // الإنجليزية
       ],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,

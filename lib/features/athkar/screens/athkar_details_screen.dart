@@ -15,12 +15,12 @@ import 'notification_settings_screen.dart';
 
 
 class AthkarDetailsScreen extends StatefulWidget {
-  final String categoryId;
+  String categoryId;
   
-  const AthkarDetailsScreen({
+  AthkarDetailsScreen({
     super.key,
-    required this.categoryId,
-  });
+    String? categoryId,
+  }) : categoryId = categoryId ?? '';
 
   @override
   State<AthkarDetailsScreen> createState() => _AthkarDetailsScreenState();

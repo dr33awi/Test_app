@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../app/themes/app_theme.dart';
 import '../../../app/di/service_locator.dart';
 import '../../../app/routes/app_router.dart';
+import '../../../core/infrastructure/services/permissions/permission_service.dart';
 import '../services/athkar_service.dart';
 import '../models/athkar_model.dart';
 import '../widgets/athkar_category_card.dart';
@@ -18,19 +19,34 @@ class AthkarCategoriesScreen extends StatefulWidget {
 
 class _AthkarCategoriesScreenState extends State<AthkarCategoriesScreen> {
   late final AthkarService _service;
+  late final PermissionService _permissionService;
   
   late Future<List<AthkarCategory>> _futureCategories;
+  bool _notificationsEnabled = false;
 
   @override
   void initState() {
     super.initState();
     _service = getIt<AthkarService>();
+    _permissionService = getIt<PermissionService>();
     
     _initialize();
   }
 
   Future<void> _initialize() async {
     _futureCategories = _service.loadCategories();
+    _checkNotificationPermission();
+  }
+
+  Future<void> _checkNotificationPermission() async {
+    final status = await _permissionService.checkPermissionStatus(
+      AppPermissionType.notification,
+    );
+    if (mounted) {
+      setState(() {
+        _notificationsEnabled = status == AppPermissionStatus.granted;
+      });
+    }
   }
 
   Future<void> _refreshData() async {
