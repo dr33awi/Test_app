@@ -1,4 +1,4 @@
-// lib/app/routes/app_router.dart - محدث مع أسماء الله الحسنى
+// lib/app/routes/app_router.dart - محدث بدون أسماء الله الحسنى
 import 'package:flutter/material.dart';
 import '../../app/themes/app_theme.dart';
 import '../../features/home/screens/home_screen.dart';
@@ -22,9 +22,6 @@ import '../../features/dua/screens/dua_categories_screen.dart';
 // Tasbih
 import '../../features/tasbih/screens/tasbih_screen.dart';
 
-// Asma Allah - أسماء الله الحسنى
-import '../../features/asma_allah/screens/asma_allah_screen.dart';
-
 // Settings
 import '../../features/settings/screens/main_settings_screen.dart';
 
@@ -36,8 +33,7 @@ class AppRouter {
   // Feature Routes
   static const String prayerTimes = '/prayer-times';
   static const String athkar = '/athkar';
-  static const String asmaAllah = '/asma-allah';  // إضافة مسار أسماء الله الحسنى
-  static const String quran = '/quran';  // الإبقاء عليه للتوافق
+  static const String quran = '/quran';  // للتوافق المستقبلي
   static const String qibla = '/qibla';
   static const String tasbih = '/tasbih';
   static const String dua = '/dua';
@@ -94,10 +90,7 @@ class AppRouter {
           settings
         );
         
-      case asmaAllah:  // صفحة أسماء الله الحسنى
-        return _slideRoute(const AsmaAllahScreen(), settings);
-        
-      case quran:  // الإبقاء عليه للتوافق
+      case quran:  // للتوافق المستقبلي
         return _slideRoute(_buildComingSoonScreen('القرآن الكريم'), settings);
         
       case qibla:
@@ -186,9 +179,7 @@ class AppRouter {
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
-        backgroundColor: title == 'أسماء الله الحسنى' 
-            ? const Color(0xFF6B46C1)  // لون بنفسجي لأسماء الله الحسنى
-            : ThemeConstants.primary,
+        backgroundColor: ThemeConstants.primary,
         foregroundColor: Colors.white,
       ),
       body: Center(
@@ -199,17 +190,13 @@ class AppRouter {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: title == 'أسماء الله الحسنى'
-                    ? const Color(0xFF6B46C1).withValues(alpha: 0.1)
-                    : ThemeConstants.primary.withValues(alpha: 0.1),
+                color: ThemeConstants.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 _getIconForFeature(title),
                 size: 60,
-                color: title == 'أسماء الله الحسنى'
-                    ? const Color(0xFF6B46C1)
-                    : ThemeConstants.primary,
+                color: ThemeConstants.primary,
               ),
             ),
             const SizedBox(height: ThemeConstants.space5),
@@ -247,9 +234,7 @@ class AppRouter {
               icon: const Icon(Icons.arrow_back),
               label: const Text('العودة'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: title == 'أسماء الله الحسنى'
-                    ? const Color(0xFF6B46C1)
-                    : ThemeConstants.primary,
+                backgroundColor: ThemeConstants.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: ThemeConstants.space4,
@@ -444,8 +429,6 @@ class AppRouter {
         return Icons.mosque;
       case 'الأذكار':
         return Icons.menu_book;
-      case 'أسماء الله الحسنى':  // إضافة أيقونة أسماء الله الحسنى
-        return Icons.star_purple500_outlined;
       case 'القرآن الكريم':
         return Icons.book;
       case 'اتجاه القبلة':

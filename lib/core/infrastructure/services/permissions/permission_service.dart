@@ -2,7 +2,7 @@
 
 import 'dart:async';
 
-/// أنواع الأذونات المطلوبة فعلياً في التطبيق (تم حذف غير المستخدم)
+/// أنواع الأذونات المستخدمة فعلياً في التطبيق
 enum AppPermissionType {
   location,           // لحساب أوقات الصلاة
   notification,       // للتذكيرات
@@ -20,7 +20,7 @@ enum AppPermissionStatus {
   unknown,
 }
 
-/// نتيجة طلب أذونات متعددة
+/// نتيجة طلب أذونات متعددة (مبسطة)
 class PermissionBatchResult {
   final Map<AppPermissionType, AppPermissionStatus> results;
   final bool allGranted;
@@ -78,7 +78,7 @@ abstract class PermissionService {
   String getPermissionDescription(AppPermissionType permission);
   String getPermissionName(AppPermissionType permission);
   
-  // دوال مساعدة للإشعارات (للتوافق مع الكود القديم)
+  // دوال مساعدة للإشعارات (مبسطة)
   Future<bool> checkNotificationPermission() async {
     final status = await checkPermissionStatus(AppPermissionType.notification);
     return status == AppPermissionStatus.granted;

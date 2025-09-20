@@ -1,4 +1,4 @@
-// lib/core/infrastructure/services/device/battery/battery_service.dart (مبسط)
+// lib/core/infrastructure/services/device/battery/battery_service.dart (منظف)
 
 /// Battery state information (مبسط)
 class BatteryState {
@@ -19,7 +19,7 @@ class BatteryState {
   };
 }
 
-/// Battery service interface (مبسط - فقط الأساسيات)
+/// Battery service interface (مبسط - فقط الأساسيات المستخدمة)
 abstract class BatteryService {
   /// Get current battery level (0-100)
   Future<int> getBatteryLevel();

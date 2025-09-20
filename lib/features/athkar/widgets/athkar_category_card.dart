@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../app/themes/app_theme.dart';
-import '../../../app/themes/widgets/animations/animated_press.dart';
 import '../models/athkar_model.dart';
 import '../utils/category_utils.dart';
 
@@ -22,12 +21,11 @@ class AthkarCategoryCard extends StatelessWidget {
     final categoryIcon = CategoryUtils.getCategoryIcon(category.id);
     final description = CategoryUtils.getCategoryDescription(category.id);
     
-    return AnimatedPress(
+    return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
         onTap();
       },
-      scaleFactor: 0.96,
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(ThemeConstants.radiusXl),
