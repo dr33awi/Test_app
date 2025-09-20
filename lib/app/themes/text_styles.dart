@@ -116,6 +116,8 @@ class AppTextStyles {
     fontFamily: ThemeConstants.fontFamily,
   );
 
+  static var h6;
+
   // ===== إنشاء TextTheme للتطبيق =====
 static TextTheme createTextTheme({
     required Color color,
