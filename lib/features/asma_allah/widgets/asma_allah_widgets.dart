@@ -1,4 +1,4 @@
-// lib/features/asma_allah/widgets/asma_allah_widgets.dart - بعد إزالة خانة المعنى
+// lib/features/asma_allah/widgets/asma_allah_widgets.dart - مع الشرح المفصل والآيات المميزة
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
@@ -7,7 +7,7 @@ import '../models/asma_allah_model.dart';
 import '../extensions/asma_allah_extensions.dart';
 
 // ============================================================================
-// CompactAsmaAllahCard - البطاقة المضغوطة الموحدة بدون خانة المعنى
+// CompactAsmaAllahCard - البطاقة المضغوطة الموحدة مع الشرح المفصل
 // ============================================================================
 class CompactAsmaAllahCard extends StatefulWidget {
   final AsmaAllahModel item;
@@ -152,7 +152,7 @@ class _CompactAsmaAllahCardState extends State<CompactAsmaAllahCard>
             
             ThemeConstants.space3.w,
             
-            // محتوى الاسم فقط (بدون المعنى)
+            // محتوى الاسم والمعلومات
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -167,19 +167,18 @@ class _CompactAsmaAllahCardState extends State<CompactAsmaAllahCard>
                     ),
                   ),
                   
-                  // إضافة معاينة قصيرة من الشرح بدلاً من المعنى
-                  if (!widget.showExplanationPreview) ...[
-                    ThemeConstants.space1.h,
-                    Text(
-                      _getTruncatedText(widget.item.explanation, 40),
-                      style: context.bodySmall?.copyWith(
-                        color: context.textSecondaryColor,
-                        height: 1.3,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  ThemeConstants.space1.h,
+                  
+                  // معاينة المعنى
+                  Text(
+                    _getTruncatedText(widget.item.meaning, 50),
+                    style: context.bodySmall?.copyWith(
+                      color: context.textSecondaryColor,
+                      height: 1.3,
                     ),
-                  ],
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
@@ -436,7 +435,7 @@ class _CompactAsmaAllahCardState extends State<CompactAsmaAllahCard>
 }
 
 // ============================================================================
-// DetailedAsmaAllahCard - البطاقة المفصلة بدون خانة المعنى
+// DetailedAsmaAllahCard - البطاقة المفصلة الجديدة
 // ============================================================================
 class DetailedAsmaAllahCard extends StatelessWidget {
   final AsmaAllahModel item;
@@ -485,7 +484,12 @@ class DetailedAsmaAllahCard extends StatelessWidget {
                 
                 ThemeConstants.space3.h,
                 
-                // الشرح المفصل مباشرة (بدون قسم المعنى)
+                // المعنى
+                _buildMeaningSection(context),
+                
+                ThemeConstants.space3.h,
+                
+                // معاينة الشرح المفصل
                 _buildExplanationPreview(context, color),
                 
                 ThemeConstants.space3.h,
@@ -555,6 +559,29 @@ class DetailedAsmaAllahCard extends StatelessWidget {
     );
   }
 
+  Widget _buildMeaningSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'المعنى',
+          style: context.titleSmall?.copyWith(
+            color: context.textSecondaryColor,
+            fontWeight: ThemeConstants.medium,
+          ),
+        ),
+        ThemeConstants.space1.h,
+        Text(
+          item.meaning,
+          style: context.bodyMedium?.copyWith(
+            color: context.textPrimaryColor,
+            height: 1.6,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildExplanationPreview(BuildContext context, Color color) {
     return Container(
       padding: const EdgeInsets.all(ThemeConstants.space3),
@@ -588,9 +615,43 @@ class DetailedAsmaAllahCard extends StatelessWidget {
           ),
           ThemeConstants.space2.h,
           RichText(
-            text: _buildDetailedPreviewTextSpan(item.explanation, context, 150),
-            maxLines: 4,
+            text: _buildDetailedPreviewTextSpan(item.explanation, context, 120),
+            maxLines: 3,
             overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReferenceSection(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(ThemeConstants.space3),
+      decoration: BoxDecoration(
+        color: ThemeConstants.tertiary.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+        border: Border.all(
+          color: ThemeConstants.tertiary.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.menu_book_rounded,
+            color: ThemeConstants.tertiary,
+            size: 16,
+          ),
+          ThemeConstants.space2.w,
+          Expanded(
+            child: Text(
+              '﴿${item.reference}﴾',
+              style: context.bodySmall?.copyWith(
+                color: ThemeConstants.tertiary,
+                fontFamily: ThemeConstants.fontFamilyQuran,
+                height: 1.6,
+              ),
+            ),
           ),
         ],
       ),
@@ -925,7 +986,7 @@ class EnhancedAsmaAllahSearchBar extends StatelessWidget {
         onChanged: onChanged,
         style: context.bodyMedium,
         decoration: InputDecoration(
-          hintText: 'ابحث في أسماء الله الحسنى...',
+          hintText: 'ابحث في أسماء الله الحسنى أو معانيها أو تفسيرها...',
           hintStyle: TextStyle(
             color: context.textSecondaryColor.withValues(alpha: 0.7),
           ),

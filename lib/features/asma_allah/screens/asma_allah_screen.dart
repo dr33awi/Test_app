@@ -1,4 +1,4 @@
-// lib/features/asma_allah/screens/asma_allah_screen.dart - بعد إزالة البحث في خانة المعنى
+// lib/features/asma_allah/screens/asma_allah_screen.dart - مع البحث في الشرح المفصل
 import 'package:athkar_app/app/di/service_locator.dart';
 import 'package:athkar_app/app/themes/app_theme.dart';
 import 'package:athkar_app/core/infrastructure/services/storage/storage_service.dart';
@@ -46,7 +46,10 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
     var list = _service.asmaAllahList;
     if (_searchQuery.isNotEmpty) {
       list = list.where((item) => 
-        item.name.contains(_searchQuery)
+        item.name.contains(_searchQuery) || 
+        item.meaning.contains(_searchQuery) ||
+        item.explanation.contains(_searchQuery) ||
+        (item.reference?.contains(_searchQuery) ?? false)
       ).toList();
     }
     return list;
@@ -212,7 +215,7 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
         controller: _searchController,
         style: context.bodyMedium,
         decoration: InputDecoration(
-          hintText: 'ابحث في أسماء الله الحسنى...',
+          hintText: 'ابحث في الأسماء أو المعاني أو الشرح والتفسير...',
           hintStyle: TextStyle(
             color: context.textSecondaryColor.withValues(alpha: 0.7),
           ),
@@ -402,7 +405,7 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
                     borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
                   ),
                   child: Text(
-                    'البحث في الأسماء فقط',
+                    'البحث في كامل المحتوى',
                     style: context.labelSmall?.copyWith(
                       color: ThemeConstants.tertiary,
                       fontWeight: ThemeConstants.medium,

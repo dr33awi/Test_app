@@ -1,4 +1,5 @@
-// lib/features/asma_allah/screens/asma_detail_screen.dart - بعد إزالة خانة المعنى
+// lib/features/asma_allah/screens/asma_detail_screen.dart - محسن ومتناسق مع الشرح المفصل
+import 'dart:ui';
 import 'package:athkar_app/app/themes/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -55,7 +56,7 @@ class _UnifiedAsmaAllahDetailsScreenState
       body: SafeArea(
         child: Column(
           children: [
-            // شريط التطبيق المحسن
+            // شريط التطبيق المحسن (متناسق مع صفحة الصلوات)
             _buildEnhancedAppBar(),
             
             // المحتوى الرئيسي مع PageView
@@ -94,14 +95,14 @@ class _UnifiedAsmaAllahDetailsScreenState
       padding: const EdgeInsets.all(ThemeConstants.space4),
       child: Row(
         children: [
-          // زر الرجوع
+          // زر الرجوع (متناسق مع صفحة الصلوات)
           AppBackButton(
             onPressed: () => Navigator.of(context).pop(),
           ),
           
           ThemeConstants.space3.w,
           
-          // أيقونة مميزة
+          // أيقونة مميزة (نفس ستايل صفحة الصلوات)
           Container(
             padding: const EdgeInsets.all(ThemeConstants.space2),
             decoration: BoxDecoration(
@@ -153,7 +154,7 @@ class _UnifiedAsmaAllahDetailsScreenState
             ),
           ),
           
-          // أزرار الإجراءات
+          // أزرار الإجراءات (نفس ستايل صفحة الصلوات)
           _buildActionButton(
             icon: Icons.copy_rounded,
             onTap: () => _copyContent(_currentItem),
@@ -220,7 +221,7 @@ class _UnifiedAsmaAllahDetailsScreenState
           
           ThemeConstants.space4.h,
           
-          // بطاقة الشرح المفصل مباشرة (بدون قسم المعنى)
+          // بطاقة الشرح المفصل مع الآيات المميزة
           _buildEnhancedExplanationCard(item),
           
           // مساحة إضافية في الأسفل
@@ -269,6 +270,85 @@ class _UnifiedAsmaAllahDetailsScreenState
           ),
           textAlign: TextAlign.center,
         ),
+      ),
+    );
+  }
+
+  Widget _buildMeaningCard(AsmaAllahModel item) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(ThemeConstants.space5),
+      decoration: BoxDecoration(
+        color: context.cardColor,
+        borderRadius: BorderRadius.circular(ThemeConstants.radius2xl),
+        border: Border.all(
+          color: context.dividerColor.withValues(alpha: 0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // عنوان القسم
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(ThemeConstants.space2),
+                decoration: BoxDecoration(
+                  color: item.getColor().withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                ),
+                child: Icon(
+                  Icons.lightbulb_outline,
+                  color: item.getColor(),
+                  size: ThemeConstants.iconMd,
+                ),
+              ),
+              ThemeConstants.space3.w,
+              Text(
+                'المعنى',
+                style: context.titleLarge?.copyWith(
+                  fontWeight: ThemeConstants.bold,
+                  color: item.getColor(),
+                ),
+              ),
+            ],
+          ),
+          
+          ThemeConstants.space4.h,
+          
+          // خط فاصل
+          Container(
+            height: 2,
+            width: 60,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [item.getColor(), Colors.transparent],
+              ),
+              borderRadius: BorderRadius.circular(1),
+            ),
+          ),
+          
+          ThemeConstants.space4.h,
+          
+          // نص المعنى المختصر
+          Text(
+            item.meaning,
+            style: context.bodyLarge?.copyWith(
+              height: 2.0,
+              fontSize: 16,
+              color: context.textPrimaryColor,
+            ),
+            textAlign: TextAlign.justify,
+          ),
+        ],
       ),
     );
   }
@@ -415,6 +495,84 @@ class _UnifiedAsmaAllahDetailsScreenState
     }
     
     return TextSpan(children: spans);
+  }
+
+  Widget _buildReferenceCard(AsmaAllahModel item) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(ThemeConstants.space5),
+      decoration: BoxDecoration(
+        color: ThemeConstants.tertiary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(ThemeConstants.radius2xl),
+        border: Border.all(
+          color: ThemeConstants.tertiary.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // عنوان القسم
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(ThemeConstants.space2),
+                decoration: BoxDecoration(
+                  color: ThemeConstants.tertiary.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                ),
+                child: const Icon(
+                  Icons.menu_book_rounded,
+                  color: ThemeConstants.tertiary,
+                  size: ThemeConstants.iconMd,
+                ),
+              ),
+              ThemeConstants.space3.w,
+              Text(
+                'من القرآن الكريم',
+                style: context.titleLarge?.copyWith(
+                  fontWeight: ThemeConstants.bold,
+                  color: ThemeConstants.tertiary,
+                ),
+              ),
+            ],
+          ),
+          
+          ThemeConstants.space4.h,
+          
+          // الآية القرآنية
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(ThemeConstants.space4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(ThemeConstants.radiusXl),
+              border: Border.all(
+                color: ThemeConstants.tertiary.withValues(alpha: 0.3),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: ThemeConstants.tertiary.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Text(
+              '﴿${item.reference}﴾',
+              style: context.titleLarge?.copyWith(
+                color: ThemeConstants.tertiary,
+                fontFamily: ThemeConstants.fontFamilyQuran,
+                height: 2.0,
+                fontSize: 20,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildBottomNavigationBar() {
