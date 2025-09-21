@@ -1,4 +1,4 @@
-// lib/features/asma_allah/screens/asma_allah_screen.dart - الإصدار المحسن والمضغوط
+// lib/features/asma_allah/screens/asma_allah_screen.dart - مع البحث في الشرح المفصل
 import 'package:athkar_app/app/di/service_locator.dart';
 import 'package:athkar_app/app/themes/app_theme.dart';
 import 'package:athkar_app/core/infrastructure/services/storage/storage_service.dart';
@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../models/asma_allah_model.dart';
 import '../services/asma_allah_service.dart';
-import '../extensions/asma_allah_extensions.dart';
+import '../widgets/asma_allah_widgets.dart';
 import 'asma_detail_screen.dart';
 
 class AsmaAllahScreen extends StatefulWidget {
@@ -23,6 +23,9 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   final ScrollController _scrollController = ScrollController();
+  
+  // إعدادات العرض
+  bool _showDetailedView = false;
 
   @override
   void initState() {
@@ -44,7 +47,9 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
     if (_searchQuery.isNotEmpty) {
       list = list.where((item) => 
         item.name.contains(_searchQuery) || 
-        item.meaning.contains(_searchQuery)
+        item.meaning.contains(_searchQuery) ||
+        item.explanation.contains(_searchQuery) ||
+        (item.reference?.contains(_searchQuery) ?? false)
       ).toList();
     }
     return list;
@@ -137,20 +142,57 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
                 ),
               ),
               
-
+              // زر تبديل طريقة العرض
+              _buildViewToggleButton(),
             ],
           ),
           
           ThemeConstants.space4.h,
           
-          // شريط البحث
+          // شريط البحث المحسن
           _buildSearchBar(),
         ],
       ),
     );
   }
 
-  
+  Widget _buildViewToggleButton() {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.cardColor,
+        borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+        border: Border.all(
+          color: context.dividerColor.withValues(alpha: 0.3),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+        child: InkWell(
+          onTap: () {
+            setState(() => _showDetailedView = !_showDetailedView);
+            HapticFeedback.lightImpact();
+          },
+          borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+          child: Container(
+            padding: const EdgeInsets.all(ThemeConstants.space2),
+            child: Icon(
+              _showDetailedView ? Icons.view_agenda_rounded : Icons.view_list_rounded,
+              color: ThemeConstants.tertiary,
+              size: ThemeConstants.iconMd,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildSearchBar() {
     return Container(
@@ -173,7 +215,7 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
         controller: _searchController,
         style: context.bodyMedium,
         decoration: InputDecoration(
-          hintText: 'ابحث في أسماء الله الحسنى أو معانيها...',
+          hintText: 'ابحث في الأسماء أو المعاني أو الشرح والتفسير...',
           hintStyle: TextStyle(
             color: context.textSecondaryColor.withValues(alpha: 0.7),
           ),
@@ -228,8 +270,9 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
           return _buildEmptyState();
         }
         
-        // عرض مباشر بدون أي انتقالات متحركة
-        return _buildCompactList(list);
+        return _showDetailedView 
+            ? _buildDetailedList(list)
+            : _buildCompactList(list);
       },
     );
   }
@@ -330,7 +373,7 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
   Widget _buildCompactList(List<AsmaAllahModel> list) {
     return Column(
       children: [
-        // عداد النتائج
+        // عداد النتائج ونوع البحث
         if (_searchQuery.isNotEmpty)
           Container(
             margin: const EdgeInsets.symmetric(
@@ -351,6 +394,24 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
                     color: context.textSecondaryColor,
                   ),
                 ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: ThemeConstants.space2,
+                    vertical: ThemeConstants.space1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: ThemeConstants.tertiary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
+                  ),
+                  child: Text(
+                    'البحث في كامل المحتوى',
+                    style: context.labelSmall?.copyWith(
+                      color: ThemeConstants.tertiary,
+                      fontWeight: ThemeConstants.medium,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -360,16 +421,17 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
           child: ListView.builder(
             controller: _scrollController,
             padding: const EdgeInsets.all(ThemeConstants.space4),
-            // إلغاء الارتداد المتحرك في نهاية القائمة
             physics: const ClampingScrollPhysics(),
             itemCount: list.length,
             itemBuilder: (context, index) {
               final item = list[index];
-              final color = item.getColor();
-              
               return Container(
                 margin: const EdgeInsets.only(bottom: ThemeConstants.space2),
-                child: _buildCompactCard(item, color),
+                child: CompactAsmaAllahCard(
+                  item: item,
+                  onTap: () => _openDetails(item),
+                  showExplanationPreview: true,
+                ),
               );
             },
           ),
@@ -378,160 +440,74 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
     );
   }
 
-  Widget _buildCompactCard(AsmaAllahModel item, Color color) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
-      child: InkWell(
-        onTap: () => _openDetails(item),
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        hoverColor: Colors.transparent,
-        splashFactory: NoSplash.splashFactory,
-        borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
-        child: Container(
-          padding: const EdgeInsets.all(ThemeConstants.space3),
-          decoration: BoxDecoration(
-            color: context.cardColor,
-            borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
-            border: Border.all(
-              color: color.withOpacity(0.2),
-              width: 1,
+  Widget _buildDetailedList(List<AsmaAllahModel> list) {
+    return Column(
+      children: [
+        // عداد النتائج مع معلومات إضافية
+        if (_searchQuery.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.symmetric(
+              horizontal: ThemeConstants.space4,
+              vertical: ThemeConstants.space2,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              // الرقم مع الخلفية الملونة
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [color, color.withOpacity(0.8)],
-                  ),
-                  borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.3),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    '${item.id}',
-                    style: context.titleSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: ThemeConstants.bold,
-                    ),
-                  ),
-                ),
-              ),
-              
-              ThemeConstants.space3.w,
-              
-              // محتوى الاسم والمعلومات
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            child: Column(
+              children: [
+                Row(
                   children: [
-                    // اسم الله
-                    Text(
-                      item.name,
-                      style: context.titleMedium?.copyWith(
-                        color: color,
-                        fontWeight: ThemeConstants.bold,
-                        fontFamily: ThemeConstants.fontFamilyArabic,
-                      ),
+                    Icon(
+                      Icons.filter_list_rounded,
+                      size: 16,
+                      color: context.textSecondaryColor,
                     ),
-                    
-                    ThemeConstants.space1.h,
-                    
-                    // معاينة المعنى
+                    ThemeConstants.space1.w,
                     Text(
-                      _getTruncatedMeaning(item.meaning, 45),
-                      style: context.bodySmall?.copyWith(
+                      'عدد النتائج: ${list.length}',
+                      style: context.labelMedium?.copyWith(
                         color: context.textSecondaryColor,
-                        height: 1.3,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                    
-                    // المرجع القرآني إذا وُجد
-                    if (item.reference != null) ...[
-                      ThemeConstants.space1.h,
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.menu_book_rounded,
-                            size: 12,
-                            color: ThemeConstants.tertiary,
-                          ),
-                          ThemeConstants.space1.w,
-                          Expanded(
-                            child: Text(
-                              '﴿${item.reference}﴾',
-                              style: context.labelSmall?.copyWith(
-                                color: ThemeConstants.tertiary,
-                                fontFamily: ThemeConstants.fontFamilyQuran,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: ThemeConstants.space2,
+                        vertical: ThemeConstants.space1,
                       ),
-                    ],
+                      decoration: BoxDecoration(
+                        color: ThemeConstants.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
+                      ),
+                      child: Text(
+                        'العرض التفصيلي',
+                        style: context.labelSmall?.copyWith(
+                          color: ThemeConstants.primary,
+                          fontWeight: ThemeConstants.medium,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              
-              // أيقونة التفاعل
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
-                ),
-                child: Icon(
-                  Icons.chevron_left_rounded,
-                  color: color,
-                  size: 18,
-                ),
-              ),
-            ],
+              ],
+            ),
+          ),
+        
+        // القائمة التفصيلية
+        Expanded(
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(ThemeConstants.space4),
+            physics: const BouncingScrollPhysics(),
+            itemCount: list.length,
+            itemBuilder: (context, index) {
+              final item = list[index];
+              return DetailedAsmaAllahCard(
+                item: item,
+                onTap: () => _openDetails(item),
+              );
+            },
           ),
         ),
-      ),
+      ],
     );
-  }
-
-  String _getTruncatedMeaning(String meaning, int maxLength) {
-    if (meaning.length <= maxLength) return meaning;
-    
-    final words = meaning.split(' ');
-    final truncatedWords = <String>[];
-    var currentLength = 0;
-    
-    for (final word in words) {
-      if (currentLength + word.length + 1 <= maxLength) {
-        truncatedWords.add(word);
-        currentLength += word.length + 1;
-      } else {
-        break;
-      }
-    }
-    
-    return '${truncatedWords.join(' ')}...';
   }
 
   void _openDetails(AsmaAllahModel item) {
@@ -548,6 +524,4 @@ class _AsmaAllahScreenState extends State<AsmaAllahScreen> {
       ),
     );
   }
-
-
 }

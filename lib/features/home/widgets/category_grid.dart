@@ -1,4 +1,4 @@
-// lib/features/home/widgets/category_grid.dart - محدث مع أسماء الله الحسنى
+// lib/features/home/widgets/category_grid.dart - مُحدث مع المسار الصحيح
 
 import 'package:athkar_app/features/home/widgets/color_helper.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +14,7 @@ class CategoryGrid extends StatefulWidget {
 
 class _CategoryGridState extends State<CategoryGrid> {
 
-  // بيانات ثابتة للأداء مع استبدال القرآن بأسماء الله الحسنى
+  // بيانات ثابتة للأداء مع المسار الصحيح لأسماء الله الحسنى
   static const List<CategoryItem> _categories = [
     CategoryItem(
       id: 'prayer_times',
@@ -35,13 +35,13 @@ class _CategoryGridState extends State<CategoryGrid> {
       isInDevelopment: false,
     ),
     CategoryItem(
-      id: 'asma_allah',  // تغيير من 'quran' إلى 'asma_allah'
-      title: 'أسماء الله الحسنى',  // تغيير العنوان
-      subtitle: 'الأسماء والصفات',  // تغيير الوصف
-      icon: Icons.star_purple500_outlined,  // تغيير الأيقونة
-      routeName: '/asma-allah',  // تغيير المسار
+      id: 'asma_allah',  
+      title: 'أسماء الله الحسنى',  
+      subtitle: 'الأسماء والصفات',  
+      icon: Icons.star_purple500_outlined,  
+      routeName: '/asma-allah',  // المسار الصحيح مع الشرطة
       progress: 0.4,
-      isInDevelopment: false,
+      isInDevelopment: false,  // معطلة مؤقتاً
     ),
     CategoryItem(
       id: 'qibla',
@@ -184,7 +184,7 @@ class _CategoryGridState extends State<CategoryGrid> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('حسناً'),
+            child: const Text('حسناً'),
           ),
         ],
       ),

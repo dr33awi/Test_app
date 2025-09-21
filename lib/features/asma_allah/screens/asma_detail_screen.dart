@@ -1,4 +1,4 @@
-// lib/features/asma_allah/screens/asma_detail_screen.dart - محسن ومتناسق
+// lib/features/asma_allah/screens/asma_detail_screen.dart - محسن ومتناسق مع الشرح المفصل
 import 'dart:ui';
 import 'package:athkar_app/app/themes/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -221,14 +221,8 @@ class _UnifiedAsmaAllahDetailsScreenState
           
           ThemeConstants.space4.h,
           
-          // بطاقة المعنى
-          _buildMeaningCard(item),
-          
-          // بطاقة المرجع القرآني
-          if (item.reference != null) ...[
-            ThemeConstants.space4.h,
-            _buildReferenceCard(item),
-          ],
+          // بطاقة الشرح المفصل مع الآيات المميزة
+          _buildEnhancedExplanationCard(item),
           
           // مساحة إضافية في الأسفل
           ThemeConstants.space8.h,
@@ -319,7 +313,7 @@ class _UnifiedAsmaAllahDetailsScreenState
               ),
               ThemeConstants.space3.w,
               Text(
-                'معنى الاسم',
+                'المعنى',
                 style: context.titleLarge?.copyWith(
                   fontWeight: ThemeConstants.bold,
                   color: item.getColor(),
@@ -344,12 +338,12 @@ class _UnifiedAsmaAllahDetailsScreenState
           
           ThemeConstants.space4.h,
           
-          // نص المعنى
+          // نص المعنى المختصر
           Text(
             item.meaning,
             style: context.bodyLarge?.copyWith(
               height: 2.0,
-              fontSize: 17,
+              fontSize: 16,
               color: context.textPrimaryColor,
             ),
             textAlign: TextAlign.justify,
@@ -357,6 +351,150 @@ class _UnifiedAsmaAllahDetailsScreenState
         ],
       ),
     );
+  }
+
+  Widget _buildEnhancedExplanationCard(AsmaAllahModel item) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(ThemeConstants.space5),
+      decoration: BoxDecoration(
+        color: context.cardColor,
+        borderRadius: BorderRadius.circular(ThemeConstants.radius2xl),
+        border: Border.all(
+          color: item.getColor().withValues(alpha: 0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: item.getColor().withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // عنوان القسم
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(ThemeConstants.space2),
+                decoration: BoxDecoration(
+                  color: item.getColor().withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                ),
+                child: Icon(
+                  Icons.auto_stories_rounded,
+                  color: item.getColor(),
+                  size: ThemeConstants.iconMd,
+                ),
+              ),
+              ThemeConstants.space3.w,
+              Text(
+                'الشرح والتفسير',
+                style: context.titleLarge?.copyWith(
+                  fontWeight: ThemeConstants.bold,
+                  color: item.getColor(),
+                ),
+              ),
+            ],
+          ),
+          
+          ThemeConstants.space4.h,
+          
+          // خط فاصل
+          Container(
+            height: 2,
+            width: 80,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [item.getColor(), Colors.transparent],
+              ),
+              borderRadius: BorderRadius.circular(1),
+            ),
+          ),
+          
+          ThemeConstants.space4.h,
+          
+          // نص الشرح المفصل مع الآيات المميزة
+          _buildFormattedExplanationText(item),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormattedExplanationText(AsmaAllahModel item) {
+    return RichText(
+      textAlign: TextAlign.justify,
+      text: _buildFormattedTextSpan(item.explanation, context, item.getColor()),
+    );
+  }
+
+  TextSpan _buildFormattedTextSpan(String text, BuildContext context, Color itemColor) {
+    final List<TextSpan> spans = [];
+    
+    // البحث عن الآيات بين ﴿ و ﴾
+    final RegExp ayahPattern = RegExp(r'﴿([^﴾]+)﴾');
+    int lastIndex = 0;
+    
+    for (final match in ayahPattern.allMatches(text)) {
+      // إضافة النص العادي قبل الآية
+      if (match.start > lastIndex) {
+        spans.add(TextSpan(
+          text: text.substring(lastIndex, match.start),
+          style: context.bodyLarge?.copyWith(
+            height: 2.2,
+            fontSize: 17,
+            color: context.textPrimaryColor,
+            letterSpacing: 0.3,
+          ),
+        ));
+      }
+      
+      // إضافة الآية مميزة
+      spans.add(TextSpan(
+        text: match.group(0), // النص الكامل مع ﴿ و ﴾
+        style: context.titleMedium?.copyWith(
+          color: ThemeConstants.tertiary,
+          fontFamily: ThemeConstants.fontFamilyQuran,
+          fontSize: 18,
+          fontWeight: ThemeConstants.medium,
+          height: 2.0,
+          backgroundColor: ThemeConstants.tertiary.withValues(alpha: 0.08),
+        ),
+      ));
+      
+      lastIndex = match.end;
+    }
+    
+    // إضافة باقي النص بعد آخر آية
+    if (lastIndex < text.length) {
+      spans.add(TextSpan(
+        text: text.substring(lastIndex),
+        style: context.bodyLarge?.copyWith(
+          height: 2.2,
+          fontSize: 17,
+          color: context.textPrimaryColor,
+          letterSpacing: 0.3,
+        ),
+      ));
+    }
+    
+    // إذا لم توجد آيات، عرض النص كاملاً بالتنسيق العادي
+    if (spans.isEmpty) {
+      spans.add(TextSpan(
+        text: text,
+        style: context.bodyLarge?.copyWith(
+          height: 2.2,
+          fontSize: 17,
+          color: context.textPrimaryColor,
+          letterSpacing: 0.3,
+        ),
+      ));
+    }
+    
+    return TextSpan(children: spans);
   }
 
   Widget _buildReferenceCard(AsmaAllahModel item) {
@@ -564,9 +702,9 @@ class _UnifiedAsmaAllahDetailsScreenState
   void _copyContent(AsmaAllahModel item) {
     final content = '''${item.name}
 
-المعنى: ${item.meaning}
+الشرح والتفسير: ${item.explanation}
 
-${item.reference != null ? 'من القرآن الكريم: ﴿${item.reference}﴾\n\n' : ''}من تطبيق أذكاري - أسماء الله الحسنى''';
+من تطبيق أذكاري - أسماء الله الحسنى''';
 
     Clipboard.setData(ClipboardData(text: content));
     
@@ -577,9 +715,9 @@ ${item.reference != null ? 'من القرآن الكريم: ﴿${item.reference}
   void _shareContent(AsmaAllahModel item) {
     final content = '''${item.name}
 
-المعنى: ${item.meaning}
+الشرح والتفسير: ${item.explanation}
 
-${item.reference != null ? 'من القرآن الكريم: ﴿${item.reference}﴾\n\n' : ''}من تطبيق أذكاري - أسماء الله الحسنى''';
+من تطبيق أذكاري - أسماء الله الحسنى''';
 
     Share.share(
       content,

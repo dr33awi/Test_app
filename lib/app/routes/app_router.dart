@@ -1,4 +1,5 @@
-// lib/app/routes/app_router.dart - محدث بدون أسماء الله الحسنى
+// lib/app/routes/app_router.dart - مُحدث مع إضافة مسار أسماء الله الحسنى
+import 'package:athkar_app/features/asma_allah/screens/asma_allah_screen.dart';
 import 'package:flutter/material.dart';
 import '../../app/themes/app_theme.dart';
 import '../../features/home/screens/home_screen.dart';
@@ -33,7 +34,8 @@ class AppRouter {
   // Feature Routes
   static const String prayerTimes = '/prayer-times';
   static const String athkar = '/athkar';
-  static const String quran = '/asma_allah';  // للتوافق المستقبلي
+  static const String asmaAllah = '/asma-allah';  // إضافة مسار أسماء الله الحسنى
+  static const String quran = '/quran';  // للتوافق المستقبلي
   static const String qibla = '/qibla';
   static const String tasbih = '/tasbih';
   static const String dua = '/dua';
@@ -90,8 +92,10 @@ class AppRouter {
           settings
         );
         
-      case quran:  // للتوافق المستقبلي
-        return _slideRoute(_buildComingSoonScreen('القرآن الكريم'), settings);
+      // ==================== أسماء الله الحسنى ====================
+      case asmaAllah:
+        return _slideRoute(const AsmaAllahScreen(), settings);
+        
         
       case qibla:
         return _slideRoute(const QiblaScreen(), settings);
@@ -429,6 +433,8 @@ class AppRouter {
         return Icons.mosque;
       case 'الأذكار':
         return Icons.menu_book;
+      case 'أسماء الله الحسنى':  // إضافة أيقونة أسماء الله الحسنى
+        return Icons.star_purple500_outlined;
       case 'القرآن الكريم':
         return Icons.book;
       case 'اتجاه القبلة':
