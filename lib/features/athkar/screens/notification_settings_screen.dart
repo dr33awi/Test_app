@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../app/di/service_locator.dart';
 import '../../../app/themes/app_theme.dart';
+import '../../../app/themes/widgets/cards/app_card.dart' show AppCard;
 import '../../../core/infrastructure/services/permissions/permission_service.dart';
 import '../../../core/infrastructure/services/storage/storage_service.dart';
 import '../services/athkar_service.dart';
