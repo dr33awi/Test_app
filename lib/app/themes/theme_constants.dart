@@ -1,7 +1,7 @@
-// lib/app/themes/theme_constants.dart - منظف ومحسن
-import 'package:athkar_app/app/themes/core/color_helper.dart';
-import 'package:athkar_app/core/constants/app_constants.dart';
+// lib/app/themes/theme_constants.dart - مصحح
 import 'package:flutter/material.dart';
+import 'core/color_helper.dart';
+import '../../core/constants/app_constants.dart'; // المسار الصحيح
 
 /// ثوابت الثيم - استخدام AppColors و AppConstants
 class ThemeConstants {

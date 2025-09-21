@@ -1,4 +1,4 @@
-// lib/app/constants/app_constants.dart
+// lib/core/constants/app_constants.dart
 import 'package:flutter/material.dart';
 
 /// الثوابت المشتركة في جميع أنحاء التطبيق

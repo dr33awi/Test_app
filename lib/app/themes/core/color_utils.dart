@@ -1,6 +1,6 @@
-// lib/app/utils/color_utils.dart
-import 'package:athkar_app/app/themes/core/color_helper.dart';
+// lib/app/themes/core/color_utils.dart - مصحح
 import 'package:flutter/material.dart';
+import 'color_helper.dart';
 
 /// دوال مساعدة للألوان - دمج جميع الدوال المكررة
 class ColorUtils {
@@ -39,10 +39,10 @@ class ColorUtils {
     ratio = ratio.clamp(0.0, 1.0);
     
     return Color.fromARGB(
-      ((1 - ratio) * color1.alpha + ratio * color2.alpha).round(),
-      ((1 - ratio) * color1.red + ratio * color2.red).round(),
-      ((1 - ratio) * color1.green + ratio * color2.green).round(),
-      ((1 - ratio) * color1.blue + ratio * color2.blue).round(),
+      ((1 - ratio) * color1.a + ratio * color2.a).round(),
+      ((1 - ratio) * color1.r + ratio * color2.r).round(),
+      ((1 - ratio) * color1.g + ratio * color2.g).round(),
+      ((1 - ratio) * color1.b + ratio * color2.b).round(),
     );
   }
 

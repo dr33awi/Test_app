@@ -1,6 +1,7 @@
-// lib/app/themes/text_styles.dart - منظف ومحسن
+// lib/app/themes/text_styles.dart - مصحح
 import 'package:athkar_app/core/constants/app_constants.dart';
 import 'package:flutter/material.dart';
+
 import 'theme_constants.dart';
 
 /// أنماط النصوص الموحدة للتطبيق
