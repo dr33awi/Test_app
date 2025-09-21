@@ -314,8 +314,8 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
       SnackBar(
         content: Row(
           children: [
-            Icon(Icons.error_outline_rounded, color: Colors.white, size: ThemeConstants.iconSm),
-            SizedBox(width: ThemeConstants.space2),
+            const Icon(Icons.error_outline_rounded, color: Colors.white, size: ThemeConstants.iconSm),
+            const SizedBox(width: ThemeConstants.space2),
             Expanded(
               child: Text(
                 message,
@@ -329,14 +329,14 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
         ),
-        margin: EdgeInsets.all(ThemeConstants.space4),
+        margin: const EdgeInsets.all(ThemeConstants.space4),
       ),
     );
   }
   
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    Theme.of(context);
     
     return PopScope(
       canPop: false,
@@ -427,7 +427,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
   
   Widget _buildEnhancedHeader() {
     return Container(
-      padding: EdgeInsets.all(ThemeConstants.space6),
+      padding: const EdgeInsets.all(ThemeConstants.space6),
       child: Column(
         children: [
           // عنوان الصفحة
@@ -438,12 +438,12 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
               fontWeight: ThemeConstants.bold,
             ),
           ),
-          SizedBox(height: ThemeConstants.space4),
+          const SizedBox(height: ThemeConstants.space4),
           
           // Progress Bar محسن
           Container(
             height: ThemeConstants.space2,
-            margin: EdgeInsets.symmetric(horizontal: ThemeConstants.space8),
+            margin: const EdgeInsets.symmetric(horizontal: ThemeConstants.space8),
             decoration: BoxDecoration(
               color: ThemeConstants.divider(context),
               borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
@@ -482,7 +482,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             ),
           ),
           
-          SizedBox(height: ThemeConstants.space3),
+          const SizedBox(height: ThemeConstants.space3),
           
           // Page indicators محسنة
           Row(
@@ -493,7 +493,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
               
               return AnimatedContainer(
                 duration: ThemeConstants.durationNormal,
-                margin: EdgeInsets.symmetric(horizontal: ThemeConstants.space1),
+                margin: const EdgeInsets.symmetric(horizontal: ThemeConstants.space1),
                 height: ThemeConstants.space2,
                 width: isActive ? ThemeConstants.space8 : ThemeConstants.space2,
                 decoration: BoxDecoration(
@@ -511,7 +511,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                     ),
                   ] : null,
                 ),
-                child: isPassed ? Center(
+                child: isPassed ? const Center(
                   child: Icon(
                     Icons.check,
                     size: ThemeConstants.space2,
@@ -528,7 +528,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
   
   Widget _buildWelcomePage() {
     return Padding(
-      padding: EdgeInsets.all(ThemeConstants.space8),
+      padding: const EdgeInsets.all(ThemeConstants.space8),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -560,7 +560,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                           shape: BoxShape.circle,
                         ),
                       ),
-                      Icon(
+                      const Icon(
                         ThemeConstants.iconPrayer,
                         size: ThemeConstants.icon3xl,
                         color: Colors.white,
@@ -572,7 +572,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             },
           ),
           
-          SizedBox(height: ThemeConstants.space10),
+          const SizedBox(height: ThemeConstants.space10),
           
           // عنوان الترحيب
           ShaderMask(
@@ -588,7 +588,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             ),
           ),
           
-          SizedBox(height: ThemeConstants.space4),
+          const SizedBox(height: ThemeConstants.space4),
           
           // وصف التطبيق
           Text(
@@ -600,7 +600,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             ),
           ),
           
-          SizedBox(height: ThemeConstants.space8),
+          const SizedBox(height: ThemeConstants.space8),
           
           // إحصائيات سريعة
           _buildWelcomeStats(),
@@ -617,7 +617,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     ];
     
     return Container(
-      padding: EdgeInsets.all(ThemeConstants.space4),
+      padding: const EdgeInsets.all(ThemeConstants.space4),
       decoration: BoxDecoration(
         color: ThemeConstants.card(context),
         borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
@@ -629,7 +629,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: EdgeInsets.all(ThemeConstants.space3),
+              padding: const EdgeInsets.all(ThemeConstants.space3),
               decoration: BoxDecoration(
                 color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity10),
                 borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
@@ -640,7 +640,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                 size: ThemeConstants.iconMd,
               ),
             ),
-            SizedBox(height: ThemeConstants.space2),
+            const SizedBox(height: ThemeConstants.space2),
             Text(
               stat['count'] as String,
               style: AppTextStyles.label1.copyWith(
@@ -689,7 +689,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     ];
     
     return SingleChildScrollView(
-      padding: EdgeInsets.all(ThemeConstants.space8),
+      padding: const EdgeInsets.all(ThemeConstants.space8),
       child: Column(
         children: [
           Text(
@@ -700,7 +700,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             ),
           ),
           
-          SizedBox(height: ThemeConstants.space2),
+          const SizedBox(height: ThemeConstants.space2),
           
           Text(
             'تعرف على الميزات الرائعة التي ستساعدك في رحلتك الروحية',
@@ -711,7 +711,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             ),
           ),
           
-          SizedBox(height: ThemeConstants.space8),
+          const SizedBox(height: ThemeConstants.space8),
           
           ...features.asMap().entries.map((entry) {
             final index = entry.key;
@@ -737,7 +737,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                 );
               },
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -751,8 +751,8 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     required int index,
   }) {
     return Container(
-      margin: EdgeInsets.only(bottom: ThemeConstants.space4),
-      padding: EdgeInsets.all(ThemeConstants.space5),
+      margin: const EdgeInsets.only(bottom: ThemeConstants.space4),
+      padding: const EdgeInsets.all(ThemeConstants.space5),
       decoration: BoxDecoration(
         color: ThemeConstants.card(context),
         borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
@@ -766,7 +766,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
         children: [
           // أيقونة محسنة
           Container(
-            padding: EdgeInsets.all(ThemeConstants.space4),
+            padding: const EdgeInsets.all(ThemeConstants.space4),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
@@ -792,7 +792,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             ),
           ),
           
-          SizedBox(width: ThemeConstants.space4),
+          const SizedBox(width: ThemeConstants.space4),
           
           // المحتوى
           Expanded(
@@ -806,7 +806,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                     color: ThemeConstants.textPrimary(context),
                   ),
                 ),
-                SizedBox(height: ThemeConstants.space1),
+                const SizedBox(height: ThemeConstants.space1),
                 Text(
                   description,
                   style: AppTextStyles.body2.copyWith(
@@ -850,7 +850,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     final optionalPermissions = widget.optionalPermissions ?? PermissionConstants.optionalPermissions;
     
     return SingleChildScrollView(
-      padding: EdgeInsets.all(ThemeConstants.space6),
+      padding: const EdgeInsets.all(ThemeConstants.space6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -859,18 +859,18 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             child: Column(
               children: [
                 Container(
-                  padding: EdgeInsets.all(ThemeConstants.space4),
+                  padding: const EdgeInsets.all(ThemeConstants.space4),
                   decoration: BoxDecoration(
                     color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity10),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.security_rounded,
                     size: ThemeConstants.icon2xl,
                     color: ThemeConstants.primary,
                   ),
                 ),
-                SizedBox(height: ThemeConstants.space4),
+                const SizedBox(height: ThemeConstants.space4),
                 Text(
                   'الأذونات المطلوبة',
                   style: AppTextStyles.h3.copyWith(
@@ -878,7 +878,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                     color: ThemeConstants.textPrimary(context),
                   ),
                 ),
-                SizedBox(height: ThemeConstants.space2),
+                const SizedBox(height: ThemeConstants.space2),
                 Text(
                   'نحتاج بعض الأذونات لتوفير أفضل تجربة ممكنة',
                   textAlign: TextAlign.center,
@@ -890,7 +890,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             ),
           ),
           
-          SizedBox(height: ThemeConstants.space8),
+          const SizedBox(height: ThemeConstants.space8),
           
           // الأذونات الأساسية
           _buildPermissionSection(
@@ -903,7 +903,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
           ),
           
           if (optionalPermissions.isNotEmpty) ...[
-            SizedBox(height: ThemeConstants.space6),
+            const SizedBox(height: ThemeConstants.space6),
             _buildPermissionSection(
               title: 'أذونات اختيارية',
               subtitle: 'لتحسين تجربة الاستخدام',
@@ -927,7 +927,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     required bool isCritical,
   }) {
     return Container(
-      padding: EdgeInsets.all(ThemeConstants.space4),
+      padding: const EdgeInsets.all(ThemeConstants.space4),
       decoration: BoxDecoration(
         color: ThemeConstants.card(context),
         borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
@@ -944,14 +944,14 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
           Row(
             children: [
               Container(
-                padding: EdgeInsets.all(ThemeConstants.space2),
+                padding: const EdgeInsets.all(ThemeConstants.space2),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: ThemeConstants.opacity10),
                   borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
                 ),
                 child: Icon(icon, color: color, size: ThemeConstants.iconMd),
               ),
-              SizedBox(width: ThemeConstants.space3),
+              const SizedBox(width: ThemeConstants.space3),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -975,7 +975,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             ],
           ),
           
-          SizedBox(height: ThemeConstants.space4),
+          const SizedBox(height: ThemeConstants.space4),
           
           // قائمة الأذونات
           ...permissions.map((permission) => 
@@ -991,7 +991,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     final isSelected = _selectedPermissions.contains(permission);
     
     return Container(
-      margin: EdgeInsets.only(bottom: ThemeConstants.space3),
+      margin: const EdgeInsets.only(bottom: ThemeConstants.space3),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -1008,7 +1008,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
           borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
           child: AnimatedContainer(
             duration: ThemeConstants.durationFast,
-            padding: EdgeInsets.all(ThemeConstants.space4),
+            padding: const EdgeInsets.all(ThemeConstants.space4),
             decoration: BoxDecoration(
               color: isSelected 
                   ? info.color.withValues(alpha: ThemeConstants.opacity05)
@@ -1026,7 +1026,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                 // أيقونة الإذن
                 AnimatedContainer(
                   duration: ThemeConstants.durationFast,
-                  padding: EdgeInsets.all(ThemeConstants.space3),
+                  padding: const EdgeInsets.all(ThemeConstants.space3),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? info.color.withValues(alpha: ThemeConstants.opacity5)
@@ -1040,7 +1040,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                   ),
                 ),
                 
-                SizedBox(width: ThemeConstants.space4),
+                const SizedBox(width: ThemeConstants.space4),
                 
                 // معلومات الإذن
                 Expanded(
@@ -1062,7 +1062,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                           ),
                           if (isCritical)
                             Container(
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                 horizontal: ThemeConstants.space2,
                                 vertical: ThemeConstants.space1,
                               ),
@@ -1077,12 +1077,12 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.star_rounded,
                                     size: ThemeConstants.space3,
                                     color: ThemeConstants.error,
                                   ),
-                                  SizedBox(width: ThemeConstants.space1),
+                                  const SizedBox(width: ThemeConstants.space1),
                                   Text(
                                     'مطلوب',
                                     style: AppTextStyles.caption.copyWith(
@@ -1095,7 +1095,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                             ),
                         ],
                       ),
-                      SizedBox(height: ThemeConstants.space1),
+                      const SizedBox(height: ThemeConstants.space1),
                       Text(
                         info.description,
                         style: AppTextStyles.caption.copyWith(
@@ -1107,7 +1107,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                   ),
                 ),
                 
-                SizedBox(width: ThemeConstants.space3),
+                const SizedBox(width: ThemeConstants.space3),
                 
                 // مؤشر الحالة
                 if (!isCritical)
@@ -1124,7 +1124,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                       borderRadius: BorderRadius.circular(ThemeConstants.radiusXs),
                     ),
                     child: isSelected
-                        ? Icon(
+                        ? const Icon(
                             Icons.check_rounded,
                             size: ThemeConstants.iconSm,
                             color: Colors.white,
@@ -1134,7 +1134,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                 
                 if (isCritical)
                   Container(
-                    padding: EdgeInsets.all(ThemeConstants.space2),
+                    padding: const EdgeInsets.all(ThemeConstants.space2),
                     decoration: BoxDecoration(
                       color: ThemeConstants.success.withValues(alpha: ThemeConstants.opacity10),
                       shape: BoxShape.circle,
@@ -1143,7 +1143,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                         width: ThemeConstants.borderMedium,
                       ),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.lock_rounded,
                       size: ThemeConstants.iconSm,
                       color: ThemeConstants.success,
@@ -1159,7 +1159,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
   
   Widget _buildCompletionPage() {
     return Padding(
-      padding: EdgeInsets.all(ThemeConstants.space8),
+      padding: const EdgeInsets.all(ThemeConstants.space8),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -1190,7 +1190,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                       ),
                     ],
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.check_circle_rounded,
                     size: ThemeConstants.icon3xl,
                     color: Colors.white,
@@ -1200,7 +1200,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             },
           ),
           
-          SizedBox(height: ThemeConstants.space8),
+          const SizedBox(height: ThemeConstants.space8),
           
           // رسالة الاكتمال
           Text(
@@ -1211,7 +1211,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             ),
           ),
           
-          SizedBox(height: ThemeConstants.space4),
+          const SizedBox(height: ThemeConstants.space4),
           
           Text(
             'سنطلب الأذونات المختارة الآن لبدء الاستخدام',
@@ -1222,11 +1222,11 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             ),
           ),
           
-          SizedBox(height: ThemeConstants.space8),
+          const SizedBox(height: ThemeConstants.space8),
           
           // ملخص الأذونات
           Container(
-            padding: EdgeInsets.all(ThemeConstants.space5),
+            padding: const EdgeInsets.all(ThemeConstants.space5),
             decoration: BoxDecoration(
               color: ThemeConstants.card(context),
               borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
@@ -1240,12 +1240,12 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
               children: [
                 Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.security_rounded,
                       color: ThemeConstants.success,
                       size: ThemeConstants.iconMd,
                     ),
-                    SizedBox(width: ThemeConstants.space3),
+                    const SizedBox(width: ThemeConstants.space3),
                     Text(
                       'ملخص الأذونات المختارة',
                       style: AppTextStyles.h5.copyWith(
@@ -1255,7 +1255,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                     ),
                   ],
                 ),
-                SizedBox(height: ThemeConstants.space4),
+                const SizedBox(height: ThemeConstants.space4),
                 if (_selectedPermissions.isEmpty)
                   Text(
                     'لم يتم اختيار أي أذونات',
@@ -1271,7 +1271,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                     children: _selectedPermissions.map((permission) {
                       final info = PermissionConstants.getInfo(permission);
                       return Container(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: ThemeConstants.space3,
                           vertical: ThemeConstants.space1,
                         ),
@@ -1291,7 +1291,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                               size: ThemeConstants.iconSm,
                               color: info.color,
                             ),
-                            SizedBox(width: ThemeConstants.space1),
+                            const SizedBox(width: ThemeConstants.space1),
                             Text(
                               info.name,
                               style: AppTextStyles.caption.copyWith(
@@ -1308,11 +1308,11 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             ),
           ),
           
-          SizedBox(height: ThemeConstants.space6),
+          const SizedBox(height: ThemeConstants.space6),
           
           // ملاحظة مهمة
           Container(
-            padding: EdgeInsets.all(ThemeConstants.space4),
+            padding: const EdgeInsets.all(ThemeConstants.space4),
             decoration: BoxDecoration(
               color: ThemeConstants.info.withValues(alpha: ThemeConstants.opacity10),
               borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
@@ -1323,12 +1323,12 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             ),
             child: Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.info_outline_rounded,
                   color: ThemeConstants.info,
                   size: ThemeConstants.iconMd,
                 ),
-                SizedBox(width: ThemeConstants.space3),
+                const SizedBox(width: ThemeConstants.space3),
                 Expanded(
                   child: Text(
                     'يمكنك تغيير إعدادات الأذونات لاحقاً من خلال إعدادات التطبيق',
@@ -1348,7 +1348,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
   
   Widget _buildEnhancedNavigation() {
     return Container(
-      padding: EdgeInsets.all(ThemeConstants.space6),
+      padding: const EdgeInsets.all(ThemeConstants.space6),
       decoration: BoxDecoration(
         color: ThemeConstants.card(context),
         boxShadow: [
@@ -1366,13 +1366,13 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: _isProcessingPermissions ? null : _previousPage,
-                icon: Icon(
+                icon: const Icon(
                   Icons.arrow_back_ios_rounded,
                   size: ThemeConstants.iconSm,
                 ),
                 label: const Text('السابق'),
                 style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: ThemeConstants.space4),
+                  padding: const EdgeInsets.symmetric(vertical: ThemeConstants.space4),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
                   ),
@@ -1384,7 +1384,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
               ),
             ),
           
-          if (_currentPage > 0) SizedBox(width: ThemeConstants.space3),
+          if (_currentPage > 0) const SizedBox(width: ThemeConstants.space3),
           
           // زر التالي/البدء
           Expanded(
@@ -1392,7 +1392,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             child: ElevatedButton.icon(
               onPressed: _isProcessingPermissions ? null : _nextPage,
               icon: _isProcessingPermissions
-                  ? SizedBox(
+                  ? const SizedBox(
                       width: ThemeConstants.iconSm,
                       height: ThemeConstants.iconSm,
                       child: CircularProgressIndicator(
@@ -1413,7 +1413,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: ThemeConstants.space4),
+                padding: const EdgeInsets.symmetric(vertical: ThemeConstants.space4),
                 backgroundColor: _currentPage == _totalPages - 1 
                     ? ThemeConstants.success 
                     : ThemeConstants.primary,
@@ -1427,11 +1427,11 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
           
           // زر التخطي
           if (_currentPage < _totalPages - 1) ...[
-            SizedBox(width: ThemeConstants.space3),
+            const SizedBox(width: ThemeConstants.space3),
             TextButton(
               onPressed: _isProcessingPermissions ? null : _skip,
               style: TextButton.styleFrom(
-                padding: EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: ThemeConstants.space4,
                   vertical: ThemeConstants.space3,
                 ),
@@ -1454,7 +1454,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
       color: Colors.black.withValues(alpha: ThemeConstants.opacity30),
       child: Center(
         child: Container(
-          padding: EdgeInsets.all(ThemeConstants.space8),
+          padding: const EdgeInsets.all(ThemeConstants.space8),
           decoration: BoxDecoration(
             color: ThemeConstants.card(context),
             borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
@@ -1463,11 +1463,11 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(
+              const CircularProgressIndicator(
                 strokeWidth: 3,
                 valueColor: AlwaysStoppedAnimation<Color>(ThemeConstants.primary),
               ),
-              SizedBox(height: ThemeConstants.space4),
+              const SizedBox(height: ThemeConstants.space4),
               Text(
                 'جاري المعالجة...',
                 style: AppTextStyles.body1.copyWith(
@@ -1494,7 +1494,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
         borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
       ),
       child: Container(
-        padding: EdgeInsets.all(ThemeConstants.space6),
+        padding: const EdgeInsets.all(ThemeConstants.space6),
         decoration: BoxDecoration(
           color: ThemeConstants.card(context),
           borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
@@ -1504,7 +1504,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
           children: [
             // أيقونة التحذير
             Container(
-              padding: EdgeInsets.all(ThemeConstants.space4),
+              padding: const EdgeInsets.all(ThemeConstants.space4),
               decoration: BoxDecoration(
                 color: iconColor.withValues(alpha: ThemeConstants.opacity10),
                 shape: BoxShape.circle,
@@ -1516,7 +1516,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
               ),
             ),
             
-            SizedBox(height: ThemeConstants.space4),
+            const SizedBox(height: ThemeConstants.space4),
             
             // العنوان
             Text(
@@ -1527,7 +1527,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
               ),
             ),
             
-            SizedBox(height: ThemeConstants.space3),
+            const SizedBox(height: ThemeConstants.space3),
             
             // المحتوى
             Text(
@@ -1539,7 +1539,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
               ),
             ),
             
-            SizedBox(height: ThemeConstants.space6),
+            const SizedBox(height: ThemeConstants.space6),
             
             // الأزرار
             Row(
@@ -1549,19 +1549,19 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                     child: OutlinedButton(
                       onPressed: secondaryAction.onPressed,
                       style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: ThemeConstants.space4),
+                        padding: const EdgeInsets.symmetric(vertical: ThemeConstants.space4),
                       ),
                       child: Text(secondaryAction.text),
                     ),
                   ),
-                  SizedBox(width: ThemeConstants.space3),
+                  const SizedBox(width: ThemeConstants.space3),
                 ],
                 Expanded(
                   child: ElevatedButton(
                     onPressed: primaryAction.onPressed,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryAction.color ?? ThemeConstants.primary,
-                      padding: EdgeInsets.symmetric(vertical: ThemeConstants.space4),
+                      padding: const EdgeInsets.symmetric(vertical: ThemeConstants.space4),
                     ),
                     child: Text(
                       primaryAction.text,
@@ -1635,7 +1635,7 @@ class __PermissionProcessingDialogState extends State<_PermissionProcessingDialo
         borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
       ),
       child: Container(
-        padding: EdgeInsets.all(ThemeConstants.space8),
+        padding: const EdgeInsets.all(ThemeConstants.space8),
         decoration: BoxDecoration(
           color: ThemeConstants.card(context),
           borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
@@ -1676,7 +1676,7 @@ class __PermissionProcessingDialogState extends State<_PermissionProcessingDialo
                     color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity10),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.security_rounded,
                     color: ThemeConstants.primary,
                     size: ThemeConstants.iconMd,
@@ -1685,7 +1685,7 @@ class __PermissionProcessingDialogState extends State<_PermissionProcessingDialo
               ],
             ),
             
-            SizedBox(height: ThemeConstants.space6),
+            const SizedBox(height: ThemeConstants.space6),
             
             // العنوان
             Text(
@@ -1696,7 +1696,7 @@ class __PermissionProcessingDialogState extends State<_PermissionProcessingDialo
               ),
             ),
             
-            SizedBox(height: ThemeConstants.space2),
+            const SizedBox(height: ThemeConstants.space2),
             
             // التقدم
             if (widget.currentIndex > 0) ...[
@@ -1708,9 +1708,9 @@ class __PermissionProcessingDialogState extends State<_PermissionProcessingDialo
               ),
               
               if (widget.currentPermission != null) ...[
-                SizedBox(height: ThemeConstants.space3),
+                const SizedBox(height: ThemeConstants.space3),
                 Container(
-                  padding: EdgeInsets.symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: ThemeConstants.space4,
                     vertical: ThemeConstants.space2,
                   ),
@@ -1730,7 +1730,7 @@ class __PermissionProcessingDialogState extends State<_PermissionProcessingDialo
                         size: ThemeConstants.iconSm,
                         color: ThemeConstants.primary,
                       ),
-                      SizedBox(width: ThemeConstants.space2),
+                      const SizedBox(width: ThemeConstants.space2),
                       Text(
                         PermissionConstants.getName(widget.currentPermission!),
                         style: AppTextStyles.caption.copyWith(
@@ -1743,7 +1743,7 @@ class __PermissionProcessingDialogState extends State<_PermissionProcessingDialo
                 ),
               ],
               
-              SizedBox(height: ThemeConstants.space5),
+              const SizedBox(height: ThemeConstants.space5),
               
               // شريط التقدم محسن
               Container(

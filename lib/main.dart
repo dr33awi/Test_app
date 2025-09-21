@@ -16,7 +16,7 @@ import 'core/infrastructure/services/permissions/widgets/permission_monitor.dart
 import 'core/infrastructure/services/permissions/screens/permission_onboarding_screen.dart';
 
 // الثوابت والثيمات
-import 'core/constants/app_constants.dart';
+import 'app/themes/constants/app_constants.dart';
 import 'app/themes/app_theme.dart';
 import 'app/routes/app_router.dart';
 

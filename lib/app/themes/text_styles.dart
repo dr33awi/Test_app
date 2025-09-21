@@ -1,5 +1,5 @@
 // lib/app/themes/text_styles.dart - مصحح
-import 'package:athkar_app/core/constants/app_constants.dart';
+import 'package:athkar_app/app/themes/constants/app_constants.dart';
 import 'package:flutter/material.dart';
 
 import 'theme_constants.dart';
@@ -9,7 +9,7 @@ class AppTextStyles {
   AppTextStyles._();
 
   // ===== أنماط العناوين =====
-  static TextStyle h1 = TextStyle(
+  static TextStyle h1 = const TextStyle(
     fontSize: AppConstants.textSize4xl,
     fontWeight: AppConstants.bold,
     height: 1.3,

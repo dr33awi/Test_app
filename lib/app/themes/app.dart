@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 // استيراد الثيمات
-import 'themes/app_theme.dart';
-import '../core/constants/app_constants.dart';
-import 'routes/app_router.dart';
+import 'app_theme.dart';
+import 'constants/app_constants.dart';
+import '../routes/app_router.dart';
 
 class AthkarApp extends StatelessWidget {
   final bool isDarkMode;

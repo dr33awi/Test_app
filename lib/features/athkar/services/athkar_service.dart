@@ -2,7 +2,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_constants.dart';
+import '../../../app/themes/constants/app_constants.dart';
 import '../../../core/infrastructure/services/logging/logger_service.dart';
 import '../../../core/infrastructure/services/storage/storage_service.dart';
 import '../../../core/infrastructure/services/notifications/notification_manager.dart';

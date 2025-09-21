@@ -1,7 +1,7 @@
 // lib/app/themes/theme_constants.dart - محدث مع الثوابت المفقودة
 import 'package:flutter/material.dart';
 import 'core/color_helper.dart';
-import '../../core/constants/app_constants.dart';
+import 'constants/app_constants.dart';
 
 /// ثوابت الثيم - استخدام AppColors و AppConstants
 class ThemeConstants {
