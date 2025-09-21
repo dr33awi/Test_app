@@ -1,7 +1,7 @@
-// lib/app/themes/theme_constants.dart - مصحح
+// lib/app/themes/theme_constants.dart - محدث مع الثوابت المفقودة
 import 'package:flutter/material.dart';
 import 'core/color_helper.dart';
-import '../../core/constants/app_constants.dart'; // المسار الصحيح
+import '../../core/constants/app_constants.dart';
 
 /// ثوابت الثيم - استخدام AppColors و AppConstants
 class ThemeConstants {
@@ -127,6 +127,7 @@ class ThemeConstants {
   static const double elevation16 = AppConstants.elevation16;
 
   static const double opacity5 = AppConstants.opacity5;
+  static const double opacity05 = AppConstants.opacity05; // المفقود
   static const double opacity10 = AppConstants.opacity10;
   static const double opacity20 = AppConstants.opacity20;
   static const double opacity30 = AppConstants.opacity30;

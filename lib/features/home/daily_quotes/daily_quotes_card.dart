@@ -1,11 +1,10 @@
 // lib/features/home/widgets/daily_quotes_card.dart
-import 'package:athkar_app/features/home/widgets/color_helper.dart';
+import 'package:athkar_app/app/themes/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:math' as math;
 import 'dart:convert';
-import '../../../app/themes/app_theme.dart';
 
 class DailyQuotesCard extends StatefulWidget {
   const DailyQuotesCard({super.key});
@@ -118,7 +117,7 @@ class _DailyQuotesCardState extends State<DailyQuotesCard> {
           content: selectedVerse['text'],
           source: selectedVerse['source'],
           theme: selectedVerse['theme'],
-          gradient: ColorHelper.getContentGradient('verse').colors,
+          gradient: AppColors.getCategoryGradient('verse').colors,
         ));
       }
 
@@ -132,7 +131,7 @@ class _DailyQuotesCardState extends State<DailyQuotesCard> {
           content: selectedHadith['text'],
           source: selectedHadith['source'],
           theme: selectedHadith['theme'],
-          gradient: ColorHelper.getContentGradient('hadith').colors,
+          gradient: AppColors.getCategoryGradient('hadith').colors,
         ));
       }
 
@@ -146,7 +145,7 @@ class _DailyQuotesCardState extends State<DailyQuotesCard> {
           content: selectedDua['text'],
           source: selectedDua['source'],
           theme: selectedDua['theme'],
-          gradient: ColorHelper.getContentGradient('dua').colors,
+          gradient: AppColors.getCategoryGradient('dua').colors,
         ));
       }
 

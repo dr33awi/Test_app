@@ -1,6 +1,6 @@
 // lib/features/home/widgets/category_grid.dart - مُحدث مع المسار الصحيح
 
-import 'package:athkar_app/features/home/widgets/color_helper.dart';
+import 'package:athkar_app/app/themes/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../app/themes/app_theme.dart';
@@ -256,7 +256,7 @@ class _CategoryGridState extends State<CategoryGrid> {
     // حساب الألوان مرة واحدة
     final gradient = category.isInDevelopment 
         ? _getDevelopmentGradient() 
-        : ColorHelper.getCategoryGradient(category.id);
+        : AppColors.getCategoryGradient(category.id);
     
     return Container(
       height: 160,
@@ -379,7 +379,7 @@ class _CategoryGridState extends State<CategoryGrid> {
     // حساب الألوان مرة واحدة
     final gradient = category.isInDevelopment 
         ? _getDevelopmentGradient() 
-        : ColorHelper.getCategoryGradient(category.id);
+        : AppColors.getCategoryGradient(category.id);
     
     return Container(
       height: 160,

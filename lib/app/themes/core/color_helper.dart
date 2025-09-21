@@ -1,4 +1,4 @@
-// lib/app/themes/core/app_colors.dart
+// lib/app/themes/core/color_helper.dart - محدث ومكتمل
 import 'package:flutter/material.dart';
 
 /// ألوان التطبيق الموحدة - مصدر واحد لجميع الألوان
@@ -127,6 +127,66 @@ class AppColors {
     }
   }
 
+  /// الحصول على تدرج المحتوى حسب النوع
+  static LinearGradient getContentGradient(String contentType) {
+    switch (contentType.toLowerCase()) {
+      case 'verse':
+      case 'آية':
+        return const LinearGradient(
+          colors: [primary, primaryLight],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'hadith':
+      case 'حديث':
+        return const LinearGradient(
+          colors: [accent, accentLight],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'dua':
+      case 'دعاء':
+        return const LinearGradient(
+          colors: [tertiary, tertiaryLight],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'athkar':
+      case 'أذكار':
+        return accentGradient;
+      case 'quote':
+      case 'حكمة':
+        return const LinearGradient(
+          colors: [primaryDark, primary],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'morning':
+      case 'صباح':
+        return const LinearGradient(
+          colors: [accentLight, accent],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'evening':
+      case 'مساء':
+        return const LinearGradient(
+          colors: [primaryDark, primary],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      case 'sleep':
+      case 'نوم':
+        return const LinearGradient(
+          colors: [tertiaryDark, tertiary],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+      default:
+        return primaryGradient;
+    }
+  }
+
   /// الحصول على لون من مجموعة أسماء الله الحسنى حسب الفهرس
   static Color getAsmaAllahColorByIndex(int index) {
     return asmaAllahColors[index % asmaAllahColors.length];
@@ -150,5 +210,139 @@ class AppColors {
       default:
         return primary;
     }
+  }
+
+  /// الحصول على تدرج حسب وقت الصلاة
+  static LinearGradient getPrayerGradient(String prayerName) {
+    switch (prayerName.toLowerCase()) {
+      case 'fajr':
+      case 'الفجر':
+        return const LinearGradient(
+          colors: [primaryDark, primary],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
+      case 'dhuhr':
+      case 'الظهر':
+        return const LinearGradient(
+          colors: [accentLight, accent],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
+      case 'asr':
+      case 'العصر':
+        return const LinearGradient(
+          colors: [primarySoft, primaryLight],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
+      case 'maghrib':
+      case 'المغرب':
+        return const LinearGradient(
+          colors: [tertiaryLight, tertiary],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
+      case 'isha':
+      case 'العشاء':
+        return const LinearGradient(
+          colors: [darkCard, darkBackground],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        );
+      default:
+        return primaryGradient;
+    }
+  }
+
+  /// الحصول على لون حسب اسم الصلاة
+  static Color getPrayerColor(String name) {
+    switch (name.toLowerCase()) {
+      case 'fajr':
+      case 'الفجر':
+        return primaryDark;
+      case 'dhuhr':
+      case 'الظهر':
+        return accent;
+      case 'asr':
+      case 'العصر':
+        return primaryLight;
+      case 'maghrib':
+      case 'المغرب':
+        return tertiary;
+      case 'isha':
+      case 'العشاء':
+        return darkCard;
+      case 'sunrise':
+      case 'الشروق':
+        return accentLight;
+      default:
+        return primary;
+    }
+  }
+
+  /// الحصول على تدرج حسب الوقت
+  static LinearGradient getTimeBasedGradient({DateTime? dateTime}) {
+    final time = dateTime ?? DateTime.now();
+    final hour = time.hour;
+    
+    if (hour < 5) {
+      return const LinearGradient(
+        colors: [darkBackground, darkCard],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    } else if (hour < 8) {
+      return const LinearGradient(
+        colors: [primaryDark, primary],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    } else if (hour < 12) {
+      return const LinearGradient(
+        colors: [accent, accentLight],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    } else if (hour < 15) {
+      return const LinearGradient(
+        colors: [primary, primaryLight],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    } else if (hour < 17) {
+      return const LinearGradient(
+        colors: [primaryLight, primarySoft],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    } else if (hour < 20) {
+      return const LinearGradient(
+        colors: [tertiary, tertiaryLight],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    } else {
+      return const LinearGradient(
+        colors: [primaryDark, primary],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    }
+  }
+
+  /// إنشاء تدرج مخصص
+  static LinearGradient createCustomGradient({
+    required List<Color> colors,
+    AlignmentGeometry begin = Alignment.topLeft,
+    AlignmentGeometry end = Alignment.bottomRight,
+    List<double>? stops,
+  }) {
+    return LinearGradient(
+      colors: colors,
+      begin: begin,
+      end: end,
+      stops: stops,
+    );
   }
 }
