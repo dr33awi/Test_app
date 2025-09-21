@@ -1,6 +1,7 @@
 // lib/core/infrastructure/services/permissions/screens/permission_onboarding_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:athkar_app/app/themes/app_theme.dart';
 import '../permission_service.dart';
 import '../permission_constants.dart';
 import '../widgets/permission_dialogs.dart';
@@ -40,8 +41,10 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
   
   late PageController _pageController;
   late AnimationController _animationController;
+  late AnimationController _progressController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  late Animation<double> _slideAnimation;
   
   int _currentPage = 0;
   final int _totalPages = 4;
@@ -59,7 +62,12 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     _pageController = PageController();
     
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: ThemeConstants.durationNormal,
+      vsync: this,
+    );
+    
+    _progressController = AnimationController(
+      duration: ThemeConstants.durationSlow,
       vsync: this,
     );
     
@@ -68,7 +76,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: Curves.easeInOut,
+      curve: ThemeConstants.curveSmooth,
     ));
     
     _scaleAnimation = Tween<double>(
@@ -76,7 +84,15 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: Curves.elasticOut,
+      curve: ThemeConstants.curveBounce,
+    ));
+    
+    _slideAnimation = Tween<double>(
+      begin: 30.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: ThemeConstants.curveDefault,
     ));
     
     // إضافة الأذونات الحرجة تلقائياً
@@ -90,16 +106,19 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
   void dispose() {
     _pageController.dispose();
     _animationController.dispose();
+    _progressController.dispose();
     super.dispose();
   }
   
   void _nextPage() {
     if (_currentPage < _totalPages - 1) {
       HapticFeedback.lightImpact();
+      _animationController.reset();
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOutCubic,
+        duration: ThemeConstants.durationSlow,
+        curve: ThemeConstants.curveSmooth,
       );
+      _animationController.forward();
     } else {
       // في الصفحة الأخيرة - معالجة الأذونات
       _processPermissionsAndComplete();
@@ -109,10 +128,12 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
   void _previousPage() {
     if (_currentPage > 0) {
       HapticFeedback.lightImpact();
+      _animationController.reset();
       _pageController.previousPage(
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOutCubic,
+        duration: ThemeConstants.durationSlow,
+        curve: ThemeConstants.curveSmooth,
       );
+      _animationController.forward();
     }
   }
   
@@ -124,34 +145,26 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
   void _showSkipConfirmation() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+      builder: (context) => _buildCustomDialog(
+        icon: Icons.skip_next_rounded,
+        iconColor: ThemeConstants.warning,
+        title: 'تخطي إعداد الأذونات؟',
+        content: 'قد لا تعمل بعض ميزات التطبيق بشكل صحيح بدون الأذونات المطلوبة.\n\nيمكنك تفعيلها لاحقاً من الإعدادات.',
+        primaryAction: _DialogAction(
+          text: 'تخطي',
+          color: ThemeConstants.warning,
+          onPressed: () {
+            Navigator.pop(context);
+            _completeWithResult(OnboardingResult(
+              skipped: true,
+              selectedPermissions: [],
+            ));
+          },
         ),
-        title: const Text('تخطي إعداد الأذونات؟'),
-        content: const Text(
-          'قد لا تعمل بعض ميزات التطبيق بشكل صحيح بدون الأذونات المطلوبة.\n\nيمكنك تفعيلها لاحقاً من الإعدادات.',
-          style: TextStyle(height: 1.5),
+        secondaryAction: _DialogAction(
+          text: 'إلغاء',
+          onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _completeWithResult(OnboardingResult(
-                skipped: true,
-                selectedPermissions: [],
-              ));
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-            ),
-            child: const Text('تخطي'),
-          ),
-        ],
       ),
     );
   }
@@ -301,16 +314,22 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.error, color: Colors.white),
-            const SizedBox(width: 8),
-            Expanded(child: Text(message)),
+            Icon(Icons.error_outline_rounded, color: Colors.white, size: ThemeConstants.iconSm),
+            SizedBox(width: ThemeConstants.space2),
+            Expanded(
+              child: Text(
+                message,
+                style: AppTextStyles.body2.copyWith(color: Colors.white),
+              ),
+            ),
           ],
         ),
-        backgroundColor: Colors.red,
+        backgroundColor: ThemeConstants.error,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
         ),
+        margin: EdgeInsets.all(ThemeConstants.space4),
       ),
     );
   }
@@ -322,94 +341,183 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     return PopScope(
       canPop: false,
       child: Scaffold(
+        backgroundColor: ThemeConstants.background(context),
         body: Stack(
           children: [
-            // خلفية متدرجة
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    theme.primaryColor.withValues(alpha: 0.1),
-                    theme.primaryColor.withValues(alpha: 0.05),
-                    theme.scaffoldBackgroundColor,
-                  ],
-                ),
-              ),
-            ),
+            // خلفية متدرجة ديناميكية
+            _buildAnimatedBackground(),
             
             // المحتوى الرئيسي
             SafeArea(
               child: Column(
                 children: [
-                  // Header مع Progress
-                  _buildHeader(),
+                  // Header مع Progress المحسن
+                  _buildEnhancedHeader(),
                   
-                  // Pages
+                  // Pages مع Animations
                   Expanded(
-                    child: FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: ScaleTransition(
-                        scale: _scaleAnimation,
-                        child: PageView(
-                          controller: _pageController,
-                          physics: const NeverScrollableScrollPhysics(),
-                          onPageChanged: (index) {
-                            setState(() => _currentPage = index);
-                            HapticFeedback.selectionClick();
-                          },
-                          children: [
-                            _buildWelcomePage(),
-                            _buildExplanationPage(),
-                            _buildPermissionSelectionPage(),
-                            _buildCompletionPage(),
-                          ],
-                        ),
-                      ),
+                    child: AnimatedBuilder(
+                      animation: _animationController,
+                      builder: (context, child) {
+                        return Transform.translate(
+                          offset: Offset(0, _slideAnimation.value),
+                          child: FadeTransition(
+                            opacity: _fadeAnimation,
+                            child: ScaleTransition(
+                              scale: _scaleAnimation,
+                              child: PageView(
+                                controller: _pageController,
+                                physics: const NeverScrollableScrollPhysics(),
+                                onPageChanged: (index) {
+                                  setState(() => _currentPage = index);
+                                  HapticFeedback.selectionClick();
+                                  _progressController.animateTo(index / (_totalPages - 1));
+                                },
+                                children: [
+                                  _buildWelcomePage(),
+                                  _buildExplanationPage(),
+                                  _buildPermissionSelectionPage(),
+                                  _buildCompletionPage(),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                   
-                  // Navigation
-                  _buildNavigation(),
+                  // Navigation المحسن
+                  _buildEnhancedNavigation(),
                 ],
               ),
             ),
             
-            // Loading overlay
+            // Loading overlay محسن
             if (_isProcessingPermissions)
-              Container(
-                color: Colors.black.withValues(alpha: 0.3),
-                child: const Center(
-                  child: CircularProgressIndicator(),
-                ),
-              ),
+              _buildLoadingOverlay(),
           ],
         ),
       ),
     );
   }
   
-  Widget _buildHeader() {
+  Widget _buildAnimatedBackground() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: ThemeConstants.getTimeBasedGradient(),
+      ),
+      child: AnimatedContainer(
+        duration: ThemeConstants.durationSlow,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              ThemeConstants.background(context),
+              ThemeConstants.surface(context).withValues(alpha: ThemeConstants.opacity90),
+              ThemeConstants.background(context),
+            ],
+            stops: const [0.0, 0.3, 1.0],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildEnhancedHeader() {
+    return Container(
+      padding: EdgeInsets.all(ThemeConstants.space6),
       child: Column(
         children: [
+          // عنوان الصفحة
+          Text(
+            'إعداد التطبيق',
+            style: AppTextStyles.h4.copyWith(
+              color: ThemeConstants.textPrimary(context),
+              fontWeight: ThemeConstants.bold,
+            ),
+          ),
+          SizedBox(height: ThemeConstants.space4),
+          
+          // Progress Bar محسن
+          Container(
+            height: ThemeConstants.space2,
+            margin: EdgeInsets.symmetric(horizontal: ThemeConstants.space8),
+            decoration: BoxDecoration(
+              color: ThemeConstants.divider(context),
+              borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
+            ),
+            child: AnimatedBuilder(
+              animation: _progressController,
+              builder: (context, child) {
+                return Stack(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: ThemeConstants.divider(context),
+                        borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
+                      ),
+                    ),
+                    FractionallySizedBox(
+                      widthFactor: (_currentPage + 1) / _totalPages,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: ThemeConstants.primaryGradient,
+                          borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
+                          boxShadow: [
+                            BoxShadow(
+                              color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity30),
+                              blurRadius: ThemeConstants.space1,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          
+          SizedBox(height: ThemeConstants.space3),
+          
+          // Page indicators محسنة
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(_totalPages, (index) {
               final isActive = index == _currentPage;
+              final isPassed = index < _currentPage;
+              
               return AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                height: 8,
-                width: isActive ? 24 : 8,
+                duration: ThemeConstants.durationNormal,
+                margin: EdgeInsets.symmetric(horizontal: ThemeConstants.space1),
+                height: ThemeConstants.space2,
+                width: isActive ? ThemeConstants.space8 : ThemeConstants.space2,
                 decoration: BoxDecoration(
-                  color: isActive 
-                      ? Theme.of(context).primaryColor 
-                      : Theme.of(context).primaryColor.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(4),
+                  color: isPassed 
+                      ? ThemeConstants.success
+                      : isActive 
+                          ? ThemeConstants.primary 
+                          : ThemeConstants.divider(context),
+                  borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
+                  boxShadow: isActive ? [
+                    BoxShadow(
+                      color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity30),
+                      blurRadius: ThemeConstants.space1,
+                      spreadRadius: 1,
+                    ),
+                  ] : null,
                 ),
+                child: isPassed ? Center(
+                  child: Icon(
+                    Icons.check,
+                    size: ThemeConstants.space2,
+                    color: Colors.white,
+                  ),
+                ) : null,
               );
             }),
           ),
@@ -420,62 +528,134 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
   
   Widget _buildWelcomePage() {
     return Padding(
-      padding: const EdgeInsets.all(32),
+      padding: EdgeInsets.all(ThemeConstants.space8),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // شعار التطبيق المحسن
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
-            duration: const Duration(seconds: 1),
+            duration: ThemeConstants.durationExtraSlow,
+            curve: ThemeConstants.curveBounce,
             builder: (context, value, child) {
               return Transform.scale(
                 scale: value,
                 child: Container(
-                  width: 120,
-                  height: 120,
+                  width: 140,
+                  height: 140,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Theme.of(context).primaryColor,
-                        Theme.of(context).primaryColor.withValues(alpha: 0.7),
-                      ],
-                    ),
+                    gradient: ThemeConstants.primaryGradient,
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
-                        blurRadius: 20,
-                        spreadRadius: 5,
+                    boxShadow: ThemeConstants.shadowLg,
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // دائرة داخلية للتأثير
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: ThemeConstants.opacity20),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      Icon(
+                        ThemeConstants.iconPrayer,
+                        size: ThemeConstants.icon3xl,
+                        color: Colors.white,
                       ),
                     ],
-                  ),
-                  child: const Icon(
-                    Icons.mosque,
-                    size: 60,
-                    color: Colors.white,
                   ),
                 ),
               );
             },
           ),
-          const SizedBox(height: 40),
-          Text(
-            'مرحباً بك في\nحصن المسلم',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              height: 1.2,
+          
+          SizedBox(height: ThemeConstants.space10),
+          
+          // عنوان الترحيب
+          ShaderMask(
+            shaderCallback: (bounds) => ThemeConstants.primaryGradient.createShader(bounds),
+            child: Text(
+              'مرحباً بك في\nحصن المسلم',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.h2.copyWith(
+                fontWeight: ThemeConstants.bold,
+                height: 1.2,
+                color: Colors.white,
+              ),
             ),
           ),
-          const SizedBox(height: 16),
+          
+          SizedBox(height: ThemeConstants.space4),
+          
+          // وصف التطبيق
           Text(
-            'رفيقك اليومي للأذكار والعبادات',
+            'رفيقك اليومي للأذكار والعبادات\nوالتقرب إلى الله سبحانه وتعالى',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Colors.grey[600],
+            style: AppTextStyles.body1.copyWith(
+              color: ThemeConstants.textSecondary(context),
+              height: 1.6,
             ),
           ),
+          
+          SizedBox(height: ThemeConstants.space8),
+          
+          // إحصائيات سريعة
+          _buildWelcomeStats(),
         ],
+      ),
+    );
+  }
+  
+  Widget _buildWelcomeStats() {
+    final stats = [
+      {'icon': Icons.menu_book_rounded, 'label': 'أذكار', 'count': '100+'},
+      {'icon': Icons.access_time_rounded, 'label': 'مواقيت', 'count': 'دقيقة'},
+      {'icon': Icons.explore_rounded, 'label': 'قبلة', 'count': 'ذكية'},
+    ];
+    
+    return Container(
+      padding: EdgeInsets.all(ThemeConstants.space4),
+      decoration: BoxDecoration(
+        color: ThemeConstants.card(context),
+        borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
+        boxShadow: ThemeConstants.shadowSm,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: stats.map((stat) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: EdgeInsets.all(ThemeConstants.space3),
+              decoration: BoxDecoration(
+                color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity10),
+                borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+              ),
+              child: Icon(
+                stat['icon'] as IconData,
+                color: ThemeConstants.primary,
+                size: ThemeConstants.iconMd,
+              ),
+            ),
+            SizedBox(height: ThemeConstants.space2),
+            Text(
+              stat['count'] as String,
+              style: AppTextStyles.label1.copyWith(
+                color: ThemeConstants.primary,
+                fontWeight: ThemeConstants.bold,
+              ),
+            ),
+            Text(
+              stat['label'] as String,
+              style: AppTextStyles.caption.copyWith(
+                color: ThemeConstants.textSecondary(context),
+              ),
+            ),
+          ],
+        )).toList(),
       ),
     );
   }
@@ -483,103 +663,181 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
   Widget _buildExplanationPage() {
     final features = [
       {
-        'icon': Icons.notifications_active,
+        'icon': Icons.notifications_active_rounded,
         'title': 'تذكيرات ذكية',
-        'description': 'تنبيهات في الأوقات المناسبة',
-        'color': Colors.blue,
+        'description': 'تنبيهات في الأوقات المناسبة للأذكار والصلوات',
+        'color': ThemeConstants.info,
       },
       {
-        'icon': Icons.location_on,
+        'icon': Icons.location_on_rounded,
         'title': 'مواقيت دقيقة',
-        'description': 'حسب موقعك الجغرافي',
-        'color': Colors.green,
+        'description': 'حساب دقيق لمواقيت الصلاة حسب موقعك الجغرافي',
+        'color': ThemeConstants.success,
       },
       {
-        'icon': Icons.explore,
+        'icon': Icons.explore_rounded,
         'title': 'اتجاه القبلة',
-        'description': 'بوصلة دقيقة للصلاة',
-        'color': Colors.orange,
+        'description': 'بوصلة دقيقة لتحديد اتجاه القبلة الصحيح',
+        'color': ThemeConstants.warning,
       },
       {
-        'icon': Icons.menu_book,
+        'icon': Icons.menu_book_rounded,
         'title': 'أذكار شاملة',
-        'description': 'جميع الأذكار اليومية',
-        'color': Colors.purple,
+        'description': 'مجموعة كاملة من الأذكار اليومية مع الأدعية',
+        'color': ThemeConstants.accent,
       },
     ];
     
-    return Padding(
-      padding: const EdgeInsets.all(32),
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(ThemeConstants.space8),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             'ميزات التطبيق',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
+            style: AppTextStyles.h3.copyWith(
+              fontWeight: ThemeConstants.bold,
+              color: ThemeConstants.textPrimary(context),
             ),
           ),
-          const SizedBox(height: 32),
-          ...features.map((feature) => Padding(
-            padding: const EdgeInsets.only(bottom: 20),
-            child: _buildFeatureCard(
-              icon: feature['icon'] as IconData,
-              title: feature['title'] as String,
-              description: feature['description'] as String,
-              color: feature['color'] as Color,
+          
+          SizedBox(height: ThemeConstants.space2),
+          
+          Text(
+            'تعرف على الميزات الرائعة التي ستساعدك في رحلتك الروحية',
+            textAlign: TextAlign.center,
+            style: AppTextStyles.body2.copyWith(
+              color: ThemeConstants.textSecondary(context),
+              height: 1.5,
             ),
-          )),
+          ),
+          
+          SizedBox(height: ThemeConstants.space8),
+          
+          ...features.asMap().entries.map((entry) {
+            final index = entry.key;
+            final feature = entry.value;
+            
+            return TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: 1),
+              duration: Duration(milliseconds: 600 + (index * 200)),
+              curve: ThemeConstants.curveSmooth,
+              builder: (context, value, child) {
+                return Transform.translate(
+                  offset: Offset((1 - value) * 100, 0),
+                  child: Opacity(
+                    opacity: value,
+                    child: _buildEnhancedFeatureCard(
+                      icon: feature['icon'] as IconData,
+                      title: feature['title'] as String,
+                      description: feature['description'] as String,
+                      color: feature['color'] as Color,
+                      index: index,
+                    ),
+                  ),
+                );
+              },
+            );
+          }).toList(),
         ],
       ),
     );
   }
   
-  Widget _buildFeatureCard({
+  Widget _buildEnhancedFeatureCard({
     required IconData icon,
     required String title,
     required String description,
     required Color color,
+    required int index,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.only(bottom: ThemeConstants.space4),
+      padding: EdgeInsets.all(ThemeConstants.space5),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
+        color: ThemeConstants.card(context),
+        borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
         border: Border.all(
-          color: color.withValues(alpha: 0.2),
+          color: color.withValues(alpha: ThemeConstants.opacity20),
+          width: ThemeConstants.borderLight,
         ),
+        boxShadow: ThemeConstants.shadowSm,
       ),
       child: Row(
         children: [
+          // أيقونة محسنة
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(ThemeConstants.space4),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                colors: [
+                  color.withValues(alpha: ThemeConstants.opacity20),
+                  color.withValues(alpha: ThemeConstants.opacity10),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: ThemeConstants.opacity20),
+                  blurRadius: ThemeConstants.space2,
+                  spreadRadius: 1,
+                ),
+              ],
             ),
-            child: Icon(icon, color: color, size: 24),
+            child: Icon(
+              icon,
+              color: color,
+              size: ThemeConstants.iconLg,
+            ),
           ),
-          const SizedBox(width: 16),
+          
+          SizedBox(width: ThemeConstants.space4),
+          
+          // المحتوى
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                  style: AppTextStyles.h5.copyWith(
+                    fontWeight: ThemeConstants.semiBold,
+                    color: ThemeConstants.textPrimary(context),
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: ThemeConstants.space1),
                 Text(
                   description,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
+                  style: AppTextStyles.body2.copyWith(
+                    color: ThemeConstants.textSecondary(context),
+                    height: 1.4,
                   ),
                 ),
               ],
+            ),
+          ),
+          
+          // رقم الترتيب
+          Container(
+            width: ThemeConstants.space8,
+            height: ThemeConstants.space8,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: ThemeConstants.opacity10),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: color.withValues(alpha: ThemeConstants.opacity30),
+                width: ThemeConstants.borderLight,
+              ),
+            ),
+            child: Center(
+              child: Text(
+                '${index + 1}',
+                style: AppTextStyles.caption.copyWith(
+                  color: color,
+                  fontWeight: ThemeConstants.bold,
+                ),
+              ),
             ),
           ),
         ],
@@ -592,47 +850,67 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     final optionalPermissions = widget.optionalPermissions ?? PermissionConstants.optionalPermissions;
     
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(ThemeConstants.space6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'الأذونات المطلوبة',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
+          // عنوان الصفحة
+          Center(
+            child: Column(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(ThemeConstants.space4),
+                  decoration: BoxDecoration(
+                    color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity10),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.security_rounded,
+                    size: ThemeConstants.icon2xl,
+                    color: ThemeConstants.primary,
+                  ),
+                ),
+                SizedBox(height: ThemeConstants.space4),
+                Text(
+                  'الأذونات المطلوبة',
+                  style: AppTextStyles.h3.copyWith(
+                    fontWeight: ThemeConstants.bold,
+                    color: ThemeConstants.textPrimary(context),
+                  ),
+                ),
+                SizedBox(height: ThemeConstants.space2),
+                Text(
+                  'نحتاج بعض الأذونات لتوفير أفضل تجربة ممكنة',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.body2.copyWith(
+                    color: ThemeConstants.textSecondary(context),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'نحتاج بعض الأذونات لتوفير أفضل تجربة',
-            style: TextStyle(color: Colors.grey[600]),
-          ),
-          const SizedBox(height: 24),
           
-          Text(
-            'أذونات أساسية',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: Colors.red,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ...criticalPermissions.map((permission) => 
-            _buildPermissionItem(permission, isCritical: true),
+          SizedBox(height: ThemeConstants.space8),
+          
+          // الأذونات الأساسية
+          _buildPermissionSection(
+            title: 'أذونات أساسية',
+            subtitle: 'مطلوبة لعمل التطبيق بشكل صحيح',
+            icon: Icons.star_rounded,
+            color: ThemeConstants.error,
+            permissions: criticalPermissions,
+            isCritical: true,
           ),
           
           if (optionalPermissions.isNotEmpty) ...[
-            const SizedBox(height: 24),
-            Text(
-              'أذونات اختيارية',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: Colors.blue,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ...optionalPermissions.map((permission) => 
-              _buildPermissionItem(permission, isCritical: false),
+            SizedBox(height: ThemeConstants.space6),
+            _buildPermissionSection(
+              title: 'أذونات اختيارية',
+              subtitle: 'لتحسين تجربة الاستخدام',
+              icon: Icons.tune_rounded,
+              color: ThemeConstants.info,
+              permissions: optionalPermissions,
+              isCritical: false,
             ),
           ],
         ],
@@ -640,151 +918,239 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     );
   }
   
-  Widget _buildPermissionItem(AppPermissionType permission, {required bool isCritical}) {
-    final info = PermissionConstants.getInfo(permission);
-    final isSelected = _selectedPermissions.contains(permission);
-    
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: isCritical ? null : () {
-          setState(() {
-            if (isSelected) {
-              _selectedPermissions.remove(permission);
-            } else {
-              _selectedPermissions.add(permission);
-            }
-          });
-          HapticFeedback.selectionClick();
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isSelected 
-                ? info.color.withValues(alpha: 0.1)
-                : Colors.grey.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected 
-                  ? info.color.withValues(alpha: 0.3)
-                  : Colors.grey.withValues(alpha: 0.2),
-              width: isSelected ? 2 : 1,
-            ),
-          ),
-          child: Row(
+  Widget _buildPermissionSection({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required List<AppPermissionType> permissions,
+    required bool isCritical,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(ThemeConstants.space4),
+      decoration: BoxDecoration(
+        color: ThemeConstants.card(context),
+        borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
+        border: Border.all(
+          color: color.withValues(alpha: ThemeConstants.opacity20),
+          width: ThemeConstants.borderLight,
+        ),
+        boxShadow: ThemeConstants.shadowSm,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // رأس القسم
+          Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: EdgeInsets.all(ThemeConstants.space2),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? info.color.withValues(alpha: 0.15)
-                      : Colors.grey.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  color: color.withValues(alpha: ThemeConstants.opacity10),
+                  borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
                 ),
-                child: Icon(
-                  info.icon,
-                  color: isSelected ? info.color : Colors.grey,
-                  size: 24,
-                ),
+                child: Icon(icon, color: color, size: ThemeConstants.iconMd),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: ThemeConstants.space3),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Text(
-                          info.name,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: isSelected ? null : Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        if (isCritical)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.red.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: Colors.red.withValues(alpha: 0.3),
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.star,
-                                  size: 10,
-                                  color: Colors.red[700],
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'مطلوب',
-                                  style: TextStyle(
-                                    color: Colors.red[700],
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
                     Text(
-                      info.description,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
-                        height: 1.3,
+                      title,
+                      style: AppTextStyles.h5.copyWith(
+                        fontWeight: ThemeConstants.semiBold,
+                        color: color,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: AppTextStyles.caption.copyWith(
+                        color: ThemeConstants.textSecondary(context),
                       ),
                     ),
                   ],
                 ),
               ),
-              if (!isCritical)
-                Checkbox(
-                  value: isSelected,
-                  onChanged: (value) {
-                    setState(() {
-                      if (value ?? false) {
-                        _selectedPermissions.add(permission);
-                      } else {
-                        _selectedPermissions.remove(permission);
-                      }
-                    });
-                    HapticFeedback.selectionClick();
-                  },
-                  activeColor: info.color,
-                ),
-              if (isCritical)
-                Container(
-                  padding: const EdgeInsets.all(8),
+            ],
+          ),
+          
+          SizedBox(height: ThemeConstants.space4),
+          
+          // قائمة الأذونات
+          ...permissions.map((permission) => 
+            _buildEnhancedPermissionItem(permission, isCritical: isCritical),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildEnhancedPermissionItem(AppPermissionType permission, {required bool isCritical}) {
+    final info = PermissionConstants.getInfo(permission);
+    final isSelected = _selectedPermissions.contains(permission);
+    
+    return Container(
+      margin: EdgeInsets.only(bottom: ThemeConstants.space3),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isCritical ? null : () {
+            setState(() {
+              if (isSelected) {
+                _selectedPermissions.remove(permission);
+              } else {
+                _selectedPermissions.add(permission);
+              }
+            });
+            HapticFeedback.selectionClick();
+          },
+          borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+          child: AnimatedContainer(
+            duration: ThemeConstants.durationFast,
+            padding: EdgeInsets.all(ThemeConstants.space4),
+            decoration: BoxDecoration(
+              color: isSelected 
+                  ? info.color.withValues(alpha: ThemeConstants.opacity05)
+                  : ThemeConstants.surface(context),
+              borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+              border: Border.all(
+                color: isSelected 
+                    ? info.color.withValues(alpha: ThemeConstants.opacity30)
+                    : ThemeConstants.divider(context),
+                width: isSelected ? ThemeConstants.borderThick : ThemeConstants.borderLight,
+              ),
+            ),
+            child: Row(
+              children: [
+                // أيقونة الإذن
+                AnimatedContainer(
+                  duration: ThemeConstants.durationFast,
+                  padding: EdgeInsets.all(ThemeConstants.space3),
                   decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.green.withValues(alpha: 0.3),
-                      width: 2,
-                    ),
+                    color: isSelected
+                        ? info.color.withValues(alpha: ThemeConstants.opacity5)
+                        : ThemeConstants.divider(context).withValues(alpha: ThemeConstants.opacity10),
+                    borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
                   ),
                   child: Icon(
-                    Icons.lock,
-                    size: 18,
-                    color: Colors.green[700],
+                    info.icon,
+                    color: isSelected ? info.color : ThemeConstants.textSecondary(context),
+                    size: ThemeConstants.iconMd,
                   ),
                 ),
-            ],
+                
+                SizedBox(width: ThemeConstants.space4),
+                
+                // معلومات الإذن
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              info.name,
+                              style: AppTextStyles.label1.copyWith(
+                                fontWeight: ThemeConstants.semiBold,
+                                color: isSelected 
+                                    ? ThemeConstants.textPrimary(context) 
+                                    : ThemeConstants.textSecondary(context),
+                              ),
+                            ),
+                          ),
+                          if (isCritical)
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: ThemeConstants.space2,
+                                vertical: ThemeConstants.space1,
+                              ),
+                              decoration: BoxDecoration(
+                                color: ThemeConstants.error.withValues(alpha: ThemeConstants.opacity10),
+                                borderRadius: BorderRadius.circular(ThemeConstants.radiusXs),
+                                border: Border.all(
+                                  color: ThemeConstants.error.withValues(alpha: ThemeConstants.opacity30),
+                                  width: ThemeConstants.borderLight,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.star_rounded,
+                                    size: ThemeConstants.space3,
+                                    color: ThemeConstants.error,
+                                  ),
+                                  SizedBox(width: ThemeConstants.space1),
+                                  Text(
+                                    'مطلوب',
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: ThemeConstants.error,
+                                      fontWeight: ThemeConstants.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                      SizedBox(height: ThemeConstants.space1),
+                      Text(
+                        info.description,
+                        style: AppTextStyles.caption.copyWith(
+                          color: ThemeConstants.textSecondary(context),
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                SizedBox(width: ThemeConstants.space3),
+                
+                // مؤشر الحالة
+                if (!isCritical)
+                  AnimatedContainer(
+                    duration: ThemeConstants.durationFast,
+                    width: ThemeConstants.iconMd,
+                    height: ThemeConstants.iconMd,
+                    decoration: BoxDecoration(
+                      color: isSelected ? info.color : Colors.transparent,
+                      border: Border.all(
+                        color: isSelected ? info.color : ThemeConstants.divider(context),
+                        width: ThemeConstants.borderMedium,
+                      ),
+                      borderRadius: BorderRadius.circular(ThemeConstants.radiusXs),
+                    ),
+                    child: isSelected
+                        ? Icon(
+                            Icons.check_rounded,
+                            size: ThemeConstants.iconSm,
+                            color: Colors.white,
+                          )
+                        : null,
+                  ),
+                
+                if (isCritical)
+                  Container(
+                    padding: EdgeInsets.all(ThemeConstants.space2),
+                    decoration: BoxDecoration(
+                      color: ThemeConstants.success.withValues(alpha: ThemeConstants.opacity10),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: ThemeConstants.success.withValues(alpha: ThemeConstants.opacity30),
+                        width: ThemeConstants.borderMedium,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.lock_rounded,
+                      size: ThemeConstants.iconSm,
+                      color: ThemeConstants.success,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -793,67 +1159,182 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
   
   Widget _buildCompletionPage() {
     return Padding(
-      padding: const EdgeInsets.all(32),
+      padding: EdgeInsets.all(ThemeConstants.space8),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // أيقونة الاكتمال
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
-            duration: const Duration(milliseconds: 800),
-            curve: Curves.elasticOut,
+            duration: ThemeConstants.durationExtraSlow,
+            curve: ThemeConstants.curveBounce,
             builder: (context, value, child) {
               return Transform.scale(
                 scale: value,
                 child: Container(
-                  width: 100,
-                  height: 100,
+                  width: 120,
+                  height: 120,
                   decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
+                    gradient: LinearGradient(
+                      colors: [
+                        ThemeConstants.success,
+                        ThemeConstants.success.withValues(alpha: ThemeConstants.opacity80),
+                      ],
+                    ),
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: ThemeConstants.success.withValues(alpha: ThemeConstants.opacity30),
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
+                    ],
                   ),
-                  child: const Icon(
-                    Icons.check_circle,
-                    size: 60,
-                    color: Colors.green,
+                  child: Icon(
+                    Icons.check_circle_rounded,
+                    size: ThemeConstants.icon3xl,
+                    color: Colors.white,
                   ),
                 ),
               );
             },
           ),
-          const SizedBox(height: 32),
+          
+          SizedBox(height: ThemeConstants.space8),
+          
+          // رسالة الاكتمال
           Text(
             'كل شيء جاهز!',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Colors.green,
+            style: AppTextStyles.h3.copyWith(
+              fontWeight: ThemeConstants.bold,
+              color: ThemeConstants.success,
             ),
           ),
-          const SizedBox(height: 16),
+          
+          SizedBox(height: ThemeConstants.space4),
+          
           Text(
-            'سنطلب الأذونات المختارة الآن',
+            'سنطلب الأذونات المختارة الآن لبدء الاستخدام',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 16,
+            style: AppTextStyles.body1.copyWith(
+              color: ThemeConstants.textSecondary(context),
+              height: 1.5,
             ),
           ),
-          const SizedBox(height: 32),
+          
+          SizedBox(height: ThemeConstants.space8),
+          
+          // ملخص الأذونات
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(ThemeConstants.space5),
             decoration: BoxDecoration(
-              color: Colors.blue.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: ThemeConstants.card(context),
+              borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
+              border: Border.all(
+                color: ThemeConstants.success.withValues(alpha: ThemeConstants.opacity20),
+                width: ThemeConstants.borderLight,
+              ),
+              boxShadow: ThemeConstants.shadowSm,
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.security_rounded,
+                      color: ThemeConstants.success,
+                      size: ThemeConstants.iconMd,
+                    ),
+                    SizedBox(width: ThemeConstants.space3),
+                    Text(
+                      'ملخص الأذونات المختارة',
+                      style: AppTextStyles.h5.copyWith(
+                        fontWeight: ThemeConstants.semiBold,
+                        color: ThemeConstants.textPrimary(context),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: ThemeConstants.space4),
+                if (_selectedPermissions.isEmpty)
+                  Text(
+                    'لم يتم اختيار أي أذونات',
+                    style: AppTextStyles.body2.copyWith(
+                      color: ThemeConstants.textSecondary(context),
+                      fontStyle: FontStyle.italic,
+                    ),
+                  )
+                else
+                  Wrap(
+                    spacing: ThemeConstants.space2,
+                    runSpacing: ThemeConstants.space2,
+                    children: _selectedPermissions.map((permission) {
+                      final info = PermissionConstants.getInfo(permission);
+                      return Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: ThemeConstants.space3,
+                          vertical: ThemeConstants.space1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: info.color.withValues(alpha: ThemeConstants.opacity10),
+                          borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
+                          border: Border.all(
+                            color: info.color.withValues(alpha: ThemeConstants.opacity30),
+                            width: ThemeConstants.borderLight,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              info.icon,
+                              size: ThemeConstants.iconSm,
+                              color: info.color,
+                            ),
+                            SizedBox(width: ThemeConstants.space1),
+                            Text(
+                              info.name,
+                              style: AppTextStyles.caption.copyWith(
+                                color: info.color,
+                                fontWeight: ThemeConstants.medium,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+              ],
+            ),
+          ),
+          
+          SizedBox(height: ThemeConstants.space6),
+          
+          // ملاحظة مهمة
+          Container(
+            padding: EdgeInsets.all(ThemeConstants.space4),
+            decoration: BoxDecoration(
+              color: ThemeConstants.info.withValues(alpha: ThemeConstants.opacity10),
+              borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+              border: Border.all(
+                color: ThemeConstants.info.withValues(alpha: ThemeConstants.opacity20),
+                width: ThemeConstants.borderLight,
+              ),
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline, color: Colors.blue),
-                const SizedBox(width: 12),
+                Icon(
+                  Icons.info_outline_rounded,
+                  color: ThemeConstants.info,
+                  size: ThemeConstants.iconMd,
+                ),
+                SizedBox(width: ThemeConstants.space3),
                 Expanded(
                   child: Text(
-                    'يمكنك تغيير الأذونات لاحقاً من الإعدادات',
-                    style: TextStyle(
-                      color: Colors.blue[700],
-                      fontSize: 14,
+                    'يمكنك تغيير إعدادات الأذونات لاحقاً من خلال إعدادات التطبيق',
+                    style: AppTextStyles.caption.copyWith(
+                      color: ThemeConstants.info,
+                      height: 1.3,
                     ),
                   ),
                 ),
@@ -865,73 +1346,101 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     );
   }
   
-  Widget _buildNavigation() {
+  Widget _buildEnhancedNavigation() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(ThemeConstants.space6),
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
+        color: ThemeConstants.card(context),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
+            color: Colors.black.withValues(alpha: ThemeConstants.opacity05),
+            blurRadius: 20,
+            offset: const Offset(0, -10),
           ),
         ],
       ),
       child: Row(
         children: [
+          // زر السابق
           if (_currentPage > 0)
             Expanded(
-              child: OutlinedButton(
+              child: OutlinedButton.icon(
                 onPressed: _isProcessingPermissions ? null : _previousPage,
+                icon: Icon(
+                  Icons.arrow_back_ios_rounded,
+                  size: ThemeConstants.iconSm,
+                ),
+                label: const Text('السابق'),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: EdgeInsets.symmetric(vertical: ThemeConstants.space4),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                  ),
+                  side: BorderSide(
+                    color: ThemeConstants.divider(context),
+                    width: ThemeConstants.borderLight,
                   ),
                 ),
-                child: const Text('السابق'),
               ),
             ),
-          if (_currentPage > 0) const SizedBox(width: 12),
+          
+          if (_currentPage > 0) SizedBox(width: ThemeConstants.space3),
+          
+          // زر التالي/البدء
           Expanded(
             flex: 2,
-            child: ElevatedButton(
+            child: ElevatedButton.icon(
               onPressed: _isProcessingPermissions ? null : _nextPage,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: _currentPage == _totalPages - 1 
-                    ? Colors.green 
-                    : Theme.of(context).primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: _isProcessingPermissions
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
+              icon: _isProcessingPermissions
+                  ? SizedBox(
+                      width: ThemeConstants.iconSm,
+                      height: ThemeConstants.iconSm,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : Text(
-                      _currentPage == _totalPages - 1 ? 'البدء' : 'التالي',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  : Icon(
+                      _currentPage == _totalPages - 1 
+                          ? Icons.rocket_launch_rounded
+                          : Icons.arrow_forward_ios_rounded,
+                      size: ThemeConstants.iconSm,
                     ),
+              label: Text(
+                _currentPage == _totalPages - 1 ? 'البدء الآن' : 'التالي',
+                style: AppTextStyles.button.copyWith(
+                  color: Colors.white,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(vertical: ThemeConstants.space4),
+                backgroundColor: _currentPage == _totalPages - 1 
+                    ? ThemeConstants.success 
+                    : ThemeConstants.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                ),
+                elevation: ThemeConstants.elevation2,
+              ),
             ),
           ),
+          
+          // زر التخطي
           if (_currentPage < _totalPages - 1) ...[
-            const SizedBox(width: 12),
+            SizedBox(width: ThemeConstants.space3),
             TextButton(
               onPressed: _isProcessingPermissions ? null : _skip,
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.symmetric(
+                  horizontal: ThemeConstants.space4,
+                  vertical: ThemeConstants.space3,
+                ),
+              ),
               child: Text(
                 'تخطي',
-                style: TextStyle(color: Colors.grey[600]),
+                style: AppTextStyles.label2.copyWith(
+                  color: ThemeConstants.textSecondary(context),
+                ),
               ),
             ),
           ],
@@ -939,10 +1448,151 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
       ),
     );
   }
+  
+  Widget _buildLoadingOverlay() {
+    return Container(
+      color: Colors.black.withValues(alpha: ThemeConstants.opacity30),
+      child: Center(
+        child: Container(
+          padding: EdgeInsets.all(ThemeConstants.space8),
+          decoration: BoxDecoration(
+            color: ThemeConstants.card(context),
+            borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
+            boxShadow: ThemeConstants.shadowLg,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor: AlwaysStoppedAnimation<Color>(ThemeConstants.primary),
+              ),
+              SizedBox(height: ThemeConstants.space4),
+              Text(
+                'جاري المعالجة...',
+                style: AppTextStyles.body1.copyWith(
+                  color: ThemeConstants.textPrimary(context),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildCustomDialog({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String content,
+    required _DialogAction primaryAction,
+    _DialogAction? secondaryAction,
+  }) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
+      ),
+      child: Container(
+        padding: EdgeInsets.all(ThemeConstants.space6),
+        decoration: BoxDecoration(
+          color: ThemeConstants.card(context),
+          borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // أيقونة التحذير
+            Container(
+              padding: EdgeInsets.all(ThemeConstants.space4),
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: ThemeConstants.opacity10),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: iconColor,
+                size: ThemeConstants.iconLg,
+              ),
+            ),
+            
+            SizedBox(height: ThemeConstants.space4),
+            
+            // العنوان
+            Text(
+              title,
+              style: AppTextStyles.h5.copyWith(
+                fontWeight: ThemeConstants.bold,
+                color: ThemeConstants.textPrimary(context),
+              ),
+            ),
+            
+            SizedBox(height: ThemeConstants.space3),
+            
+            // المحتوى
+            Text(
+              content,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.body2.copyWith(
+                color: ThemeConstants.textSecondary(context),
+                height: 1.5,
+              ),
+            ),
+            
+            SizedBox(height: ThemeConstants.space6),
+            
+            // الأزرار
+            Row(
+              children: [
+                if (secondaryAction != null) ...[
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: secondaryAction.onPressed,
+                      style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: ThemeConstants.space4),
+                      ),
+                      child: Text(secondaryAction.text),
+                    ),
+                  ),
+                  SizedBox(width: ThemeConstants.space3),
+                ],
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: primaryAction.onPressed,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryAction.color ?? ThemeConstants.primary,
+                      padding: EdgeInsets.symmetric(vertical: ThemeConstants.space4),
+                    ),
+                    child: Text(
+                      primaryAction.text,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-/// Dialog لعرض التقدم أثناء معالجة الأذونات
-class _PermissionProcessingDialog extends StatelessWidget {
+/// Helper class للأزرار في الحوارات
+class _DialogAction {
+  final String text;
+  final VoidCallback onPressed;
+  final Color? color;
+  
+  _DialogAction({
+    required this.text,
+    required this.onPressed,
+    this.color,
+  });
+}
+
+/// Dialog لعرض التقدم أثناء معالجة الأذونات - محسن
+class _PermissionProcessingDialog extends StatefulWidget {
   final int totalPermissions;
   final int currentIndex;
   final AppPermissionType? currentPermission;
@@ -954,61 +1604,169 @@ class _PermissionProcessingDialog extends StatelessWidget {
   });
   
   @override
+  State<_PermissionProcessingDialog> createState() => __PermissionProcessingDialogState();
+}
+
+class __PermissionProcessingDialogState extends State<_PermissionProcessingDialog>
+    with TickerProviderStateMixin {
+  late AnimationController _rotationController;
+  
+  @override
+  void initState() {
+    super.initState();
+    _rotationController = AnimationController(
+      duration: ThemeConstants.durationVerySlow,
+      vsync: this,
+    )..repeat();
+  }
+  
+  @override
+  void dispose() {
+    _rotationController.dispose();
+    super.dispose();
+  }
+  
+  @override
   Widget build(BuildContext context) {
-    final progress = currentIndex > 0 ? currentIndex / totalPermissions : 0.0;
+    final progress = widget.currentIndex > 0 ? widget.currentIndex / widget.totalPermissions : 0.0;
     
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
+      child: Container(
+        padding: EdgeInsets.all(ThemeConstants.space8),
+        decoration: BoxDecoration(
+          color: ThemeConstants.card(context),
+          borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 24),
-            Text(
-              'جاري طلب الأذونات',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            if (currentIndex > 0) ...[
-              Text(
-                '$currentIndex من $totalPermissions',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
-              ),
-              if (currentPermission != null) ...[
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    PermissionConstants.getName(currentPermission!),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.w500,
+            // Loading Animation محسن
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                // دائرة خارجية دوارة
+                RotationTransition(
+                  turns: _rotationController,
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity30),
+                        width: 3,
+                      ),
+                    ),
+                    child: CustomPaint(
+                      painter: _LoadingPainter(
+                        color: ThemeConstants.primary,
+                        progress: progress,
+                      ),
                     ),
                   ),
                 ),
+                // أيقونة في المنتصف
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity10),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.security_rounded,
+                    color: ThemeConstants.primary,
+                    size: ThemeConstants.iconMd,
+                  ),
+                ),
               ],
-              const SizedBox(height: 16),
-              LinearProgressIndicator(
-                value: progress,
-                backgroundColor: Colors.grey[200],
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  Theme.of(context).primaryColor,
+            ),
+            
+            SizedBox(height: ThemeConstants.space6),
+            
+            // العنوان
+            Text(
+              'جاري طلب الأذونات',
+              style: AppTextStyles.h5.copyWith(
+                fontWeight: ThemeConstants.bold,
+                color: ThemeConstants.textPrimary(context),
+              ),
+            ),
+            
+            SizedBox(height: ThemeConstants.space2),
+            
+            // التقدم
+            if (widget.currentIndex > 0) ...[
+              Text(
+                'الإذن ${widget.currentIndex} من ${widget.totalPermissions}',
+                style: AppTextStyles.body2.copyWith(
+                  color: ThemeConstants.textSecondary(context),
+                ),
+              ),
+              
+              if (widget.currentPermission != null) ...[
+                SizedBox(height: ThemeConstants.space3),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: ThemeConstants.space4,
+                    vertical: ThemeConstants.space2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity10),
+                    borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
+                    border: Border.all(
+                      color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity20),
+                      width: ThemeConstants.borderLight,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        PermissionConstants.getInfo(widget.currentPermission!).icon,
+                        size: ThemeConstants.iconSm,
+                        color: ThemeConstants.primary,
+                      ),
+                      SizedBox(width: ThemeConstants.space2),
+                      Text(
+                        PermissionConstants.getName(widget.currentPermission!),
+                        style: AppTextStyles.caption.copyWith(
+                          color: ThemeConstants.primary,
+                          fontWeight: ThemeConstants.medium,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              
+              SizedBox(height: ThemeConstants.space5),
+              
+              // شريط التقدم محسن
+              Container(
+                height: ThemeConstants.space1,
+                decoration: BoxDecoration(
+                  color: ThemeConstants.divider(context),
+                  borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
+                ),
+                child: FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: progress,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: ThemeConstants.primaryGradient,
+                      borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
+                      boxShadow: [
+                        BoxShadow(
+                          color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity30),
+                          blurRadius: ThemeConstants.space1,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -1017,4 +1775,39 @@ class _PermissionProcessingDialog extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Painter للـ Loading Animation
+class _LoadingPainter extends CustomPainter {
+  final Color color;
+  final double progress;
+  
+  _LoadingPainter({
+    required this.color,
+    required this.progress,
+  });
+  
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 1.5;
+    
+    // رسم قوس التقدم
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -1.5708, // البدء من الأعلى
+      2 * 3.14159 * progress,
+      false,
+      paint,
+    );
+  }
+  
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

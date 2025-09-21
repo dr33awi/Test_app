@@ -1,125 +1,124 @@
-// lib/app/themes/text_styles.dart
-import 'package:athkar_app/app/themes/theme_constants.dart';
+// lib/app/themes/text_styles.dart - منظف ومحسن
+import 'package:athkar_app/core/constants/app_constants.dart';
 import 'package:flutter/material.dart';
+import 'theme_constants.dart';
 
 /// أنماط النصوص الموحدة للتطبيق
 class AppTextStyles {
   AppTextStyles._();
 
   // ===== أنماط العناوين =====
-  static const TextStyle h1 = TextStyle(
-    fontSize: ThemeConstants.textSize4xl,
-    fontWeight: ThemeConstants.bold,
+  static TextStyle h1 = TextStyle(
+    fontSize: AppConstants.textSize4xl,
+    fontWeight: AppConstants.bold,
     height: 1.3,
-    fontFamily: ThemeConstants.fontFamily,
+    fontFamily: AppConstants.fontFamily,
   );
 
   static const TextStyle h2 = TextStyle(
-    fontSize: ThemeConstants.textSize3xl,
-    fontWeight: ThemeConstants.semiBold,
+    fontSize: AppConstants.textSize3xl,
+    fontWeight: AppConstants.semiBold,
     height: 1.3,
-    fontFamily: ThemeConstants.fontFamily,
+    fontFamily: AppConstants.fontFamily,
   );
 
   static const TextStyle h3 = TextStyle(
-    fontSize: ThemeConstants.textSize2xl,
-    fontWeight: ThemeConstants.semiBold,
+    fontSize: AppConstants.textSize2xl,
+    fontWeight: AppConstants.semiBold,
     height: 1.4,
-    fontFamily: ThemeConstants.fontFamily,
+    fontFamily: AppConstants.fontFamily,
   );
 
   static const TextStyle h4 = TextStyle(
-    fontSize: ThemeConstants.textSizeXl,
-    fontWeight: ThemeConstants.semiBold,
+    fontSize: AppConstants.textSizeXl,
+    fontWeight: AppConstants.semiBold,
     height: 1.4,
-    fontFamily: ThemeConstants.fontFamily,
+    fontFamily: AppConstants.fontFamily,
   );
 
   static const TextStyle h5 = TextStyle(
-    fontSize: ThemeConstants.textSizeLg,
-    fontWeight: ThemeConstants.semiBold,
+    fontSize: AppConstants.textSizeLg,
+    fontWeight: AppConstants.semiBold,
     height: 1.5,
-    fontFamily: ThemeConstants.fontFamily,
+    fontFamily: AppConstants.fontFamily,
   );
 
   // ===== أنماط النص الأساسي =====
   static const TextStyle body1 = TextStyle(
-    fontSize: ThemeConstants.textSizeLg,
-    fontWeight: ThemeConstants.regular,
+    fontSize: AppConstants.textSizeLg,
+    fontWeight: AppConstants.regular,
     height: 1.6,
-    fontFamily: ThemeConstants.fontFamily,
+    fontFamily: AppConstants.fontFamily,
   );
 
   static const TextStyle body2 = TextStyle(
-    fontSize: ThemeConstants.textSizeMd,
-    fontWeight: ThemeConstants.regular,
+    fontSize: AppConstants.textSizeMd,
+    fontWeight: AppConstants.regular,
     height: 1.6,
-    fontFamily: ThemeConstants.fontFamily,
+    fontFamily: AppConstants.fontFamily,
   );
 
   // ===== أنماط التسميات =====
   static const TextStyle label1 = TextStyle(
-    fontSize: ThemeConstants.textSizeMd,
-    fontWeight: ThemeConstants.medium,
+    fontSize: AppConstants.textSizeMd,
+    fontWeight: AppConstants.medium,
     height: 1.4,
-    fontFamily: ThemeConstants.fontFamily,
+    fontFamily: AppConstants.fontFamily,
   );
 
   static const TextStyle label2 = TextStyle(
-    fontSize: ThemeConstants.textSizeSm,
-    fontWeight: ThemeConstants.medium,
+    fontSize: AppConstants.textSizeSm,
+    fontWeight: AppConstants.medium,
     height: 1.4,
-    fontFamily: ThemeConstants.fontFamily,
+    fontFamily: AppConstants.fontFamily,
   );
 
   static const TextStyle caption = TextStyle(
-    fontSize: ThemeConstants.textSizeXs,
-    fontWeight: ThemeConstants.regular,
+    fontSize: AppConstants.textSizeXs,
+    fontWeight: AppConstants.regular,
     height: 1.4,
-    fontFamily: ThemeConstants.fontFamily,
+    fontFamily: AppConstants.fontFamily,
   );
 
   // ===== أنماط الأزرار =====
   static const TextStyle button = TextStyle(
-    fontSize: ThemeConstants.textSizeLg,
-    fontWeight: ThemeConstants.semiBold,
+    fontSize: AppConstants.textSizeLg,
+    fontWeight: AppConstants.semiBold,
     height: 1.2,
-    fontFamily: ThemeConstants.fontFamily,
+    fontFamily: AppConstants.fontFamily,
   );
 
   static const TextStyle buttonSmall = TextStyle(
-    fontSize: ThemeConstants.textSizeMd,
-    fontWeight: ThemeConstants.semiBold,
+    fontSize: AppConstants.textSizeMd,
+    fontWeight: AppConstants.semiBold,
     height: 1.2,
-    fontFamily: ThemeConstants.fontFamily,
+    fontFamily: AppConstants.fontFamily,
   );
 
   // ===== أنماط خاصة بالمحتوى الإسلامي =====
   static const TextStyle quran = TextStyle(
     fontSize: 22,
-    fontWeight: ThemeConstants.regular,
+    fontWeight: AppConstants.regular,
     height: 2.0,
-    fontFamily: ThemeConstants.fontFamilyQuran,
+    fontFamily: AppConstants.fontFamilyQuran,
   );
 
   static const TextStyle athkar = TextStyle(
-    fontSize: ThemeConstants.textSizeXl,
-    fontWeight: ThemeConstants.regular,
+    fontSize: AppConstants.textSizeXl,
+    fontWeight: AppConstants.regular,
     height: 1.8,
-    fontFamily: ThemeConstants.fontFamily,
+    fontFamily: AppConstants.fontFamily,
   );
 
   static const TextStyle dua = TextStyle(
-    fontSize: ThemeConstants.textSizeLg,
-    fontWeight: ThemeConstants.regular,
+    fontSize: AppConstants.textSizeLg,
+    fontWeight: AppConstants.regular,
     height: 1.7,
-    fontFamily: ThemeConstants.fontFamily,
+    fontFamily: AppConstants.fontFamily,
   );
 
-  static var h6;
-
   // ===== إنشاء TextTheme للتطبيق =====
-static TextTheme createTextTheme({
+  static TextTheme createTextTheme({
     required Color color,
     Color? secondaryColor,
   }) {
@@ -139,7 +138,7 @@ static TextTheme createTextTheme({
       // Title styles
       titleLarge: h4.copyWith(color: color),
       titleMedium: h5.copyWith(color: color),
-      titleSmall: h5.copyWith(color: color, fontSize: ThemeConstants.textSizeMd),
+      titleSmall: h5.copyWith(color: color, fontSize: AppConstants.textSizeMd),
       
       // Body styles
       bodyLarge: body1.copyWith(color: color),
@@ -201,7 +200,7 @@ static TextTheme createTextTheme({
   static TextStyle successText(BuildContext context) {
     return body2.copyWith(
       color: ThemeConstants.success,
-      fontWeight: ThemeConstants.medium,
+      fontWeight: AppConstants.medium,
     );
   }
 
@@ -209,7 +208,7 @@ static TextTheme createTextTheme({
   static TextStyle warningText(BuildContext context) {
     return body2.copyWith(
       color: ThemeConstants.warning,
-      fontWeight: ThemeConstants.medium,
+      fontWeight: AppConstants.medium,
     );
   }
 

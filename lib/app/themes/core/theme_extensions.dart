@@ -1,7 +1,9 @@
-// lib/app/themes/core/theme_extensions.dart
-import 'package:athkar_app/app/themes/text_styles.dart';
+// lib/app/themes/core/theme_extensions.dart - منظف ومحسن
+import 'package:athkar_app/app/themes/core/color_utils.dart';
 import 'package:flutter/material.dart';
+import '../text_styles.dart';
 import '../theme_constants.dart';
+
 
 /// Extensions لتسهيل الوصول للثيم
 extension ThemeExtension on BuildContext {
@@ -83,53 +85,22 @@ extension ThemeExtension on BuildContext {
   double get safeBottom => screenPadding.bottom;
 }
 
-/// Extensions للألوان - موحدة من جميع الملفات
+/// Extensions للألوان - استخدام ColorUtils
 extension ColorExtensions on Color {
-  /// إنشاء لون بشفافية - تم إصلاحها لاستخدام withValues بدلاً من withOpacity المكرر
-  Color withOpacitySafe(double opacity) {
-    // التأكد من أن القيمة في النطاق الصحيح
-    final safeOpacity = opacity.clamp(0.0, 1.0);
-    return withValues(alpha: safeOpacity);
-  }
+  /// تطبيق شفافية آمنة
+  Color withOpacitySafe(double opacity) => ColorUtils.applyOpacitySafely(this, opacity);
 
   /// تفتيح اللون
-  Color lighten([double amount = 0.1]) {
-    assert(amount >= 0 && amount <= 1);
-    final hsl = HSLColor.fromColor(this);
-    final lightness = (hsl.lightness + amount).clamp(0.0, 1.0);
-    return hsl.withLightness(lightness).toColor();
-  }
+  Color lighten([double amount = 0.1]) => ColorUtils.lighten(this, amount);
 
   /// تغميق اللون
-  Color darken([double amount = 0.1]) {
-    assert(amount >= 0 && amount <= 1);
-    final hsl = HSLColor.fromColor(this);
-    final lightness = (hsl.lightness - amount).clamp(0.0, 1.0);
-    return hsl.withLightness(lightness).toColor();
-  }
+  Color darken([double amount = 0.1]) => ColorUtils.darken(this, amount);
 
   /// الحصول على لون متباين للنص
-  Color get contrastingTextColor {
-    return ThemeData.estimateBrightnessForColor(this) == Brightness.dark
-        ? Colors.white
-        : Colors.black87;
-  }
+  Color get contrastingTextColor => ColorUtils.getContrastingTextColor(this);
 
   /// تحويل إلى Material Color
-  MaterialColor toMaterialColor() {
-    final strengths = <double>[.05, .1, .2, .3, .4, .5, .6, .7, .8, .9];
-    final swatch = <int, Color>{};
-    
-    for (var i = 0; i < strengths.length; i++) {
-      final strength = strengths[i];
-      swatch[(strength * 1000).round()] = i < 5
-          ? lighten(strength)
-          : darken(strength - 0.5);
-    }
-    
-    // استخدام value بدلاً من toARGB32() غير الموجود
-    return MaterialColor(value, swatch);
-  }
+  MaterialColor toMaterialColor() => ColorUtils.toMaterialColor(this);
 }
 
 /// Extensions للنصوص
@@ -174,7 +145,7 @@ extension EdgeInsetsExtensions on EdgeInsets {
   );
 }
 
-/// Extensions للأرقام - لإنشاء widgets بسرعة
+/// Extensions للأرقام
 extension NumberExtensions on num {
   // مسافات
   SizedBox get w => SizedBox(width: toDouble());
@@ -270,15 +241,11 @@ extension WidgetExtensions on Widget {
     child: this,
   );
 
-  /// إضافة تأثير تلاشي - مع التأكد من صحة قيمة opacity
-  Widget opacity(double opacity) {
-    // التأكد من أن القيمة في النطاق الصحيح
-    final safeOpacity = opacity.clamp(0.0, 1.0);
-    return Opacity(
-      opacity: safeOpacity,
-      child: this,
-    );
-  }
+  /// إضافة تأثير تلاشي
+  Widget opacity(double opacity) => Opacity(
+    opacity: opacity.clamp(0.0, 1.0),
+    child: this,
+  );
 
   /// إضافة دوران
   Widget rotate(double angle) => Transform.rotate(
