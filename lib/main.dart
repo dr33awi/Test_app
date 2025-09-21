@@ -252,7 +252,7 @@ class _OnboardingWrapper extends StatelessWidget {
     final permissionService = getIt<PermissionService>();
     final permissionManager = getIt<UnifiedPermissionManager>();
     
-    return ProfessionalOnboardingScreen(
+    return PermissionOnboardingScreen(
       permissionService: permissionService,
       onComplete: (result) async {
         // حفظ حالة Onboarding
