@@ -17,7 +17,7 @@ class OnboardingResult {
   });
 }
 
-/// شاشة Onboarding الموحدة لطلب الأذونات
+/// شاشة Onboarding الموحدة لطلب الأذونات - التصميم المحسن
 class PermissionOnboardingScreen extends StatefulWidget {
   final PermissionService permissionService;
   final List<AppPermissionType>? criticalPermissions;
@@ -42,9 +42,15 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
   late PageController _pageController;
   late AnimationController _animationController;
   late AnimationController _progressController;
+  late AnimationController _backgroundController;
+  late AnimationController _floatingController;
+  
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
   late Animation<double> _slideAnimation;
+  late Animation<double> _rotateAnimation;
+  late Animation<Color?> _colorAnimation;
+  late Animation<double> _floatingAnimation;
   
   int _currentPage = 0;
   final int _totalPages = 4;
@@ -62,38 +68,26 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     _pageController = PageController();
     
     _animationController = AnimationController(
-      duration: ThemeConstants.durationNormal,
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
     
     _progressController = AnimationController(
-      duration: ThemeConstants.durationSlow,
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
     
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: ThemeConstants.curveSmooth,
-    ));
+    _backgroundController = AnimationController(
+      duration: const Duration(seconds: 20),
+      vsync: this,
+    )..repeat();
     
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: ThemeConstants.curveBounce,
-    ));
+    _floatingController = AnimationController(
+      duration: const Duration(seconds: 4),
+      vsync: this,
+    )..repeat(reverse: true);
     
-    _slideAnimation = Tween<double>(
-      begin: 30.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: ThemeConstants.curveDefault,
-    ));
+    _initializeAnimations();
     
     // إضافة الأذونات الحرجة تلقائياً
     final criticalPermissions = widget.criticalPermissions ?? PermissionConstants.criticalPermissions;
@@ -102,11 +96,63 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     _animationController.forward();
   }
   
+  void _initializeAnimations() {
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutQuart,
+    ));
+    
+    _scaleAnimation = Tween<double>(
+      begin: 0.3,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.elasticOut,
+    ));
+    
+    _slideAnimation = Tween<double>(
+      begin: 100.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutCubic,
+    ));
+    
+    _rotateAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _backgroundController,
+      curve: Curves.linear,
+    ));
+    
+    _colorAnimation = ColorTween(
+      begin: ThemeConstants.primary,
+      end: ThemeConstants.accent,
+    ).animate(CurvedAnimation(
+      parent: _backgroundController,
+      curve: Curves.easeInOut,
+    ));
+    
+    _floatingAnimation = Tween<double>(
+      begin: -20.0,
+      end: 20.0,
+    ).animate(CurvedAnimation(
+      parent: _floatingController,
+      curve: Curves.easeInOut,
+    ));
+  }
+  
   @override
   void dispose() {
     _pageController.dispose();
     _animationController.dispose();
     _progressController.dispose();
+    _backgroundController.dispose();
+    _floatingController.dispose();
     super.dispose();
   }
   
@@ -115,12 +161,11 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
       HapticFeedback.lightImpact();
       _animationController.reset();
       _pageController.nextPage(
-        duration: ThemeConstants.durationSlow,
-        curve: ThemeConstants.curveSmooth,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOutCubic,
       );
       _animationController.forward();
     } else {
-      // في الصفحة الأخيرة - معالجة الأذونات
       _processPermissionsAndComplete();
     }
   }
@@ -130,8 +175,8 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
       HapticFeedback.lightImpact();
       _animationController.reset();
       _pageController.previousPage(
-        duration: ThemeConstants.durationSlow,
-        curve: ThemeConstants.curveSmooth,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOutCubic,
       );
       _animationController.forward();
     }
@@ -145,7 +190,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
   void _showSkipConfirmation() {
     showDialog(
       context: context,
-      builder: (context) => _buildCustomDialog(
+      builder: (context) => _buildModernDialog(
         icon: Icons.skip_next_rounded,
         iconColor: ThemeConstants.warning,
         title: 'تخطي إعداد الأذونات؟',
@@ -179,7 +224,6 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     
     HapticFeedback.heavyImpact();
     
-    // إذا لم يتم اختيار أي أذونات
     if (_selectedPermissions.isEmpty) {
       _completeWithResult(OnboardingResult(
         skipped: false,
@@ -188,33 +232,28 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
       return;
     }
     
-    // عرض dialog التقدم
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => PopScope(
         canPop: false,
-        child: _PermissionProcessingDialog(
+        child: _ModernPermissionProcessingDialog(
           totalPermissions: _selectedPermissions.length,
         ),
       ),
     );
     
     try {
-      // طلب الأذونات
       final results = await _requestPermissions();
       
-      // إغلاق dialog التقدم
       if (mounted) {
         Navigator.pop(context);
       }
       
-      // عرض النتائج
       if (mounted) {
         await _showResults(results);
       }
       
-      // إكمال العملية
       _completeWithResult(OnboardingResult(
         skipped: false,
         selectedPermissions: _selectedPermissions.toList(),
@@ -223,7 +262,6 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     } catch (e) {
       debugPrint('Error processing permissions: $e');
       
-      // إغلاق dialog في حالة الخطأ
       if (mounted) {
         Navigator.pop(context);
         _showErrorMessage('حدث خطأ في معالجة الأذونات');
@@ -243,7 +281,6 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     for (int i = 0; i < permissions.length; i++) {
       final permission = permissions[i];
       
-      // تحديث dialog التقدم
       if (mounted) {
         Navigator.pop(context);
         showDialog(
@@ -251,7 +288,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
           barrierDismissible: false,
           builder: (context) => PopScope(
             canPop: false,
-            child: _PermissionProcessingDialog(
+            child: _ModernPermissionProcessingDialog(
               totalPermissions: permissions.length,
               currentIndex: i + 1,
               currentPermission: permission,
@@ -260,7 +297,6 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
         );
       }
       
-      // طلب الإذن
       try {
         final status = await widget.permissionService.requestPermission(permission);
         results[permission] = status;
@@ -270,7 +306,6 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
         results[permission] = AppPermissionStatus.unknown;
       }
       
-      // تأخير صغير بين الطلبات
       if (i < permissions.length - 1) {
         await Future.delayed(const Duration(milliseconds: 800));
       }
@@ -314,12 +349,12 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.white, size: ThemeConstants.iconSm),
-            const SizedBox(width: ThemeConstants.space2),
+            const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 message,
-                style: AppTextStyles.body2.copyWith(color: Colors.white),
+                style: const TextStyle(color: Colors.white, fontSize: 14),
               ),
             ),
           ],
@@ -327,32 +362,32 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
         backgroundColor: ThemeConstants.error,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+          borderRadius: BorderRadius.circular(12),
         ),
-        margin: const EdgeInsets.all(ThemeConstants.space4),
+        margin: const EdgeInsets.all(16),
       ),
     );
   }
   
   @override
   Widget build(BuildContext context) {
-    Theme.of(context);
-    
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: ThemeConstants.background(context),
         body: Stack(
           children: [
-            // خلفية متدرجة ديناميكية
-            _buildAnimatedBackground(),
+            // خلفية متدرجة ديناميكية محسنة
+            _buildEnhancedAnimatedBackground(),
+            
+            // عناصر زخرفية عائمة
+            _buildFloatingElements(),
             
             // المحتوى الرئيسي
             SafeArea(
               child: Column(
                 children: [
                   // Header مع Progress المحسن
-                  _buildEnhancedHeader(),
+                  _buildModernHeader(),
                   
                   // Pages مع Animations
                   Expanded(
@@ -374,10 +409,10 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                                   _progressController.animateTo(index / (_totalPages - 1));
                                 },
                                 children: [
-                                  _buildWelcomePage(),
-                                  _buildExplanationPage(),
-                                  _buildPermissionSelectionPage(),
-                                  _buildCompletionPage(),
+                                  _buildModernWelcomePage(),
+                                  _buildModernExplanationPage(),
+                                  _buildModernPermissionSelectionPage(),
+                                  _buildModernCompletionPage(),
                                 ],
                               ),
                             ),
@@ -388,89 +423,208 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                   ),
                   
                   // Navigation المحسن
-                  _buildEnhancedNavigation(),
+                  _buildModernNavigation(),
                 ],
               ),
             ),
             
             // Loading overlay محسن
             if (_isProcessingPermissions)
-              _buildLoadingOverlay(),
+              _buildModernLoadingOverlay(),
           ],
         ),
       ),
     );
   }
   
-  Widget _buildAnimatedBackground() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: ThemeConstants.getTimeBasedGradient(),
-      ),
-      child: AnimatedContainer(
-        duration: ThemeConstants.durationSlow,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              ThemeConstants.background(context),
-              ThemeConstants.surface(context).withValues(alpha: ThemeConstants.opacity90),
-              ThemeConstants.background(context),
-            ],
-            stops: const [0.0, 0.3, 1.0],
+  Widget _buildEnhancedAnimatedBackground() {
+    return AnimatedBuilder(
+      animation: _backgroundController,
+      builder: (context, child) {
+        return Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              transform: GradientRotation(_rotateAnimation.value * 0.2),
+              colors: [
+                const Color(0xFF1E3A8A), // أزرق داكن إسلامي
+                const Color(0xFF059669), // أخضر إسلامي
+                const Color(0xFFDC2626), // أحمر دافئ
+                const Color(0xFF7C3AED), // بنفسجي ملكي
+              ],
+              stops: const [0.0, 0.3, 0.7, 1.0],
+            ),
           ),
-        ),
-      ),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.3),
+                  Colors.black.withOpacity(0.1),
+                  Colors.black.withOpacity(0.2),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
   
-  Widget _buildEnhancedHeader() {
+  Widget _buildFloatingElements() {
+    return AnimatedBuilder(
+      animation: _floatingController,
+      builder: (context, child) {
+        return Stack(
+          children: [
+            // عناصر هندسية إسلامية
+            Positioned(
+              top: 100 + _floatingAnimation.value,
+              right: 30,
+              child: Transform.rotate(
+                angle: _rotateAnimation.value * 2,
+                child: Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.1),
+                      width: 2,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.star_rounded,
+                    color: Colors.white24,
+                    size: 30,
+                  ),
+                ),
+              ),
+            ),
+            
+            Positioned(
+              bottom: 200 - _floatingAnimation.value,
+              left: 40,
+              child: Transform.rotate(
+                angle: -_rotateAnimation.value * 1.5,
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.08),
+                      width: 2,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.mosque_rounded,
+                    color: Colors.white12,
+                    size: 40,
+                  ),
+                ),
+              ),
+            ),
+            
+            Positioned(
+              top: 300 + _floatingAnimation.value * 0.5,
+              left: 20,
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.05),
+                ),
+              ),
+            ),
+            
+            Positioned(
+              bottom: 400 - _floatingAnimation.value * 0.8,
+              right: 50,
+              child: Container(
+                width: 25,
+                height: 25,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  color: Colors.white.withOpacity(0.08),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  
+  Widget _buildModernHeader() {
     return Container(
-      padding: const EdgeInsets.all(ThemeConstants.space6),
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
       child: Column(
         children: [
-          // عنوان الصفحة
-          Text(
-            'إعداد التطبيق',
-            style: AppTextStyles.h4.copyWith(
-              color: ThemeConstants.textPrimary(context),
-              fontWeight: ThemeConstants.bold,
+          // عنوان الصفحة مع تأثير متدرج
+          ShaderMask(
+            shaderCallback: (bounds) => const LinearGradient(
+              colors: [Colors.white, Colors.white70],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ).createShader(bounds),
+            child: const Text(
+              'إعداد التطبيق',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 1.2,
+              ),
             ),
           ),
-          const SizedBox(height: ThemeConstants.space4),
           
-          // Progress Bar محسن
+          const SizedBox(height: 8),
+          
+          Text(
+            'مرحباً بك في رحلتك الروحانية',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.white.withOpacity(0.8),
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+          
+          const SizedBox(height: 32),
+          
+          // Progress Bar فاخر
           Container(
-            height: ThemeConstants.space2,
-            margin: const EdgeInsets.symmetric(horizontal: ThemeConstants.space8),
+            height: 6,
+            margin: const EdgeInsets.symmetric(horizontal: 20),
             decoration: BoxDecoration(
-              color: ThemeConstants.divider(context),
-              borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(20),
             ),
             child: AnimatedBuilder(
               animation: _progressController,
               builder: (context, child) {
                 return Stack(
                   children: [
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: ThemeConstants.divider(context),
-                        borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
-                      ),
-                    ),
                     FractionallySizedBox(
                       widthFactor: (_currentPage + 1) / _totalPages,
                       child: Container(
                         decoration: BoxDecoration(
-                          gradient: ThemeConstants.primaryGradient,
-                          borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
+                          gradient: const LinearGradient(
+                            colors: [
+                              Colors.white,
+                              Colors.white70,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity30),
-                              blurRadius: ThemeConstants.space1,
-                              spreadRadius: 1,
+                              color: Colors.white.withOpacity(0.4),
+                              blurRadius: 8,
+                              spreadRadius: 2,
                             ),
                           ],
                         ),
@@ -482,9 +636,9 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             ),
           ),
           
-          const SizedBox(height: ThemeConstants.space3),
+          const SizedBox(height: 20),
           
-          // Page indicators محسنة
+          // Page indicators مع أنيميشن فاخر
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(_totalPages, (index) {
@@ -492,21 +646,21 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
               final isPassed = index < _currentPage;
               
               return AnimatedContainer(
-                duration: ThemeConstants.durationNormal,
-                margin: const EdgeInsets.symmetric(horizontal: ThemeConstants.space1),
-                height: ThemeConstants.space2,
-                width: isActive ? ThemeConstants.space8 : ThemeConstants.space2,
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                height: 8,
+                width: isActive ? 32 : 8,
                 decoration: BoxDecoration(
                   color: isPassed 
-                      ? ThemeConstants.success
+                      ? Colors.green.shade300
                       : isActive 
-                          ? ThemeConstants.primary 
-                          : ThemeConstants.divider(context),
-                  borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
+                          ? Colors.white
+                          : Colors.white.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(20),
                   boxShadow: isActive ? [
                     BoxShadow(
-                      color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity30),
-                      blurRadius: ThemeConstants.space1,
+                      color: Colors.white.withOpacity(0.4),
+                      blurRadius: 8,
                       spreadRadius: 1,
                     ),
                   ] : null,
@@ -514,7 +668,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                 child: isPassed ? const Center(
                   child: Icon(
                     Icons.check,
-                    size: ThemeConstants.space2,
+                    size: 6,
                     color: Colors.white,
                   ),
                 ) : null,
@@ -526,44 +680,69 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     );
   }
   
-  Widget _buildWelcomePage() {
+  Widget _buildModernWelcomePage() {
     return Padding(
-      padding: const EdgeInsets.all(ThemeConstants.space8),
+      padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // شعار التطبيق المحسن
+          // شعار التطبيق الفاخر
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
-            duration: ThemeConstants.durationExtraSlow,
-            curve: ThemeConstants.curveBounce,
+            duration: const Duration(milliseconds: 1500),
+            curve: Curves.elasticOut,
             builder: (context, value, child) {
               return Transform.scale(
                 scale: value,
                 child: Container(
-                  width: 140,
-                  height: 140,
+                  width: 160,
+                  height: 160,
                   decoration: BoxDecoration(
-                    gradient: ThemeConstants.primaryGradient,
+                    gradient: const RadialGradient(
+                      colors: [
+                        Colors.white,
+                        Colors.white70,
+                      ],
+                    ),
                     shape: BoxShape.circle,
-                    boxShadow: ThemeConstants.shadowLg,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.3),
+                        blurRadius: 30,
+                        spreadRadius: 10,
+                      ),
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
+                    ],
                   ),
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
                       // دائرة داخلية للتأثير
                       Container(
-                        width: 100,
-                        height: 100,
+                        width: 120,
+                        height: 120,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: ThemeConstants.opacity20),
+                          color: Colors.white.withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
                       ),
-                      const Icon(
-                        ThemeConstants.iconPrayer,
-                        size: ThemeConstants.icon3xl,
-                        color: Colors.white,
+                      // الأيقونة
+                      ShaderMask(
+                        shaderCallback: (bounds) => const LinearGradient(
+                          colors: [
+                            Color(0xFF1E3A8A),
+                            Color(0xFF059669),
+                          ],
+                        ).createShader(bounds),
+                        child: const Icon(
+                          Icons.mosque_rounded,
+                          size: 80,
+                          color: Colors.white,
+                        ),
                       ),
                     ],
                   ),
@@ -572,56 +751,90 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             },
           ),
           
-          const SizedBox(height: ThemeConstants.space10),
+          const SizedBox(height: 40),
           
-          // عنوان الترحيب
+          // عنوان الترحيب مع تأثير متدرج
           ShaderMask(
-            shaderCallback: (bounds) => ThemeConstants.primaryGradient.createShader(bounds),
-            child: Text(
-              'مرحباً بك في\nحصن المسلم',
+            shaderCallback: (bounds) => const LinearGradient(
+              colors: [Colors.white, Colors.white70],
+            ).createShader(bounds),
+            child: const Text(
+              'بسم الله نبدأ',
               textAlign: TextAlign.center,
-              style: AppTextStyles.h2.copyWith(
-                fontWeight: ThemeConstants.bold,
+              style: TextStyle(
+                fontSize: 36,
+                fontWeight: FontWeight.bold,
                 height: 1.2,
                 color: Colors.white,
+                letterSpacing: 2,
               ),
             ),
           ),
           
-          const SizedBox(height: ThemeConstants.space4),
+          const SizedBox(height: 12),
+          
+          ShaderMask(
+            shaderCallback: (bounds) => const LinearGradient(
+              colors: [Colors.white, Colors.white60],
+            ).createShader(bounds),
+            child: const Text(
+              'حصن المسلم',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                letterSpacing: 1,
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 24),
           
           // وصف التطبيق
           Text(
             'رفيقك اليومي للأذكار والعبادات\nوالتقرب إلى الله سبحانه وتعالى',
             textAlign: TextAlign.center,
-            style: AppTextStyles.body1.copyWith(
-              color: ThemeConstants.textSecondary(context),
-              height: 1.6,
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.white.withOpacity(0.8),
+              height: 1.8,
+              fontWeight: FontWeight.w400,
             ),
           ),
           
-          const SizedBox(height: ThemeConstants.space8),
+          const SizedBox(height: 40),
           
-          // إحصائيات سريعة
-          _buildWelcomeStats(),
+          // إحصائيات سريعة محسنة
+          _buildModernWelcomeStats(),
         ],
       ),
     );
   }
   
-  Widget _buildWelcomeStats() {
+  Widget _buildModernWelcomeStats() {
     final stats = [
-      {'icon': Icons.menu_book_rounded, 'label': 'أذكار', 'count': '100+'},
-      {'icon': Icons.access_time_rounded, 'label': 'مواقيت', 'count': 'دقيقة'},
-      {'icon': Icons.explore_rounded, 'label': 'قبلة', 'count': 'ذكية'},
+      {'icon': Icons.menu_book_rounded, 'label': 'أذكار', 'count': '200+', 'color': Colors.amber},
+      {'icon': Icons.access_time_rounded, 'label': 'مواقيت', 'count': 'دقيقة', 'color': Colors.blue},
+      {'icon': Icons.explore_rounded, 'label': 'قبلة', 'count': 'ذكية', 'color': Colors.green},
     ];
     
     return Container(
-      padding: const EdgeInsets.all(ThemeConstants.space4),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: ThemeConstants.card(context),
-        borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
-        boxShadow: ThemeConstants.shadowSm,
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            spreadRadius: 5,
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -629,29 +842,36 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(ThemeConstants.space3),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity10),
-                borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                color: (stat['color'] as Color).withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: (stat['color'] as Color).withOpacity(0.3),
+                  width: 1,
+                ),
               ),
               child: Icon(
                 stat['icon'] as IconData,
-                color: ThemeConstants.primary,
-                size: ThemeConstants.iconMd,
+                color: stat['color'] as Color,
+                size: 24,
               ),
             ),
-            const SizedBox(height: ThemeConstants.space2),
+            const SizedBox(height: 8),
             Text(
               stat['count'] as String,
-              style: AppTextStyles.label1.copyWith(
-                color: ThemeConstants.primary,
-                fontWeight: ThemeConstants.bold,
+              style: TextStyle(
+                fontSize: 16,
+                color: stat['color'] as Color,
+                fontWeight: FontWeight.bold,
               ),
             ),
             Text(
               stat['label'] as String,
-              style: AppTextStyles.caption.copyWith(
-                color: ThemeConstants.textSecondary(context),
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.white.withOpacity(0.8),
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -660,58 +880,60 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     );
   }
   
-  Widget _buildExplanationPage() {
+  Widget _buildModernExplanationPage() {
     final features = [
       {
         'icon': Icons.notifications_active_rounded,
         'title': 'تذكيرات ذكية',
         'description': 'تنبيهات في الأوقات المناسبة للأذكار والصلوات',
-        'color': ThemeConstants.info,
+        'color': const Color(0xFF8B5CF6),
       },
       {
         'icon': Icons.location_on_rounded,
         'title': 'مواقيت دقيقة',
         'description': 'حساب دقيق لمواقيت الصلاة حسب موقعك الجغرافي',
-        'color': ThemeConstants.success,
+        'color': const Color(0xFF06B6D4),
       },
       {
         'icon': Icons.explore_rounded,
         'title': 'اتجاه القبلة',
         'description': 'بوصلة دقيقة لتحديد اتجاه القبلة الصحيح',
-        'color': ThemeConstants.warning,
+        'color': const Color(0xFF10B981),
       },
       {
         'icon': Icons.menu_book_rounded,
         'title': 'أذكار شاملة',
         'description': 'مجموعة كاملة من الأذكار اليومية مع الأدعية',
-        'color': ThemeConstants.accent,
+        'color': const Color(0xFFF59E0B),
       },
     ];
     
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(ThemeConstants.space8),
+      padding: const EdgeInsets.all(24),
       child: Column(
         children: [
           Text(
             'ميزات التطبيق',
-            style: AppTextStyles.h3.copyWith(
-              fontWeight: ThemeConstants.bold,
-              color: ThemeConstants.textPrimary(context),
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white.withOpacity(0.95),
             ),
           ),
           
-          const SizedBox(height: ThemeConstants.space2),
+          const SizedBox(height: 8),
           
           Text(
             'تعرف على الميزات الرائعة التي ستساعدك في رحلتك الروحية',
             textAlign: TextAlign.center,
-            style: AppTextStyles.body2.copyWith(
-              color: ThemeConstants.textSecondary(context),
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.white.withOpacity(0.7),
               height: 1.5,
             ),
           ),
           
-          const SizedBox(height: ThemeConstants.space8),
+          const SizedBox(height: 32),
           
           ...features.asMap().entries.map((entry) {
             final index = entry.key;
@@ -719,14 +941,14 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             
             return TweenAnimationBuilder<double>(
               tween: Tween(begin: 0, end: 1),
-              duration: Duration(milliseconds: 600 + (index * 200)),
-              curve: ThemeConstants.curveSmooth,
+              duration: Duration(milliseconds: 800 + (index * 200)),
+              curve: Curves.easeOutBack,
               builder: (context, value, child) {
                 return Transform.translate(
-                  offset: Offset((1 - value) * 100, 0),
+                  offset: Offset((1 - value) * 300, 0),
                   child: Opacity(
                     opacity: value,
-                    child: _buildEnhancedFeatureCard(
+                    child: _buildModernFeatureCard(
                       icon: feature['icon'] as IconData,
                       title: feature['title'] as String,
                       description: feature['description'] as String,
@@ -743,7 +965,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     );
   }
   
-  Widget _buildEnhancedFeatureCard({
+  Widget _buildModernFeatureCard({
     required IconData icon,
     required String title,
     required String description,
@@ -751,48 +973,55 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     required int index,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: ThemeConstants.space4),
-      padding: const EdgeInsets.all(ThemeConstants.space5),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: ThemeConstants.card(context),
-        borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: color.withValues(alpha: ThemeConstants.opacity20),
-          width: ThemeConstants.borderLight,
+          color: color.withOpacity(0.3),
+          width: 1,
         ),
-        boxShadow: ThemeConstants.shadowSm,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            spreadRadius: 5,
+          ),
+        ],
       ),
       child: Row(
         children: [
-          // أيقونة محسنة
+          // أيقونة فاخرة
           Container(
-            padding: const EdgeInsets.all(ThemeConstants.space4),
+            width: 60,
+            height: 60,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  color.withValues(alpha: ThemeConstants.opacity20),
-                  color.withValues(alpha: ThemeConstants.opacity10),
+                  color,
+                  color.withOpacity(0.7),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+              borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: color.withValues(alpha: ThemeConstants.opacity20),
-                  blurRadius: ThemeConstants.space2,
-                  spreadRadius: 1,
+                  color: color.withOpacity(0.4),
+                  blurRadius: 15,
+                  spreadRadius: 2,
                 ),
               ],
             ),
             child: Icon(
               icon,
-              color: color,
-              size: ThemeConstants.iconLg,
+              color: Colors.white,
+              size: 30,
             ),
           ),
           
-          const SizedBox(width: ThemeConstants.space4),
+          const SizedBox(width: 16),
           
           // المحتوى
           Expanded(
@@ -801,16 +1030,18 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
               children: [
                 Text(
                   title,
-                  style: AppTextStyles.h5.copyWith(
-                    fontWeight: ThemeConstants.semiBold,
-                    color: ThemeConstants.textPrimary(context),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: ThemeConstants.space1),
+                const SizedBox(height: 6),
                 Text(
                   description,
-                  style: AppTextStyles.body2.copyWith(
-                    color: ThemeConstants.textSecondary(context),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withOpacity(0.8),
                     height: 1.4,
                   ),
                 ),
@@ -820,22 +1051,23 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
           
           // رقم الترتيب
           Container(
-            width: ThemeConstants.space8,
-            height: ThemeConstants.space8,
+            width: 30,
+            height: 30,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: ThemeConstants.opacity10),
+              color: color.withOpacity(0.2),
               shape: BoxShape.circle,
               border: Border.all(
-                color: color.withValues(alpha: ThemeConstants.opacity30),
-                width: ThemeConstants.borderLight,
+                color: color.withOpacity(0.5),
+                width: 1,
               ),
             ),
             child: Center(
               child: Text(
                 '${index + 1}',
-                style: AppTextStyles.caption.copyWith(
+                style: TextStyle(
+                  fontSize: 14,
                   color: color,
-                  fontWeight: ThemeConstants.bold,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -845,12 +1077,12 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     );
   }
   
-  Widget _buildPermissionSelectionPage() {
+  Widget _buildModernPermissionSelectionPage() {
     final criticalPermissions = widget.criticalPermissions ?? PermissionConstants.criticalPermissions;
     final optionalPermissions = widget.optionalPermissions ?? PermissionConstants.optionalPermissions;
     
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(ThemeConstants.space6),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -859,56 +1091,67 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             child: Column(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(ThemeConstants.space4),
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity10),
+                    gradient: const LinearGradient(
+                      colors: [Colors.white, Colors.white70],
+                    ),
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.3),
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
+                    ],
                   ),
                   child: const Icon(
                     Icons.security_rounded,
-                    size: ThemeConstants.icon2xl,
-                    color: ThemeConstants.primary,
+                    size: 40,
+                    color: Color(0xFF1E3A8A),
                   ),
                 ),
-                const SizedBox(height: ThemeConstants.space4),
-                Text(
+                const SizedBox(height: 20),
+                const Text(
                   'الأذونات المطلوبة',
-                  style: AppTextStyles.h3.copyWith(
-                    fontWeight: ThemeConstants.bold,
-                    color: ThemeConstants.textPrimary(context),
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: ThemeConstants.space2),
+                const SizedBox(height: 8),
                 Text(
                   'نحتاج بعض الأذونات لتوفير أفضل تجربة ممكنة',
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.body2.copyWith(
-                    color: ThemeConstants.textSecondary(context),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white.withOpacity(0.8),
                   ),
                 ),
               ],
             ),
           ),
           
-          const SizedBox(height: ThemeConstants.space8),
+          const SizedBox(height: 32),
           
           // الأذونات الأساسية
-          _buildPermissionSection(
+          _buildModernPermissionSection(
             title: 'أذونات أساسية',
             subtitle: 'مطلوبة لعمل التطبيق بشكل صحيح',
             icon: Icons.star_rounded,
-            color: ThemeConstants.error,
+            color: const Color(0xFFEF4444),
             permissions: criticalPermissions,
             isCritical: true,
           ),
           
           if (optionalPermissions.isNotEmpty) ...[
-            const SizedBox(height: ThemeConstants.space6),
-            _buildPermissionSection(
+            const SizedBox(height: 24),
+            _buildModernPermissionSection(
               title: 'أذونات اختيارية',
               subtitle: 'لتحسين تجربة الاستخدام',
               icon: Icons.tune_rounded,
-              color: ThemeConstants.info,
+              color: const Color(0xFF3B82F6),
               permissions: optionalPermissions,
               isCritical: false,
             ),
@@ -918,7 +1161,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     );
   }
   
-  Widget _buildPermissionSection({
+  Widget _buildModernPermissionSection({
     required String title,
     required String subtitle,
     required IconData icon,
@@ -927,15 +1170,21 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     required bool isCritical,
   }) {
     return Container(
-      padding: const EdgeInsets.all(ThemeConstants.space4),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: ThemeConstants.card(context),
-        borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: color.withValues(alpha: ThemeConstants.opacity20),
-          width: ThemeConstants.borderLight,
+          color: color.withOpacity(0.3),
+          width: 1,
         ),
-        boxShadow: ThemeConstants.shadowSm,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            spreadRadius: 5,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -944,29 +1193,31 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(ThemeConstants.space2),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: ThemeConstants.opacity10),
-                  borderRadius: BorderRadius.circular(ThemeConstants.radiusSm),
+                  color: color.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: color, size: ThemeConstants.iconMd),
+                child: Icon(icon, color: color, size: 24),
               ),
-              const SizedBox(width: ThemeConstants.space3),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: AppTextStyles.h5.copyWith(
-                        fontWeight: ThemeConstants.semiBold,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                         color: color,
                       ),
                     ),
                     Text(
                       subtitle,
-                      style: AppTextStyles.caption.copyWith(
-                        color: ThemeConstants.textSecondary(context),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.7),
                       ),
                     ),
                   ],
@@ -975,23 +1226,23 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             ],
           ),
           
-          const SizedBox(height: ThemeConstants.space4),
+          const SizedBox(height: 16),
           
           // قائمة الأذونات
           ...permissions.map((permission) => 
-            _buildEnhancedPermissionItem(permission, isCritical: isCritical),
+            _buildModernPermissionItem(permission, isCritical: isCritical),
           ),
         ],
       ),
     );
   }
   
-  Widget _buildEnhancedPermissionItem(AppPermissionType permission, {required bool isCritical}) {
+  Widget _buildModernPermissionItem(AppPermissionType permission, {required bool isCritical}) {
     final info = PermissionConstants.getInfo(permission);
     final isSelected = _selectedPermissions.contains(permission);
     
     return Container(
-      margin: const EdgeInsets.only(bottom: ThemeConstants.space3),
+      margin: const EdgeInsets.only(bottom: 12),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -1005,42 +1256,42 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             });
             HapticFeedback.selectionClick();
           },
-          borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+          borderRadius: BorderRadius.circular(16),
           child: AnimatedContainer(
-            duration: ThemeConstants.durationFast,
-            padding: const EdgeInsets.all(ThemeConstants.space4),
+            duration: const Duration(milliseconds: 300),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: isSelected 
-                  ? info.color.withValues(alpha: ThemeConstants.opacity05)
-                  : ThemeConstants.surface(context),
-              borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                  ? info.color.withOpacity(0.15)
+                  : Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isSelected 
-                    ? info.color.withValues(alpha: ThemeConstants.opacity30)
-                    : ThemeConstants.divider(context),
-                width: isSelected ? ThemeConstants.borderThick : ThemeConstants.borderLight,
+                    ? info.color.withOpacity(0.6)
+                    : Colors.white.withOpacity(0.2),
+                width: isSelected ? 2 : 1,
               ),
             ),
             child: Row(
               children: [
                 // أيقونة الإذن
                 AnimatedContainer(
-                  duration: ThemeConstants.durationFast,
-                  padding: const EdgeInsets.all(ThemeConstants.space3),
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? info.color.withValues(alpha: ThemeConstants.opacity5)
-                        : ThemeConstants.divider(context).withValues(alpha: ThemeConstants.opacity10),
-                    borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+                        ? info.color.withOpacity(0.2)
+                        : Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     info.icon,
-                    color: isSelected ? info.color : ThemeConstants.textSecondary(context),
-                    size: ThemeConstants.iconMd,
+                    color: isSelected ? info.color : Colors.white.withOpacity(0.7),
+                    size: 24,
                   ),
                 ),
                 
-                const SizedBox(width: ThemeConstants.space4),
+                const SizedBox(width: 16),
                 
                 // معلومات الإذن
                 Expanded(
@@ -1052,42 +1303,44 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                           Expanded(
                             child: Text(
                               info.name,
-                              style: AppTextStyles.label1.copyWith(
-                                fontWeight: ThemeConstants.semiBold,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
                                 color: isSelected 
-                                    ? ThemeConstants.textPrimary(context) 
-                                    : ThemeConstants.textSecondary(context),
+                                    ? Colors.white
+                                    : Colors.white.withOpacity(0.8),
                               ),
                             ),
                           ),
                           if (isCritical)
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: ThemeConstants.space2,
-                                vertical: ThemeConstants.space1,
+                                horizontal: 8,
+                                vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: ThemeConstants.error.withValues(alpha: ThemeConstants.opacity10),
-                                borderRadius: BorderRadius.circular(ThemeConstants.radiusXs),
+                                color: const Color(0xFFEF4444).withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: ThemeConstants.error.withValues(alpha: ThemeConstants.opacity30),
-                                  width: ThemeConstants.borderLight,
+                                  color: const Color(0xFFEF4444).withOpacity(0.5),
+                                  width: 1,
                                 ),
                               ),
-                              child: Row(
+                              child: const Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.star_rounded,
-                                    size: ThemeConstants.space3,
-                                    color: ThemeConstants.error,
+                                    size: 12,
+                                    color: Color(0xFFEF4444),
                                   ),
-                                  const SizedBox(width: ThemeConstants.space1),
+                                  SizedBox(width: 4),
                                   Text(
                                     'مطلوب',
-                                    style: AppTextStyles.caption.copyWith(
-                                      color: ThemeConstants.error,
-                                      fontWeight: ThemeConstants.bold,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Color(0xFFEF4444),
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ],
@@ -1095,11 +1348,12 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                             ),
                         ],
                       ),
-                      const SizedBox(height: ThemeConstants.space1),
+                      const SizedBox(height: 4),
                       Text(
                         info.description,
-                        style: AppTextStyles.caption.copyWith(
-                          color: ThemeConstants.textSecondary(context),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.6),
                           height: 1.3,
                         ),
                       ),
@@ -1107,26 +1361,26 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                   ),
                 ),
                 
-                const SizedBox(width: ThemeConstants.space3),
+                const SizedBox(width: 12),
                 
                 // مؤشر الحالة
                 if (!isCritical)
                   AnimatedContainer(
-                    duration: ThemeConstants.durationFast,
-                    width: ThemeConstants.iconMd,
-                    height: ThemeConstants.iconMd,
+                    duration: const Duration(milliseconds: 300),
+                    width: 24,
+                    height: 24,
                     decoration: BoxDecoration(
                       color: isSelected ? info.color : Colors.transparent,
                       border: Border.all(
-                        color: isSelected ? info.color : ThemeConstants.divider(context),
-                        width: ThemeConstants.borderMedium,
+                        color: isSelected ? info.color : Colors.white.withOpacity(0.4),
+                        width: 2,
                       ),
-                      borderRadius: BorderRadius.circular(ThemeConstants.radiusXs),
+                      borderRadius: BorderRadius.circular(6),
                     ),
                     child: isSelected
                         ? const Icon(
                             Icons.check_rounded,
-                            size: ThemeConstants.iconSm,
+                            size: 16,
                             color: Colors.white,
                           )
                         : null,
@@ -1134,19 +1388,19 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                 
                 if (isCritical)
                   Container(
-                    padding: const EdgeInsets.all(ThemeConstants.space2),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: ThemeConstants.success.withValues(alpha: ThemeConstants.opacity10),
+                      color: const Color(0xFF10B981).withOpacity(0.2),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: ThemeConstants.success.withValues(alpha: ThemeConstants.opacity30),
-                        width: ThemeConstants.borderMedium,
+                        color: const Color(0xFF10B981).withOpacity(0.5),
+                        width: 1,
                       ),
                     ),
                     child: const Icon(
                       Icons.lock_rounded,
-                      size: ThemeConstants.iconSm,
-                      color: ThemeConstants.success,
+                      size: 16,
+                      color: Color(0xFF10B981),
                     ),
                   ),
               ],
@@ -1157,42 +1411,42 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     );
   }
   
-  Widget _buildCompletionPage() {
+  Widget _buildModernCompletionPage() {
     return Padding(
-      padding: const EdgeInsets.all(ThemeConstants.space8),
+      padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // أيقونة الاكتمال
+          // أيقونة الاكتمال الفاخرة
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
-            duration: ThemeConstants.durationExtraSlow,
-            curve: ThemeConstants.curveBounce,
+            duration: const Duration(milliseconds: 2000),
+            curve: Curves.elasticOut,
             builder: (context, value, child) {
               return Transform.scale(
                 scale: value,
                 child: Container(
-                  width: 120,
-                  height: 120,
+                  width: 140,
+                  height: 140,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
+                    gradient: const LinearGradient(
                       colors: [
-                        ThemeConstants.success,
-                        ThemeConstants.success.withValues(alpha: ThemeConstants.opacity80),
+                        Color(0xFF10B981),
+                        Color(0xFF059669),
                       ],
                     ),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: ThemeConstants.success.withValues(alpha: ThemeConstants.opacity30),
-                        blurRadius: 20,
-                        spreadRadius: 5,
+                        color: const Color(0xFF10B981).withOpacity(0.4),
+                        blurRadius: 30,
+                        spreadRadius: 10,
                       ),
                     ],
                   ),
                   child: const Icon(
                     Icons.check_circle_rounded,
-                    size: ThemeConstants.icon3xl,
+                    size: 80,
                     color: Colors.white,
                   ),
                 ),
@@ -1200,41 +1454,49 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             },
           ),
           
-          const SizedBox(height: ThemeConstants.space8),
+          const SizedBox(height: 32),
           
           // رسالة الاكتمال
-          Text(
+          const Text(
             'كل شيء جاهز!',
-            style: AppTextStyles.h3.copyWith(
-              fontWeight: ThemeConstants.bold,
-              color: ThemeConstants.success,
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF10B981),
             ),
           ),
           
-          const SizedBox(height: ThemeConstants.space4),
+          const SizedBox(height: 16),
           
           Text(
             'سنطلب الأذونات المختارة الآن لبدء الاستخدام',
             textAlign: TextAlign.center,
-            style: AppTextStyles.body1.copyWith(
-              color: ThemeConstants.textSecondary(context),
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.white.withOpacity(0.8),
               height: 1.5,
             ),
           ),
           
-          const SizedBox(height: ThemeConstants.space8),
+          const SizedBox(height: 32),
           
-          // ملخص الأذونات
+          // ملخص الأذونات المحسن
           Container(
-            padding: const EdgeInsets.all(ThemeConstants.space5),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: ThemeConstants.card(context),
-              borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: ThemeConstants.success.withValues(alpha: ThemeConstants.opacity20),
-                width: ThemeConstants.borderLight,
+                color: const Color(0xFF10B981).withOpacity(0.3),
+                width: 1,
               ),
-              boxShadow: ThemeConstants.shadowSm,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  spreadRadius: 5,
+                ),
+              ],
             ),
             child: Column(
               children: [
@@ -1242,45 +1504,47 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                   children: [
                     const Icon(
                       Icons.security_rounded,
-                      color: ThemeConstants.success,
-                      size: ThemeConstants.iconMd,
+                      color: Color(0xFF10B981),
+                      size: 24,
                     ),
-                    const SizedBox(width: ThemeConstants.space3),
-                    Text(
+                    const SizedBox(width: 12),
+                    const Text(
                       'ملخص الأذونات المختارة',
-                      style: AppTextStyles.h5.copyWith(
-                        fontWeight: ThemeConstants.semiBold,
-                        color: ThemeConstants.textPrimary(context),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: ThemeConstants.space4),
+                const SizedBox(height: 16),
                 if (_selectedPermissions.isEmpty)
                   Text(
                     'لم يتم اختيار أي أذونات',
-                    style: AppTextStyles.body2.copyWith(
-                      color: ThemeConstants.textSecondary(context),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.7),
                       fontStyle: FontStyle.italic,
                     ),
                   )
                 else
                   Wrap(
-                    spacing: ThemeConstants.space2,
-                    runSpacing: ThemeConstants.space2,
+                    spacing: 8,
+                    runSpacing: 8,
                     children: _selectedPermissions.map((permission) {
                       final info = PermissionConstants.getInfo(permission);
                       return Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: ThemeConstants.space3,
-                          vertical: ThemeConstants.space1,
+                          horizontal: 12,
+                          vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: info.color.withValues(alpha: ThemeConstants.opacity10),
-                          borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
+                          color: info.color.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: info.color.withValues(alpha: ThemeConstants.opacity30),
-                            width: ThemeConstants.borderLight,
+                            color: info.color.withOpacity(0.5),
+                            width: 1,
                           ),
                         ),
                         child: Row(
@@ -1288,15 +1552,16 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
                           children: [
                             Icon(
                               info.icon,
-                              size: ThemeConstants.iconSm,
+                              size: 16,
                               color: info.color,
                             ),
-                            const SizedBox(width: ThemeConstants.space1),
+                            const SizedBox(width: 6),
                             Text(
                               info.name,
-                              style: AppTextStyles.caption.copyWith(
+                              style: TextStyle(
+                                fontSize: 12,
                                 color: info.color,
-                                fontWeight: ThemeConstants.medium,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
@@ -1308,32 +1573,33 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
             ),
           ),
           
-          const SizedBox(height: ThemeConstants.space6),
+          const SizedBox(height: 24),
           
           // ملاحظة مهمة
           Container(
-            padding: const EdgeInsets.all(ThemeConstants.space4),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: ThemeConstants.info.withValues(alpha: ThemeConstants.opacity10),
-              borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+              color: const Color(0xFF3B82F6).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: ThemeConstants.info.withValues(alpha: ThemeConstants.opacity20),
-                width: ThemeConstants.borderLight,
+                color: const Color(0xFF3B82F6).withOpacity(0.3),
+                width: 1,
               ),
             ),
             child: Row(
               children: [
                 const Icon(
                   Icons.info_outline_rounded,
-                  color: ThemeConstants.info,
-                  size: ThemeConstants.iconMd,
+                  color: Color(0xFF3B82F6),
+                  size: 20,
                 ),
-                const SizedBox(width: ThemeConstants.space3),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'يمكنك تغيير إعدادات الأذونات لاحقاً من خلال إعدادات التطبيق',
-                    style: AppTextStyles.caption.copyWith(
-                      color: ThemeConstants.info,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: const Color(0xFF3B82F6).withOpacity(0.9),
                       height: 1.3,
                     ),
                   ),
@@ -1346,100 +1612,153 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     );
   }
   
-  Widget _buildEnhancedNavigation() {
+  Widget _buildModernNavigation() {
     return Container(
-      padding: const EdgeInsets.all(ThemeConstants.space6),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: ThemeConstants.card(context),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: ThemeConstants.opacity05),
-            blurRadius: 20,
-            offset: const Offset(0, -10),
+        color: Colors.black.withOpacity(0.2),
+        border: Border(
+          top: BorderSide(
+            color: Colors.white.withOpacity(0.1),
+            width: 1,
           ),
-        ],
+        ),
       ),
       child: Row(
         children: [
           // زر السابق
           if (_currentPage > 0)
             Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _isProcessingPermissions ? null : _previousPage,
-                icon: const Icon(
-                  Icons.arrow_back_ios_rounded,
-                  size: ThemeConstants.iconSm,
-                ),
-                label: const Text('السابق'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: ThemeConstants.space4),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1,
                   ),
-                  side: BorderSide(
-                    color: ThemeConstants.divider(context),
-                    width: ThemeConstants.borderLight,
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _isProcessingPermissions ? null : _previousPage,
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.arrow_back_ios_rounded,
+                            size: 18,
+                            color: Colors.white.withOpacity(0.8),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'السابق',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white.withOpacity(0.8),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
           
-          if (_currentPage > 0) const SizedBox(width: ThemeConstants.space3),
+          if (_currentPage > 0) const SizedBox(width: 12),
           
           // زر التالي/البدء
           Expanded(
             flex: 2,
-            child: ElevatedButton.icon(
-              onPressed: _isProcessingPermissions ? null : _nextPage,
-              icon: _isProcessingPermissions
-                  ? const SizedBox(
-                      width: ThemeConstants.iconSm,
-                      height: ThemeConstants.iconSm,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: _currentPage == _totalPages - 1 
+                    ? const LinearGradient(
+                        colors: [Color(0xFF10B981), Color(0xFF059669)],
+                      )
+                    : const LinearGradient(
+                        colors: [Colors.white, Colors.white70],
                       ),
-                    )
-                  : Icon(
-                      _currentPage == _totalPages - 1 
-                          ? Icons.rocket_launch_rounded
-                          : Icons.arrow_forward_ios_rounded,
-                      size: ThemeConstants.iconSm,
-                    ),
-              label: Text(
-                _currentPage == _totalPages - 1 ? 'البدء الآن' : 'التالي',
-                style: AppTextStyles.button.copyWith(
-                  color: Colors.white,
-                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: (_currentPage == _totalPages - 1 
+                        ? const Color(0xFF10B981) 
+                        : Colors.white).withOpacity(0.3),
+                    blurRadius: 15,
+                    spreadRadius: 2,
+                  ),
+                ],
               ),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: ThemeConstants.space4),
-                backgroundColor: _currentPage == _totalPages - 1 
-                    ? ThemeConstants.success 
-                    : ThemeConstants.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(ThemeConstants.radiusMd),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _isProcessingPermissions ? null : _nextPage,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (_isProcessingPermissions)
+                          const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        else
+                          Icon(
+                            _currentPage == _totalPages - 1 
+                                ? Icons.rocket_launch_rounded
+                                : Icons.arrow_forward_ios_rounded,
+                            size: 20,
+                            color: _currentPage == _totalPages - 1 
+                                ? Colors.white 
+                                : const Color(0xFF1E3A8A),
+                          ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _currentPage == _totalPages - 1 ? 'البدء الآن' : 'التالي',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: _currentPage == _totalPages - 1 
+                                ? Colors.white 
+                                : const Color(0xFF1E3A8A),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                elevation: ThemeConstants.elevation2,
               ),
             ),
           ),
           
           // زر التخطي
           if (_currentPage < _totalPages - 1) ...[
-            const SizedBox(width: ThemeConstants.space3),
+            const SizedBox(width: 12),
             TextButton(
               onPressed: _isProcessingPermissions ? null : _skip,
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: ThemeConstants.space4,
-                  vertical: ThemeConstants.space3,
+                  horizontal: 16,
+                  vertical: 12,
                 ),
               ),
               child: Text(
                 'تخطي',
-                style: AppTextStyles.label2.copyWith(
-                  color: ThemeConstants.textSecondary(context),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white.withOpacity(0.6),
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
@@ -1449,29 +1768,51 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     );
   }
   
-  Widget _buildLoadingOverlay() {
+  Widget _buildModernLoadingOverlay() {
     return Container(
-      color: Colors.black.withValues(alpha: ThemeConstants.opacity30),
+      color: Colors.black.withOpacity(0.8),
       child: Center(
         child: Container(
-          padding: const EdgeInsets.all(ThemeConstants.space8),
+          padding: const EdgeInsets.all(32),
           decoration: BoxDecoration(
-            color: ThemeConstants.card(context),
-            borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
-            boxShadow: ThemeConstants.shadowLg,
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.2),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 30,
+                spreadRadius: 10,
+              ),
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const CircularProgressIndicator(
-                strokeWidth: 3,
-                valueColor: AlwaysStoppedAnimation<Color>(ThemeConstants.primary),
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Colors.white, Colors.white70],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: const CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1E3A8A)),
+                ),
               ),
-              const SizedBox(height: ThemeConstants.space4),
-              Text(
+              const SizedBox(height: 20),
+              const Text(
                 'جاري المعالجة...',
-                style: AppTextStyles.body1.copyWith(
-                  color: ThemeConstants.textPrimary(context),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -1481,7 +1822,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     );
   }
   
-  Widget _buildCustomDialog({
+  Widget _buildModernDialog({
     required IconData icon,
     required Color iconColor,
     required String title,
@@ -1490,82 +1831,135 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     _DialogAction? secondaryAction,
   }) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
-      ),
+      backgroundColor: Colors.transparent,
       child: Container(
-        padding: const EdgeInsets.all(ThemeConstants.space6),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: ThemeConstants.card(context),
-          borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
+          color: Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.2),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 30,
+              spreadRadius: 10,
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // أيقونة التحذير
             Container(
-              padding: const EdgeInsets.all(ThemeConstants.space4),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: ThemeConstants.opacity10),
+                color: iconColor.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
                 color: iconColor,
-                size: ThemeConstants.iconLg,
+                size: 32,
               ),
             ),
             
-            const SizedBox(height: ThemeConstants.space4),
+            const SizedBox(height: 16),
             
             // العنوان
             Text(
               title,
-              style: AppTextStyles.h5.copyWith(
-                fontWeight: ThemeConstants.bold,
-                color: ThemeConstants.textPrimary(context),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
             
-            const SizedBox(height: ThemeConstants.space3),
+            const SizedBox(height: 12),
             
             // المحتوى
             Text(
               content,
               textAlign: TextAlign.center,
-              style: AppTextStyles.body2.copyWith(
-                color: ThemeConstants.textSecondary(context),
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.white.withOpacity(0.8),
                 height: 1.5,
               ),
             ),
             
-            const SizedBox(height: ThemeConstants.space6),
+            const SizedBox(height: 24),
             
             // الأزرار
             Row(
               children: [
                 if (secondaryAction != null) ...[
                   Expanded(
-                    child: OutlinedButton(
-                      onPressed: secondaryAction.onPressed,
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: ThemeConstants.space4),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 1,
+                        ),
                       ),
-                      child: Text(secondaryAction.text),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: secondaryAction.onPressed,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                              child: Text(
+                                secondaryAction.text,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white.withOpacity(0.8),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: ThemeConstants.space3),
+                  const SizedBox(width: 12),
                 ],
                 Expanded(
-                  child: ElevatedButton(
-                    onPressed: primaryAction.onPressed,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryAction.color ?? ThemeConstants.primary,
-                      padding: const EdgeInsets.symmetric(vertical: ThemeConstants.space4),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          primaryAction.color ?? const Color(0xFF1E3A8A),
+                          (primaryAction.color ?? const Color(0xFF1E3A8A)).withOpacity(0.8),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      primaryAction.text,
-                      style: const TextStyle(color: Colors.white),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: primaryAction.onPressed,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Center(
+                            child: Text(
+                              primaryAction.text,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -1591,38 +1985,54 @@ class _DialogAction {
   });
 }
 
-/// Dialog لعرض التقدم أثناء معالجة الأذونات - محسن
-class _PermissionProcessingDialog extends StatefulWidget {
+/// Dialog لعرض التقدم أثناء معالجة الأذونات - تصميم فاخر
+class _ModernPermissionProcessingDialog extends StatefulWidget {
   final int totalPermissions;
   final int currentIndex;
   final AppPermissionType? currentPermission;
   
-  const _PermissionProcessingDialog({
+  const _ModernPermissionProcessingDialog({
     required this.totalPermissions,
     this.currentIndex = 0,
     this.currentPermission,
   });
   
   @override
-  State<_PermissionProcessingDialog> createState() => __PermissionProcessingDialogState();
+  State<_ModernPermissionProcessingDialog> createState() => __ModernPermissionProcessingDialogState();
 }
 
-class __PermissionProcessingDialogState extends State<_PermissionProcessingDialog>
+class __ModernPermissionProcessingDialogState extends State<_ModernPermissionProcessingDialog>
     with TickerProviderStateMixin {
   late AnimationController _rotationController;
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
   
   @override
   void initState() {
     super.initState();
     _rotationController = AnimationController(
-      duration: ThemeConstants.durationVerySlow,
+      duration: const Duration(seconds: 3),
       vsync: this,
     )..repeat();
+    
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+    
+    _pulseAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.2,
+    ).animate(CurvedAnimation(
+      parent: _pulseController,
+      curve: Curves.easeInOut,
+    ));
   }
   
   @override
   void dispose() {
     _rotationController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
   
@@ -1631,95 +2041,124 @@ class __PermissionProcessingDialogState extends State<_PermissionProcessingDialo
     final progress = widget.currentIndex > 0 ? widget.currentIndex / widget.totalPermissions : 0.0;
     
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
-      ),
+      backgroundColor: Colors.transparent,
       child: Container(
-        padding: const EdgeInsets.all(ThemeConstants.space8),
+        padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
-          color: ThemeConstants.card(context),
-          borderRadius: BorderRadius.circular(ThemeConstants.radiusLg),
+          color: Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.2),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 30,
+              spreadRadius: 10,
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Loading Animation محسن
+            // Loading Animation فاخر
             Stack(
               alignment: Alignment.center,
               children: [
-                // دائرة خارجية دوارة
-                RotationTransition(
-                  turns: _rotationController,
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity30),
-                        width: 3,
+                // دائرة خارجية دوارة مع تأثير النبض
+                AnimatedBuilder(
+                  animation: _pulseController,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: _pulseAnimation.value,
+                      child: RotationTransition(
+                        turns: _rotationController,
+                        child: Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.3),
+                              width: 3,
+                            ),
+                          ),
+                          child: CustomPaint(
+                            painter: _ModernLoadingPainter(
+                              color: Colors.white,
+                              progress: progress,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                    child: CustomPaint(
-                      painter: _LoadingPainter(
-                        color: ThemeConstants.primary,
-                        progress: progress,
-                      ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
-                // أيقونة في المنتصف
+                
+                // أيقونة في المنتصف مع تدرج
                 Container(
-                  width: 50,
-                  height: 50,
+                  width: 60,
+                  height: 60,
                   decoration: BoxDecoration(
-                    color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity10),
+                    gradient: const LinearGradient(
+                      colors: [Colors.white, Colors.white70],
+                    ),
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.3),
+                        blurRadius: 15,
+                        spreadRadius: 3,
+                      ),
+                    ],
                   ),
                   child: const Icon(
                     Icons.security_rounded,
-                    color: ThemeConstants.primary,
-                    size: ThemeConstants.iconMd,
+                    color: Color(0xFF1E3A8A),
+                    size: 30,
                   ),
                 ),
               ],
             ),
             
-            const SizedBox(height: ThemeConstants.space6),
+            const SizedBox(height: 24),
             
             // العنوان
-            Text(
+            const Text(
               'جاري طلب الأذونات',
-              style: AppTextStyles.h5.copyWith(
-                fontWeight: ThemeConstants.bold,
-                color: ThemeConstants.textPrimary(context),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
             
-            const SizedBox(height: ThemeConstants.space2),
+            const SizedBox(height: 8),
             
             // التقدم
             if (widget.currentIndex > 0) ...[
               Text(
                 'الإذن ${widget.currentIndex} من ${widget.totalPermissions}',
-                style: AppTextStyles.body2.copyWith(
-                  color: ThemeConstants.textSecondary(context),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white.withOpacity(0.8),
                 ),
               ),
               
               if (widget.currentPermission != null) ...[
-                const SizedBox(height: ThemeConstants.space3),
+                const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: ThemeConstants.space4,
-                    vertical: ThemeConstants.space2,
+                    horizontal: 16,
+                    vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity10),
-                    borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity20),
-                      width: ThemeConstants.borderLight,
+                      color: Colors.white.withOpacity(0.3),
+                      width: 1,
                     ),
                   ),
                   child: Row(
@@ -1727,15 +2166,16 @@ class __PermissionProcessingDialogState extends State<_PermissionProcessingDialo
                     children: [
                       Icon(
                         PermissionConstants.getInfo(widget.currentPermission!).icon,
-                        size: ThemeConstants.iconSm,
-                        color: ThemeConstants.primary,
+                        size: 18,
+                        color: Colors.white,
                       ),
-                      const SizedBox(width: ThemeConstants.space2),
+                      const SizedBox(width: 8),
                       Text(
                         PermissionConstants.getName(widget.currentPermission!),
-                        style: AppTextStyles.caption.copyWith(
-                          color: ThemeConstants.primary,
-                          fontWeight: ThemeConstants.medium,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -1743,30 +2183,58 @@ class __PermissionProcessingDialogState extends State<_PermissionProcessingDialo
                 ),
               ],
               
-              const SizedBox(height: ThemeConstants.space5),
+              const SizedBox(height: 20),
               
-              // شريط التقدم محسن
+              // شريط التقدم فاخر
               Container(
-                height: ThemeConstants.space1,
+                height: 4,
+                width: 200,
                 decoration: BoxDecoration(
-                  color: ThemeConstants.divider(context),
-                  borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: FractionallySizedBox(
-                  alignment: Alignment.centerLeft,
-                  widthFactor: progress,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: ThemeConstants.primaryGradient,
-                      borderRadius: BorderRadius.circular(ThemeConstants.radiusFull),
-                      boxShadow: [
-                        BoxShadow(
-                          color: ThemeConstants.primary.withValues(alpha: ThemeConstants.opacity30),
-                          blurRadius: ThemeConstants.space1,
+                child: Stack(
+                  children: [
+                    FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: progress,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Colors.white, Colors.white70],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.white.withOpacity(0.5),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // نسبة التقدم
+              Text(
+                '${(progress * 100).toInt()}%',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white.withOpacity(0.9),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ] else ...[
+              Text(
+                'جاري التحضير...',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white.withOpacity(0.8),
                 ),
               ),
             ],
@@ -1777,12 +2245,12 @@ class __PermissionProcessingDialogState extends State<_PermissionProcessingDialo
   }
 }
 
-/// Painter للـ Loading Animation
-class _LoadingPainter extends CustomPainter {
+/// Painter للـ Loading Animation الفاخر
+class _ModernLoadingPainter extends CustomPainter {
   final Color color;
   final double progress;
   
-  _LoadingPainter({
+  _ModernLoadingPainter({
     required this.color,
     required this.progress,
   });
@@ -1791,12 +2259,26 @@ class _LoadingPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = color
-      ..strokeWidth = 3
+      ..strokeWidth = 4
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
     
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2 - 1.5;
+    final radius = size.width / 2 - 2;
+    
+    // رسم قوس التقدم مع تدرج
+    final gradient = SweepGradient(
+      colors: [
+        color.withOpacity(0.2),
+        color,
+        color.withOpacity(0.8),
+      ],
+      stops: const [0.0, 0.5, 1.0],
+    );
+    
+    paint.shader = gradient.createShader(
+      Rect.fromCircle(center: center, radius: radius),
+    );
     
     // رسم قوس التقدم
     canvas.drawArc(
