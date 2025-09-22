@@ -233,15 +233,15 @@ class PermissionDialogs {
                 color: Colors.blue.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Row(
+              child: const Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.info_outline,
                     size: 18,
                     color: Colors.blue,
                   ),
-                  const SizedBox(width: 8),
-                  const Expanded(
+                  SizedBox(width: 8),
+                  Expanded(
                     child: Text(
                       'ستنتقل إلى إعدادات التطبيق في النظام',
                       style: TextStyle(
