@@ -6,7 +6,6 @@ plugins {
     id("com.google.firebase.crashlytics")
 }
 
-
 android {
     namespace = "com.example.test_athkar_app"
     compileSdk = 35
@@ -51,7 +50,6 @@ android {
         }
     }
 
-    // الاسم الحديث في AGP هو "packaging" وليس packagingOptions
     packaging {
         resources {
             excludes += setOf(
@@ -70,28 +68,32 @@ android {
 }
 
 dependencies {
-    // لا تُجبر نسخة kotlin-stdlib يدويًا (يتم جلبها من بلَجن Kotlin)
-    // implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.0")  // احذفها
-
+    // Core library desugaring
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 
-    // Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
+    // Firebase BoM - إصدار مستقر ومتوافق
+    implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
 
-    // Firebase libs (بدون تحديد نسخ)
+    // Firebase libraries - بدون تحديد إصدارات (BoM يدير ذلك)
     implementation("com.google.firebase:firebase-messaging-ktx")
     implementation("com.google.firebase:firebase-config-ktx")
     implementation("com.google.firebase:firebase-analytics-ktx")
     implementation("com.google.firebase:firebase-crashlytics-ktx")
+    implementation("com.google.firebase:firebase-auth-ktx")
 
-    // احذف firebase-core لأنه متقاعد ويُسبب تضارباً أحيانًا
-    // implementation("com.google.firebase:firebase-core") // احذفه
+    // WorkManager - للمهام في الخلفية
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
 
-    // WorkManager
-    implementation("androidx.work:work-runtime-ktx:2.10.0")
-
-    // Multidex
+    // Multidex support
     implementation("androidx.multidex:multidex:2.0.1")
+
+    // Google Play Services (مطلوب لـ Firebase)
+    implementation("com.google.android.gms:play-services-base:18.5.0")
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+
+    // AndroidX Core (للتوافق)
+    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.appcompat:appcompat:1.7.0")
 }
 
 flutter {
