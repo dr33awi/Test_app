@@ -23,7 +23,7 @@ class FirebaseInitializer {
       logger?.info('Firebase initialized successfully ✓');
       
     } catch (e, stackTrace) {
-      logger?.error('Failed to initialize Firebase', e, stackTrace);
+      logger?.error('Failed to initialize Firebase: $e', stackTrace: stackTrace);
       
       // في حالة الخطأ، نحاول المتابعة بدون Firebase
       if (kDebugMode) {

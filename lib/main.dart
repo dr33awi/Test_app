@@ -6,6 +6,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+// Firebase imports
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
 // Service Locator والخدمات
 import 'app/di/service_locator.dart';
 import 'app/themes/core/theme_notifier.dart';
@@ -14,6 +18,10 @@ import 'core/infrastructure/services/permissions/permission_manager.dart';
 import 'core/infrastructure/services/permissions/permission_service.dart';
 import 'core/infrastructure/services/permissions/widgets/permission_monitor.dart';
 import 'core/infrastructure/services/permissions/screens/permission_onboarding_screen.dart';
+
+// Firebase services
+import 'core/infrastructure/firebase/firebase_initializer.dart';
+import 'core/infrastructure/services/logging/logger_service.dart';
 
 // الثوابت والثيمات
 import 'app/themes/constants/app_constants.dart';
@@ -41,7 +49,7 @@ Future<void> main() async {
   runZonedGuarded(
     () async {
       try {
-        // تهيئة جميع الخدمات
+        // تهيئة جميع الخدمات (بما في ذلك Firebase)
         await _initializeApp();
         
         // الحصول على الخدمات المطلوبة
@@ -81,17 +89,35 @@ Future<void> _initializeApp() async {
   debugPrint('========== بدء تهيئة التطبيق ==========');
   
   try {
-    // تهيئة ServiceLocator
+    // 1. تهيئة Firebase أولاً
+    debugPrint('تهيئة Firebase...');
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    debugPrint('✅ تمت تهيئة Firebase بنجاح');
+    
+    // 2. تهيئة ServiceLocator
     await ServiceLocator.init();
     
-    // التحقق من جاهزية الخدمات
+    // 3. تهيئة Firebase services إضافية (اختياري)
+    try {
+      final logger = getIt<LoggerService>();
+      await FirebaseInitializer.initialize(logger: logger);
+      debugPrint('✅ تمت تهيئة خدمات Firebase الإضافية');
+    } catch (e) {
+      debugPrint('⚠️ تحذير: بعض خدمات Firebase غير متوفرة: $e');
+      // المتابعة بدون Firebase services (التطبيق سيعمل محلياً)
+    }
+    
+    // 4. التحقق من جاهزية الخدمات
     if (!ServiceLocator.areServicesReady()) {
       throw Exception('فشل في تهيئة بعض الخدمات المطلوبة');
     }
     
     debugPrint('========== تمت تهيئة التطبيق بنجاح ==========');
+    
   } catch (e, s) {
-    debugPrint('خطأ في تهيئة التطبيق: $e');
+    debugPrint('❌ خطأ في تهيئة التطبيق: $e');
     debugPrint('Stack trace: $s');
     rethrow;
   }
@@ -331,6 +357,7 @@ class _ErrorApp extends StatelessWidget {
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
+                        fontFamily: 'Cairo',
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -344,6 +371,7 @@ class _ErrorApp extends StatelessWidget {
                         fontSize: 16,
                         color: Colors.black54,
                         height: 1.5,
+                        fontFamily: 'Cairo',
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -378,6 +406,7 @@ class _ErrorApp extends StatelessWidget {
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.grey.shade700,
+                                  fontFamily: 'Cairo',
                                 ),
                               ),
                             ],
@@ -414,10 +443,11 @@ class _ErrorApp extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
+                            fontFamily: 'Cairo',
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: ThemeConstants.primary,
+                          backgroundColor: const Color(0xFF2E7D32),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -444,6 +474,7 @@ class _ErrorApp extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 11,
                             color: Colors.grey.shade500,
+                            fontFamily: 'Cairo',
                           ),
                         ),
                       ],

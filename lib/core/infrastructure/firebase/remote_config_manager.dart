@@ -1,4 +1,4 @@
-// lib/core/infrastructure/services/firebase/remote_config_manager.dart
+// lib/core/infrastructure/firebase/remote_config_manager.dart
 
 import 'dart:async';
 import 'package:flutter/foundation.dart';
@@ -58,7 +58,7 @@ class RemoteConfigManager {
       _logger.info('RemoteConfigManager initialized successfully');
       
     } catch (e, stackTrace) {
-      _logger.error('Error initializing RemoteConfigManager', e, stackTrace);
+      _logger.error('Error initializing RemoteConfigManager: $e', stackTrace: stackTrace);
     }
   }
 

@@ -1,4 +1,4 @@
-// lib/core/infrastructure/services/firebase/firebase_messaging_service.dart
+// lib/core/infrastructure/firebase/firebase_messaging_service.dart
 
 import 'dart:async';
 import 'dart:convert';
@@ -76,7 +76,7 @@ class FirebaseMessagingService {
       _logger.info('FirebaseMessagingService initialized successfully');
       
     } catch (e, stackTrace) {
-      _logger.error('Error initializing Firebase Messaging', e, stackTrace);
+      _logger.error('Error initializing Firebase Messaging: $e', stackTrace: stackTrace);
       throw Exception('Failed to initialize Firebase Messaging: $e');
     }
   }
@@ -211,13 +211,13 @@ class FirebaseMessagingService {
       final body = message.notification?.body ?? '';
       final data = message.data;
       
-      // إنشاء الإشعار
-      await _notificationService.showInstantNotification(
+      // إنشاء الإشعار باستخدام الطريقة الصحيحة
+      await _notificationService.showNotification(
+        id: DateTime.now().millisecondsSinceEpoch,
         title: title,
         body: body,
         payload: jsonEncode(data),
-        importance: NotificationImportance.high,
-        category: _getNotificationCategory(data),
+        channelKey: _getNotificationCategory(data),
       );
       
     } catch (e) {

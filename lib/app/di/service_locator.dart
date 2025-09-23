@@ -43,6 +43,11 @@ import '../../features/tasbih/services/tasbih_service.dart';
 // خدمات الإعدادات الموحدة
 import '../../features/settings/services/settings_services_manager.dart';
 
+// Firebase Services
+import 'package:athkar_app/core/infrastructure/firebase/firebase_messaging_service.dart';
+import 'package:athkar_app/core/infrastructure/firebase/remote_config_service.dart';
+import 'package:athkar_app/core/infrastructure/firebase/remote_config_manager.dart';
+
 final getIt = GetIt.instance;
 
 /// Service Locator لإدارة جميع الخدمات في التطبيق
@@ -95,6 +100,10 @@ class ServiceLocator {
 
       // 8. خدمات الميزات
       _registerFeatureServices();
+      
+      // 9. خدمات Firebase (الجديدة - اختيارية)
+      _registerFirebaseServices();
+      await _initializeFirebaseServices();
 
       _isInitialized = true;
       debugPrint('ServiceLocator: All services initialized successfully ✓');
@@ -228,7 +237,6 @@ class ServiceLocator {
         () => BatteryServiceImpl(
           battery: getIt<Battery>(),
           logger: getIt<LoggerService>(),
-          
         ),
       );
     }
@@ -333,6 +341,84 @@ class ServiceLocator {
     }
   }
 
+  /// تسجيل خدمات Firebase (اختياري)
+  void _registerFirebaseServices() {
+    debugPrint('ServiceLocator: Registering Firebase services...');
+    
+    try {
+      // Firebase Remote Config Service
+      if (!getIt.isRegistered<FirebaseRemoteConfigService>()) {
+        getIt.registerLazySingleton<FirebaseRemoteConfigService>(
+          () => FirebaseRemoteConfigService(),
+        );
+      }
+      
+      // Firebase Remote Config Manager
+      if (!getIt.isRegistered<RemoteConfigManager>()) {
+        getIt.registerLazySingleton<RemoteConfigManager>(
+          () => RemoteConfigManager(),
+        );
+      }
+      
+      // Firebase Messaging Service
+      if (!getIt.isRegistered<FirebaseMessagingService>()) {
+        getIt.registerLazySingleton<FirebaseMessagingService>(
+          () => FirebaseMessagingService(),
+        );
+      }
+      
+      debugPrint('ServiceLocator: Firebase services registered successfully');
+      
+    } catch (e) {
+      debugPrint('ServiceLocator: Warning - Firebase services not available: $e');
+      // التطبيق سيعمل بدون Firebase services
+    }
+  }
+
+  /// تهيئة Firebase services إذا كانت متوفرة
+  Future<void> _initializeFirebaseServices() async {
+    debugPrint('ServiceLocator: Initializing Firebase services...');
+    
+    try {
+      // تهيئة Remote Config إذا كان متوفراً
+      if (getIt.isRegistered<FirebaseRemoteConfigService>()) {
+        final remoteConfig = getIt<FirebaseRemoteConfigService>();
+        final logger = getIt<LoggerService>();
+        
+        await remoteConfig.initialize(logger);
+        debugPrint('ServiceLocator: Remote Config initialized');
+        
+        // تهيئة Manager
+        if (getIt.isRegistered<RemoteConfigManager>()) {
+          final configManager = getIt<RemoteConfigManager>();
+          await configManager.initialize(
+            remoteConfig: remoteConfig,
+            storage: getIt<StorageService>(),
+            logger: logger,
+          );
+          debugPrint('ServiceLocator: Remote Config Manager initialized');
+        }
+      }
+      
+      // تهيئة Messaging إذا كان متوفراً
+      if (getIt.isRegistered<FirebaseMessagingService>()) {
+        final messaging = getIt<FirebaseMessagingService>();
+        await messaging.initialize(
+          logger: getIt<LoggerService>(),
+          storage: getIt<StorageService>(),
+          notificationService: getIt<NotificationService>(),
+        );
+        debugPrint('ServiceLocator: Firebase Messaging initialized');
+      }
+      
+      debugPrint('ServiceLocator: Firebase services initialized successfully ✅');
+      
+    } catch (e) {
+      debugPrint('ServiceLocator: Warning - Could not initialize Firebase services: $e');
+      // التطبيق سيعمل محلياً بدون Firebase
+    }
+  }
+
   /// التحقق من تهيئة جميع الخدمات المطلوبة
   static bool areServicesReady() {
     final requiredServices = [
@@ -427,6 +513,19 @@ class ServiceLocator {
       // تنظيف خدمة الأذونات
       if (getIt.isRegistered<PermissionService>()) {
         await getIt<PermissionService>().dispose();
+      }
+
+      // تنظيف Firebase services
+      if (getIt.isRegistered<FirebaseMessagingService>()) {
+        getIt<FirebaseMessagingService>().dispose();
+      }
+
+      if (getIt.isRegistered<RemoteConfigManager>()) {
+        getIt<RemoteConfigManager>().dispose();
+      }
+
+      if (getIt.isRegistered<FirebaseRemoteConfigService>()) {
+        getIt<FirebaseRemoteConfigService>().dispose();
       }
 
       debugPrint('ServiceLocator: Resources cleaned up');
@@ -526,6 +625,60 @@ extension ServiceLocatorExtensions on BuildContext {
   
   /// الحصول على مدير الخدمات الموحد للإعدادات
   SettingsServicesManager get settingsManager => getIt<SettingsServicesManager>();
+  
+  // ==================== Firebase Services ====================
+  
+  /// الحصول على Firebase Remote Config Service
+  FirebaseRemoteConfigService? get firebaseRemoteConfig {
+    try {
+      return getIt.isRegistered<FirebaseRemoteConfigService>() 
+          ? getIt<FirebaseRemoteConfigService>() 
+          : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  /// الحصول على Remote Config Manager
+  RemoteConfigManager? get remoteConfigManager {
+    try {
+      return getIt.isRegistered<RemoteConfigManager>() 
+          ? getIt<RemoteConfigManager>() 
+          : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  /// الحصول على Firebase Messaging Service
+  FirebaseMessagingService? get firebaseMessaging {
+    try {
+      return getIt.isRegistered<FirebaseMessagingService>() 
+          ? getIt<FirebaseMessagingService>() 
+          : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  /// فحص تفعيل ميزة عن طريق Remote Config
+  bool isFeatureEnabled(String featureName) {
+    final manager = remoteConfigManager;
+    if (manager == null) return true; // default enabled if no remote config
+    
+    switch (featureName.toLowerCase()) {
+      case 'prayer_times':
+        return manager.isPrayerTimesFeatureEnabled;
+      case 'qibla':
+        return manager.isQiblaFeatureEnabled;
+      case 'athkar':
+        return manager.isAthkarFeatureEnabled;
+      case 'notifications':
+        return manager.isNotificationsFeatureEnabled;
+      default:
+        return true;
+    }
+  }
   
   // ==================== وظائف مساعدة ====================
   

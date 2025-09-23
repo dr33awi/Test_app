@@ -1,4 +1,4 @@
-// lib/core/infrastructure/services/firebase/remote_config_service.dart
+// lib/core/infrastructure/firebase/remote_config_service.dart
 
 import 'dart:async';
 import 'dart:convert';
@@ -50,7 +50,7 @@ class FirebaseRemoteConfigService {
       _logger.info('FirebaseRemoteConfigService initialized successfully');
       
     } catch (e, stackTrace) {
-      _logger.error('Error initializing Firebase Remote Config', e, stackTrace);
+      _logger.error('Error initializing Firebase Remote Config: $e', stackTrace: stackTrace);
       throw Exception('Failed to initialize Firebase Remote Config: $e');
     }
   }
