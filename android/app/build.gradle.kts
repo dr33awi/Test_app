@@ -2,15 +2,14 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-gradle-plugin")
-    
-    // Firebase plugins - يجب أن تكون في النهاية
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
 }
 
+
 android {
     namespace = "com.example.test_athkar_app"
-    compileSdk = 36
+    compileSdk = 35
     ndkVersion = "27.0.12077973"
 
     defaultConfig {
@@ -30,35 +29,69 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
+        freeCompilerArgs += listOf(
+            "-Xjvm-default=all",
+            "-Xskip-prerelease-check"
+        )
     }
 
     buildTypes {
-        getByName("release") {
-            signingConfig = signingConfigs.getByName("debug") // تأكد من استخدام توقيع الإصدار الصحيح هنا في الإنتاج
+        release {
+            signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+        debug {
+            isMinifyEnabled = false
+            isShrinkResources = false
+        }
+    }
 
-            // ✅ تفعيل تقليص الموارد لتقليل حجم التطبيق
-            isMinifyEnabled = true // يجب تفعيل هذا أيضًا لاستخدام ProGuard/R8
-            isShrinkResources = true // تفعيل تقليص الموارد
+    // الاسم الحديث في AGP هو "packaging" وليس packagingOptions
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.txt",
+                "META-INF/license.txt",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt",
+                "META-INF/notice.txt",
+                "META-INF/ASL2.0",
+                "META-INF/*.kotlin_module"
+            )
         }
     }
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.22")
+    // لا تُجبر نسخة kotlin-stdlib يدويًا (يتم جلبها من بلَجن Kotlin)
+    // implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.0")  // احذفها
+
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
-    
-    // Firebase BoM - يدير إصدارات جميع Firebase libraries
-    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
-    
-    // Firebase libraries (بدون تحديد الإصدار - BoM يدير ذلك)
+
+    // Firebase BoM
+    implementation(platform("com.google.firebase:firebase-bom:33.8.0"))
+
+    // Firebase libs (بدون تحديد نسخ)
     implementation("com.google.firebase:firebase-messaging-ktx")
     implementation("com.google.firebase:firebase-config-ktx")
     implementation("com.google.firebase:firebase-analytics-ktx")
     implementation("com.google.firebase:firebase-crashlytics-ktx")
-    implementation("com.google.firebase:firebase-core")
-    
-    // WorkManager for background tasks
-    implementation("androidx.work:work-runtime-ktx:2.9.1")
+
+    // احذف firebase-core لأنه متقاعد ويُسبب تضارباً أحيانًا
+    // implementation("com.google.firebase:firebase-core") // احذفه
+
+    // WorkManager
+    implementation("androidx.work:work-runtime-ktx:2.10.0")
+
+    // Multidex
+    implementation("androidx.multidex:multidex:2.0.1")
 }
 
 flutter {
