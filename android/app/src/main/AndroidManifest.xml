@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+  
   <!-- أذونات الإشعارات والتنبيهات (محسّنة) -->
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
   <uses-permission android:name="android.permission.VIBRATE" />
@@ -10,13 +11,15 @@
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
   <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-  <!-- إضافة إذن جديد لأندرويد 12 وما فوق -->
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
   
   <!-- أذونات الإنترنت والموقع (لمواقيت الصلاة) -->
   <uses-permission android:name="android.permission.INTERNET" />
   <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
   <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+  
+  <!-- أذونات Firebase (إضافية) -->
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
   <application
       android:label="تطبيق الأذكار"
@@ -74,6 +77,38 @@
         android:stopWithTask="false"
         android:foregroundServiceType="dataSync"/>
 
+      <!-- ==================== خدمات Firebase ==================== -->
+      
+      <!-- خدمة Firebase Cloud Messaging -->
+      <service
+          android:name="com.google.firebase.messaging.FirebaseMessagingService"
+          android:exported="false"
+          android:directBootAware="true">
+          <intent-filter android:priority="-500">
+              <action android:name="com.google.firebase.MESSAGING_EVENT" />
+          </intent-filter>
+      </service>
+
+      <!-- خدمة Firebase Cloud Messaging المخصصة (اختيارية) -->
+      <service
+          android:name=".FirebaseMessagingService"
+          android:exported="false"
+          tools:ignore="MissingClass">
+          <intent-filter>
+              <action android:name="com.google.firebase.MESSAGING_EVENT" />
+          </intent-filter>
+      </service>
+
+      <!-- مستقبل Firebase للإشعارات -->
+      <receiver
+          android:name="com.google.firebase.iid.FirebaseInstanceIdReceiver"
+          android:exported="true"
+          android:permission="com.google.android.c2dm.permission.SEND">
+          <intent-filter>
+              <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+          </intent-filter>
+      </receiver>
+
       <!-- النشاط الرئيسي للتطبيق -->
       <activity
           android:name=".MainActivity"
@@ -113,17 +148,86 @@
               <action android:name="FLUTTER_NOTIFICATION_CLICK" />
               <category android:name="android.intent.category.DEFAULT" />
           </intent-filter>
+
+          <!-- معالجة النقر على إشعارات Firebase -->
+          <intent-filter>
+              <action android:name="android.intent.action.VIEW" />
+              <category android:name="android.intent.category.DEFAULT" />
+              <category android:name="android.intent.category.BROWSABLE" />
+              <data android:scheme="athkar" />
+          </intent-filter>
       </activity>
       
-      <!-- تكوين قناة الإشعارات لإصدارات Android الحديثة -->
+      <!-- ==================== إعدادات Firebase ==================== -->
+      
+      <!-- قناة الإشعارات الافتراضية لـ Firebase -->
       <meta-data
           android:name="com.google.firebase.messaging.default_notification_channel_id"
           android:value="athkar_channel_id" />
+
+      <!-- أيقونة الإشعارات الافتراضية -->
+      <meta-data
+          android:name="com.google.firebase.messaging.default_notification_icon"
+          android:resource="@drawable/ic_notification" />
+
+      <!-- لون الإشعارات الافتراضي -->
+      <meta-data
+          android:name="com.google.firebase.messaging.default_notification_color"
+          android:resource="@color/notification_color" />
+
+      <!-- تفعيل التحليلات التلقائية (اختياري) -->
+      <meta-data
+          android:name="google_analytics_automatic_screen_reporting_enabled"
+          android:value="true" />
+
+      <!-- تفعيل جمع البيانات التلقائي (اختياري) -->
+      <meta-data
+          android:name="firebase_analytics_collection_enabled"
+          android:value="true" />
+
+      <!-- إعدادات Remote Config -->
+      <meta-data
+          android:name="com.google.firebase.remoteconfig.developer_mode_enabled"
+          android:value="false" />
+
+      <!-- ==================== إعدادات Flutter ==================== -->
       
       <!-- لا تحذف البيانات الوصفية أدناه.
       يستخدمها أداة Flutter لإنشاء GeneratedPluginRegistrant.java -->
       <meta-data
           android:name="flutterEmbedding"
           android:value="2" />
+          
+      <!-- إعدادات الأداء -->
+      <meta-data
+          android:name="io.flutter.embedding.android.EnableHardwareAcceleration"
+          android:value="true" />
   </application>
+
+  <!-- ==================== استعلامات التطبيق (Android 11+) ==================== -->
+  <queries>
+      <!-- للتفاعل مع متاجر التطبيقات -->
+      <intent>
+          <action android:name="android.intent.action.VIEW" />
+          <data android:scheme="market" />
+      </intent>
+      
+      <!-- للتفاعل مع المتصفحات -->
+      <intent>
+          <action android:name="android.intent.action.VIEW" />
+          <data android:scheme="https" />
+      </intent>
+      
+      <!-- للتفاعل مع تطبيقات المشاركة -->
+      <intent>
+          <action android:name="android.intent.action.SEND" />
+          <data android:mimeType="text/plain" />
+      </intent>
+      
+      <!-- للتفاعل مع تطبيقات الهاتف -->
+      <intent>
+          <action android:name="android.intent.action.DIAL" />
+          <data android:scheme="tel" />
+      </intent>
+  </queries>
 </manifest>

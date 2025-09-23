@@ -1,0 +1,23 @@
+<!-- android/app/src/main/res/drawable/ic_notification.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/notification_color">
+    
+  <!-- أيقونة مسجد مبسطة للإشعارات -->
+  <path
+      android:fillColor="@android:color/white"
+      android:pathData="M12,2L4,9V21H20V9L12,2ZM12,4.5L18,10V19H6V10L12,4.5Z"/>
+      
+  <!-- مئذنة -->
+  <path
+      android:fillColor="@android:color/white"
+      android:pathData="M11,2H13V8H11V2Z"/>
+      
+  <!-- قبة -->
+  <path
+      android:fillColor="@android:color/white"
+      android:pathData="M12,8C10.9,8 10,8.9 10,10V12H14V10C14,8.9 13.1,8 12,8Z"/>
+</vector>
