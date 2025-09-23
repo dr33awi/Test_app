@@ -55,10 +55,10 @@ class RemoteConfigManager {
       _startPeriodicRefresh();
       
       _isInitialized = true;
-      _logger.info('RemoteConfigManager initialized successfully');
+      _logger.info(message: 'RemoteConfigManager initialized successfully');
       
     } catch (e, stackTrace) {
-      _logger.error('Error initializing RemoteConfigManager: $e', stackTrace: stackTrace);
+      _logger.error(message: 'Error initializing RemoteConfigManager: $e', stackTrace: stackTrace);
     }
   }
 
@@ -76,10 +76,10 @@ class RemoteConfigManager {
       _maintenanceMode.value = _remoteConfig.isMaintenanceModeEnabled;
       _forceUpdate.value = _remoteConfig.isForceUpdateRequired;
       
-      _logger.info('All remote config values updated');
+      _logger.info(message: 'All remote config values updated');
       
     } catch (e) {
-      _logger.error('Error updating remote config values: $e');
+      _logger.error(message: 'Error updating remote config values: $e');
     }
   }
 
@@ -97,7 +97,7 @@ class RemoteConfigManager {
   /// تحديث الإعدادات يدوياً
   Future<bool> refreshConfig() async {
     try {
-      _logger.info('Refreshing remote config...');
+      _logger.info(message: 'Refreshing remote config...');
       
       final success = await _remoteConfig.refresh();
       if (success) {
@@ -107,7 +107,7 @@ class RemoteConfigManager {
       
       return success;
     } catch (e) {
-      _logger.error('Error refreshing config: $e');
+      _logger.error(message: 'Error refreshing config: $e');
       return false;
     }
   }
@@ -198,7 +198,7 @@ class RemoteConfigManager {
         return defaultValue;
       }
     } catch (e) {
-      _logger.error('Error getting custom value for key $key: $e');
+      _logger.error(message: 'Error getting custom value for key $key: $e');
       return defaultValue;
     }
   }
@@ -295,6 +295,6 @@ class RemoteConfigManager {
     _forceUpdate.dispose();
     
     _isInitialized = false;
-    _logger.info('RemoteConfigManager disposed');
+    _logger.info(message: 'RemoteConfigManager disposed');
   }
 }

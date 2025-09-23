@@ -9,21 +9,21 @@ class FirebaseInitializer {
   /// تهيئة Firebase
   static Future<void> initialize({LoggerService? logger}) async {
     if (_isInitialized) {
-      logger?.info('Firebase already initialized');
+      logger?.info(message: 'Firebase already initialized');
       return;
     }
     
     try {
-      logger?.info('Initializing Firebase...');
+      logger?.info(message: 'Initializing Firebase...');
       
       // تهيئة Firebase Core
       await Firebase.initializeApp();
       
       _isInitialized = true;
-      logger?.info('Firebase initialized successfully ✓');
+      logger?.info(message: 'Firebase initialized successfully ✓');
       
     } catch (e, stackTrace) {
-      logger?.error('Failed to initialize Firebase: $e', stackTrace: stackTrace);
+      logger?.error(message: 'Failed to initialize Firebase: $e', stackTrace: stackTrace);
       
       // في حالة الخطأ، نحاول المتابعة بدون Firebase
       if (kDebugMode) {
