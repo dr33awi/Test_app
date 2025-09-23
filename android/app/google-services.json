@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "627917894269",
+    "project_id": "athkar-app-7074e",
+    "storage_bucket": "athkar-app-7074e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:627917894269:android:0a6d4b051a641d69b7b714",
+        "android_client_info": {
+          "package_name": "com.example.test_athkar_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBduWVF2EBK_RG1iq8voaMzsBTbCLB1x5Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
