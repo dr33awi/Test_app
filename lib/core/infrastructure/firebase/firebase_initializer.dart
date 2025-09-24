@@ -1,3 +1,5 @@
+// lib/core/infrastructure/firebase/firebase_initializer.dart
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import '../services/logging/logger_service.dart';
@@ -42,5 +44,10 @@ class FirebaseInitializer {
   static Future<void> reinitialize({LoggerService? logger}) async {
     _isInitialized = false;
     await initialize(logger: logger);
+  }
+  
+  /// تنظيف Firebase (للاستخدام في التطوير)
+  static void dispose() {
+    _isInitialized = false;
   }
 }

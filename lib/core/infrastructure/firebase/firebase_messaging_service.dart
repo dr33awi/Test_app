@@ -8,8 +8,7 @@ import 'package:flutter/services.dart';
 import '../services/storage/storage_service.dart';
 import '../services/logging/logger_service.dart';
 import '../services/notifications/notification_service.dart';
-// تجنب استيراد NotificationSettings لتجنب التضارب
-// import '../services/notifications/models/notification_models.dart' as LocalNotifications;
+import '../services/notifications/models/notification_models.dart' as LocalNotificationModels hide NotificationSettings;
 
 /// معالج الرسائل في الخلفية
 @pragma('vm:entry-point')
@@ -301,15 +300,37 @@ class FirebaseMessagingService {
       final body = message.notification?.body ?? '';
       final data = message.data;
       
-      // استخدام الخدمة بدون استيراد النماذج لتجنب التضارب
-      await _notificationService!.showSimpleNotification(
+      // إنشاء NotificationData وعرض الإشعار
+      final notificationData = LocalNotificationModels.NotificationData(
+        id: 'firebase_${message.messageId ?? DateTime.now().millisecondsSinceEpoch}',
         title: title,
         body: body,
-        payload: data.toString(),
+        category: _getNotificationCategory(data['type']),
+        priority: LocalNotificationModels.NotificationPriority.normal,
+        payload: data.isNotEmpty ? data : null,
       );
+      
+      // استخدام showNotification بدلاً من showSimpleNotification
+      await _notificationService!.showNotification(notificationData);
       
     } catch (e) {
       _logger.error(message: 'Error showing local notification: $e');
+    }
+  }
+
+  /// تحديد فئة الإشعار بناءً على النوع
+  LocalNotificationModels.NotificationCategory _getNotificationCategory(String? type) {
+    switch (type) {
+      case 'prayer':
+        return LocalNotificationModels.NotificationCategory.prayer;
+      case 'athkar':
+        return LocalNotificationModels.NotificationCategory.athkar;
+      case 'quran':
+        return LocalNotificationModels.NotificationCategory.quran;
+      case 'reminder':
+        return LocalNotificationModels.NotificationCategory.reminder;
+      default:
+        return LocalNotificationModels.NotificationCategory.system;
     }
   }
 
