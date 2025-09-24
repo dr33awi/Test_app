@@ -2,7 +2,9 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-gradle-plugin")
+    // إضافة Google Services (مطلوب لـ Firebase)
     id("com.google.gms.google-services")
+    // إضافة Crashlytics (اختياري)
     id("com.google.firebase.crashlytics")
 }
 
@@ -71,15 +73,17 @@ dependencies {
     // Core library desugaring
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 
-    // Firebase BoM - إصدار مستقر ومتوافق
+    // Firebase BoM - استخدم أحدث إصدار مستقر
     implementation(platform("com.google.firebase:firebase-bom:33.6.0"))
 
-    // Firebase libraries - بدون تحديد إصدارات (BoM يدير ذلك)
+    // Firebase libraries الأساسية - بدون تحديد إصدارات (BoM يدير ذلك)
     implementation("com.google.firebase:firebase-messaging-ktx")
     implementation("com.google.firebase:firebase-config-ktx")
     implementation("com.google.firebase:firebase-analytics-ktx")
     implementation("com.google.firebase:firebase-crashlytics-ktx")
-    implementation("com.google.firebase:firebase-auth-ktx")
+    
+    // إضافة Firebase Core إذا لزم الأمر
+    implementation("com.google.firebase:firebase-core")
 
     // WorkManager - للمهام في الخلفية
     implementation("androidx.work:work-runtime-ktx:2.9.1")

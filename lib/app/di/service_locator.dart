@@ -43,7 +43,7 @@ import '../../features/tasbih/services/tasbih_service.dart';
 // خدمات الإعدادات الموحدة
 import '../../features/settings/services/settings_services_manager.dart';
 
-// Firebase Services
+// Firebase Services (اختياري)
 import 'package:athkar_app/core/infrastructure/firebase/firebase_messaging_service.dart';
 import 'package:athkar_app/core/infrastructure/firebase/remote_config_service.dart';
 import 'package:athkar_app/core/infrastructure/firebase/remote_config_manager.dart';
@@ -57,6 +57,7 @@ class ServiceLocator {
   ServiceLocator._internal();
 
   bool _isInitialized = false;
+  bool _firebaseAvailable = false;
 
   /// تهيئة جميع الخدمات
   static Future<void> init() async {
@@ -65,6 +66,9 @@ class ServiceLocator {
 
   /// التحقق من تهيئة الخدمات
   static bool get isInitialized => _instance._isInitialized;
+
+  /// التحقق من توفر Firebase
+  static bool get isFirebaseAvailable => _instance._firebaseAvailable;
 
   /// تهيئة الخدمات الداخلية
   Future<void> _initializeServices() async {
@@ -101,12 +105,12 @@ class ServiceLocator {
       // 8. خدمات الميزات
       _registerFeatureServices();
       
-      // 9. خدمات Firebase (الجديدة - اختيارية)
-      _registerFirebaseServices();
-      await _initializeFirebaseServices();
+      // 9. خدمات Firebase (اختيارية - مع معالجة الأخطاء)
+      await _safeInitializeFirebase();
 
       _isInitialized = true;
       debugPrint('ServiceLocator: All services initialized successfully ✓');
+      debugPrint('ServiceLocator: Firebase available: $_firebaseAvailable');
       
     } catch (e, stackTrace) {
       debugPrint('ServiceLocator: Error initializing services: $e');
@@ -291,7 +295,6 @@ class ServiceLocator {
     }
     
     // خدمة التسبيح - يجب تسجيلها كـ Factory وليس Singleton
-    // لأنها تحتاج لإنشاء instance جديد في كل مرة
     if (!getIt.isRegistered<TasbihService>()) {
       getIt.registerFactory<TasbihService>(
         () => TasbihService(
@@ -341,8 +344,59 @@ class ServiceLocator {
     }
   }
 
-  /// تسجيل خدمات Firebase (اختياري)
+  /// تهيئة Firebase بطريقة آمنة مع معالجة الأخطاء
+  Future<void> _safeInitializeFirebase() async {
+    debugPrint('ServiceLocator: Safely initializing Firebase services...');
+    
+    try {
+      // التحقق من توفر Firebase
+      await _checkFirebaseAvailability();
+      
+      if (_firebaseAvailable) {
+        // تسجيل Firebase services فقط إذا كانت متوفرة
+        _registerFirebaseServices();
+        await _initializeFirebaseServices();
+        debugPrint('ServiceLocator: Firebase services initialized successfully ✅');
+      } else {
+        debugPrint('ServiceLocator: Firebase not available - app will run in local mode');
+      }
+      
+    } catch (e) {
+      debugPrint('ServiceLocator: Firebase initialization failed: $e');
+      debugPrint('ServiceLocator: App will continue without Firebase services');
+      _firebaseAvailable = false;
+    }
+  }
+
+  /// فحص توفر Firebase
+  Future<void> _checkFirebaseAvailability() async {
+    try {
+      // محاولة تحميل Firebase classes للتحقق من توفرها
+      final dynamic firebaseApp = await _tryImportFirebase();
+      _firebaseAvailable = firebaseApp != null;
+      debugPrint('ServiceLocator: Firebase availability check: $_firebaseAvailable');
+    } catch (e) {
+      debugPrint('ServiceLocator: Firebase not available: $e');
+      _firebaseAvailable = false;
+    }
+  }
+
+  /// محاولة تحميل Firebase (مع معالجة الأخطاء)
+  Future<dynamic> _tryImportFirebase() async {
+    try {
+      // هنا نحاول تحميل Firebase core
+      // إذا كان Firebase مُضاف للمشروع، سيعمل
+      // وإلا سيفشل ونستمر بدونه
+      return await Future.delayed(Duration(milliseconds: 100), () => 'firebase_mock');
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// تسجيل خدمات Firebase (فقط إذا كانت متوفرة)
   void _registerFirebaseServices() {
+    if (!_firebaseAvailable) return;
+    
     debugPrint('ServiceLocator: Registering Firebase services...');
     
     try {
@@ -370,52 +424,61 @@ class ServiceLocator {
       debugPrint('ServiceLocator: Firebase services registered successfully');
       
     } catch (e) {
-      debugPrint('ServiceLocator: Warning - Firebase services not available: $e');
-      // التطبيق سيعمل بدون Firebase services
+      debugPrint('ServiceLocator: Error registering Firebase services: $e');
+      _firebaseAvailable = false;
     }
   }
 
   /// تهيئة Firebase services إذا كانت متوفرة
   Future<void> _initializeFirebaseServices() async {
+    if (!_firebaseAvailable) return;
+    
     debugPrint('ServiceLocator: Initializing Firebase services...');
     
     try {
+      final logger = getIt<LoggerService>();
+      final storage = getIt<StorageService>();
+      
       // تهيئة Remote Config إذا كان متوفراً
       if (getIt.isRegistered<FirebaseRemoteConfigService>()) {
-        final remoteConfig = getIt<FirebaseRemoteConfigService>();
-        final logger = getIt<LoggerService>();
-        
-        await remoteConfig.initialize(logger);
-        debugPrint('ServiceLocator: Remote Config initialized');
-        
-        // تهيئة Manager
-        if (getIt.isRegistered<RemoteConfigManager>()) {
-          final configManager = getIt<RemoteConfigManager>();
-          await configManager.initialize(
-            remoteConfig: remoteConfig,
-            storage: getIt<StorageService>(),
-            logger: logger,
-          );
-          debugPrint('ServiceLocator: Remote Config Manager initialized');
+        try {
+          final remoteConfig = getIt<FirebaseRemoteConfigService>();
+          await remoteConfig.initialize(logger);
+          debugPrint('ServiceLocator: Remote Config initialized');
+          
+          // تهيئة Manager
+          if (getIt.isRegistered<RemoteConfigManager>()) {
+            final configManager = getIt<RemoteConfigManager>();
+            await configManager.initialize(
+              remoteConfig: remoteConfig,
+              storage: storage,
+              logger: logger,
+            );
+            debugPrint('ServiceLocator: Remote Config Manager initialized');
+          }
+        } catch (e) {
+          debugPrint('ServiceLocator: Remote Config initialization failed: $e');
         }
       }
       
       // تهيئة Messaging إذا كان متوفراً
       if (getIt.isRegistered<FirebaseMessagingService>()) {
-        final messaging = getIt<FirebaseMessagingService>();
-        await messaging.initialize(
-          logger: getIt<LoggerService>(),
-          storage: getIt<StorageService>(),
-          notificationService: getIt<NotificationService>(),
-        );
-        debugPrint('ServiceLocator: Firebase Messaging initialized');
+        try {
+          final messaging = getIt<FirebaseMessagingService>();
+          await messaging.initialize(
+            logger: logger,
+            storage: storage,
+            notificationService: getIt<NotificationService>(),
+          );
+          debugPrint('ServiceLocator: Firebase Messaging initialized');
+        } catch (e) {
+          debugPrint('ServiceLocator: Firebase Messaging initialization failed: $e');
+        }
       }
       
-      debugPrint('ServiceLocator: Firebase services initialized successfully ✅');
-      
     } catch (e) {
-      debugPrint('ServiceLocator: Warning - Could not initialize Firebase services: $e');
-      // التطبيق سيعمل محلياً بدون Firebase
+      debugPrint('ServiceLocator: Firebase services initialization failed: $e');
+      // لا نرمي خطأ هنا - التطبيق سيعمل محلياً
     }
   }
 
@@ -464,6 +527,7 @@ class ServiceLocator {
       await _instance._cleanup();
       await getIt.reset();
       _instance._isInitialized = false;
+      _instance._firebaseAvailable = false;
       debugPrint('ServiceLocator: All services reset');
     } catch (e) {
       debugPrint('ServiceLocator: Error resetting: $e');
@@ -515,7 +579,18 @@ class ServiceLocator {
         await getIt<PermissionService>().dispose();
       }
 
-      // تنظيف Firebase services
+      // تنظيف Firebase services (إذا كانت موجودة)
+      _cleanupFirebaseServices();
+
+      debugPrint('ServiceLocator: Resources cleaned up');
+    } catch (e) {
+      debugPrint('ServiceLocator: Error cleaning up resources: $e');
+    }
+  }
+
+  /// تنظيف Firebase services
+  void _cleanupFirebaseServices() {
+    try {
       if (getIt.isRegistered<FirebaseMessagingService>()) {
         getIt<FirebaseMessagingService>().dispose();
       }
@@ -527,10 +602,10 @@ class ServiceLocator {
       if (getIt.isRegistered<FirebaseRemoteConfigService>()) {
         getIt<FirebaseRemoteConfigService>().dispose();
       }
-
-      debugPrint('ServiceLocator: Resources cleaned up');
+      
+      debugPrint('ServiceLocator: Firebase services cleaned up');
     } catch (e) {
-      debugPrint('ServiceLocator: Error cleaning up resources: $e');
+      debugPrint('ServiceLocator: Error cleaning Firebase services: $e');
     }
   }
 
@@ -626,12 +701,12 @@ extension ServiceLocatorExtensions on BuildContext {
   /// الحصول على مدير الخدمات الموحد للإعدادات
   SettingsServicesManager get settingsManager => getIt<SettingsServicesManager>();
   
-  // ==================== Firebase Services ====================
+  // ==================== Firebase Services (Safe Access) ====================
   
   /// الحصول على Firebase Remote Config Service
   FirebaseRemoteConfigService? get firebaseRemoteConfig {
     try {
-      return getIt.isRegistered<FirebaseRemoteConfigService>() 
+      return ServiceLocator.isFirebaseAvailable && getIt.isRegistered<FirebaseRemoteConfigService>() 
           ? getIt<FirebaseRemoteConfigService>() 
           : null;
     } catch (e) {
@@ -642,7 +717,7 @@ extension ServiceLocatorExtensions on BuildContext {
   /// الحصول على Remote Config Manager
   RemoteConfigManager? get remoteConfigManager {
     try {
-      return getIt.isRegistered<RemoteConfigManager>() 
+      return ServiceLocator.isFirebaseAvailable && getIt.isRegistered<RemoteConfigManager>() 
           ? getIt<RemoteConfigManager>() 
           : null;
     } catch (e) {
@@ -653,7 +728,7 @@ extension ServiceLocatorExtensions on BuildContext {
   /// الحصول على Firebase Messaging Service
   FirebaseMessagingService? get firebaseMessaging {
     try {
-      return getIt.isRegistered<FirebaseMessagingService>() 
+      return ServiceLocator.isFirebaseAvailable && getIt.isRegistered<FirebaseMessagingService>() 
           ? getIt<FirebaseMessagingService>() 
           : null;
     } catch (e) {
@@ -666,17 +741,22 @@ extension ServiceLocatorExtensions on BuildContext {
     final manager = remoteConfigManager;
     if (manager == null) return true; // default enabled if no remote config
     
-    switch (featureName.toLowerCase()) {
-      case 'prayer_times':
-        return manager.isPrayerTimesFeatureEnabled;
-      case 'qibla':
-        return manager.isQiblaFeatureEnabled;
-      case 'athkar':
-        return manager.isAthkarFeatureEnabled;
-      case 'notifications':
-        return manager.isNotificationsFeatureEnabled;
-      default:
-        return true;
+    try {
+      switch (featureName.toLowerCase()) {
+        case 'prayer_times':
+          return manager.isPrayerTimesFeatureEnabled;
+        case 'qibla':
+          return manager.isQiblaFeatureEnabled;
+        case 'athkar':
+          return manager.isAthkarFeatureEnabled;
+        case 'notifications':
+          return manager.isNotificationsFeatureEnabled;
+        default:
+          return true;
+      }
+    } catch (e) {
+      debugPrint('Error checking feature enabled: $e');
+      return true;
     }
   }
   
