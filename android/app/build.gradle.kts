@@ -82,8 +82,7 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics-ktx")
     implementation("com.google.firebase:firebase-crashlytics-ktx")
     
-    // إضافة Firebase Core إذا لزم الأمر
-    implementation("com.google.firebase:firebase-core")
+    // إزالة firebase-core المنفصل - هو مدمج في firebase-analytics-ktx
 
     // WorkManager - للمهام في الخلفية
     implementation("androidx.work:work-runtime-ktx:2.9.1")
