@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:sensors_plus/sensors_plus.dart';
 
 import '../../../core/infrastructure/services/logging/logger_service.dart';
 import '../../../core/infrastructure/services/storage/storage_service.dart';
