@@ -67,12 +67,7 @@
   <application
       android:label="تطبيق الأذكار"
       android:name="${applicationName}"
-      android:icon="@mipmap/ic_launcher"
-      android:allowBackup="true"
-      android:fullBackupContent="true"
-      android:requestLegacyExternalStorage="true"
-      android:preserveLegacyExternalStorage="true"
-      android:usesCleartextTraffic="true">
+      android:icon="@mipmap/ic_launcher">
 
       <!-- ==================== خدمات Firebase ==================== -->
       
@@ -210,16 +205,6 @@
           android:name="com.google.firebase.messaging.default_notification_color"
           android:resource="@color/notification_color" />
 
-      <!-- تفعيل التحليلات التلقائية -->
-      <meta-data
-          android:name="google_analytics_automatic_screen_reporting_enabled"
-          android:value="true" />
-
-      <!-- تفعيل جمع البيانات التلقائي -->
-      <meta-data
-          android:name="firebase_analytics_collection_enabled"
-          android:value="true" />
-
       <!-- ==================== إعدادات الموقع ==================== -->
       
       <!-- إعداد دقة الموقع المطلوبة -->
@@ -246,13 +231,6 @@
       <meta-data
           android:name="io.flutter.embedding.android.DefaultFontFamily"
           android:value="Cairo" />
-
-      <!-- ==================== إعدادات الأمان ==================== -->
-      
-      <!-- منع لقطات الشاشة في وضع الأمان (اختياري) -->
-      <meta-data
-          android:name="android.app.security.FLAG_SECURE"
-          android:value="false" />
 
   </application>
 
