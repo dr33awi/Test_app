@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/material.dart';
 import '../../../app/themes/constants/app_constants.dart';
-import '../../../core/infrastructure/services/logging/logger_service.dart';
 import '../../../core/infrastructure/services/storage/storage_service.dart';
 import '../../../core/infrastructure/services/notifications/notification_manager.dart';
 import '../../../core/infrastructure/services/notifications/models/notification_models.dart';
@@ -13,7 +12,6 @@ import '../constants/athkar_constants.dart';
 
 /// خدمة إدارة الأذكار
 class AthkarService {
-  final LoggerService _logger;
   final StorageService _storage;
 
   // كاش البيانات
@@ -23,16 +21,14 @@ class AthkarService {
   DateTime? _lastSyncTime;
 
   AthkarService({
-    required LoggerService logger,
     required StorageService storage,
-  })  : _logger = logger,
-        _storage = storage {
+  }) : _storage = storage {
     _initialize();
   }
 
   /// تهيئة الخدمة
   void _initialize() {
-    _logger.debug(message: '[AthkarService] Initializing service');
+    debugPrint('[AthkarService] Initializing service');
     _loadCachedData();
   }
 
@@ -54,10 +50,7 @@ class AthkarService {
         });
       }
     } catch (e) {
-      _logger.warning(
-        message: '[AthkarService] Error loading cached data',
-        data: {'error': e.toString()},
-      );
+      debugPrint('[AthkarService] Error loading cached data: $e');
     }
   }
 
@@ -67,18 +60,18 @@ class AthkarService {
   Future<List<AthkarCategory>> loadCategories() async {
     try {
       if (_categoriesCache != null) {
-        _logger.debug(message: '[AthkarService] Returning categories from cache');
+        debugPrint('[AthkarService] Returning categories from cache');
         return _categoriesCache!;
       }
 
       final cachedData = _storage.getMap(AthkarConstants.categoriesKey);
       if (cachedData != null && _isCacheValid(cachedData)) {
-        _logger.debug(message: '[AthkarService] Loading categories from storage');
+        debugPrint('[AthkarService] Loading categories from storage');
         _categoriesCache = _parseCategoriesFromJson(cachedData);
         return _categoriesCache!;
       }
 
-      _logger.info(message: '[AthkarService] Loading categories from assets');
+      debugPrint('[AthkarService] Loading categories from assets');
       final jsonStr = await rootBundle.loadString(AppConstants.athkarDataFile);
       final Map<String, dynamic> data = json.decode(jsonStr);
       
@@ -88,18 +81,12 @@ class AthkarService {
       
       _categoriesCache = _parseCategoriesFromJson(data);
       
-      _logger.info(
-        message: '[AthkarService] Categories loaded successfully',
-        data: {'count': _categoriesCache!.length},
-      );
+      debugPrint('[AthkarService] Categories loaded successfully - count: ${_categoriesCache!.length}');
       
       return _categoriesCache!;
     } catch (e, stackTrace) {
-      _logger.error(
-        message: '[AthkarService] Failed to load categories',
-        error: e,
-        stackTrace: stackTrace,
-      );
+      debugPrint('[AthkarService] Failed to load categories: $e');
+      debugPrint('Stack trace: $stackTrace');
       throw Exception('Failed to load athkar data: $e');
     }
   }
@@ -125,7 +112,7 @@ class AthkarService {
       final cachedAt = DateTime.parse(cachedAtStr);
       return AthkarConstants.isCacheValid(cachedAt);
     } catch (e) {
-      _logger.warning(message: '[AthkarService] Invalid cache data');
+      debugPrint('[AthkarService] Invalid cache data');
       return false;
     }
   }
@@ -139,17 +126,14 @@ class AthkarService {
         orElse: () => throw Exception('Category not found: $id'),
       );
     } catch (e) {
-      _logger.warning(
-        message: '[AthkarService] Category not found',
-        data: {'categoryId': id, 'error': e.toString()},
-      );
+      debugPrint('[AthkarService] Category not found: $id - error: $e');
       return null;
     }
   }
 
   /// مسح الكاش وإعادة التحميل
   Future<void> refreshCategories() async {
-    _logger.info(message: '[AthkarService] Refreshing categories');
+    debugPrint('[AthkarService] Refreshing categories');
     _categoriesCache = null;
     await _storage.remove(AthkarConstants.categoriesKey);
     await loadCategories();
@@ -167,15 +151,9 @@ class AthkarService {
       
       await _storage.setDouble(AthkarConstants.fontSizeKey, clampedSize);
       
-      _logger.info(
-        message: '[AthkarService] Font size saved',
-        data: {'fontSize': clampedSize},
-      );
+      debugPrint('[AthkarService] Font size saved: $clampedSize');
     } catch (e) {
-      _logger.error(
-        message: '[AthkarService] Error saving font size',
-        error: e,
-      );
+      debugPrint('[AthkarService] Error saving font size: $e');
     }
   }
 
@@ -185,10 +163,7 @@ class AthkarService {
       return _storage.getDouble(AthkarConstants.fontSizeKey) ?? 
              AthkarConstants.defaultFontSize;
     } catch (e) {
-      _logger.error(
-        message: '[AthkarService] Error getting saved font size',
-        error: e,
-      );
+      debugPrint('[AthkarService] Error getting saved font size: $e');
       return AthkarConstants.defaultFontSize;
     }
   }
@@ -206,15 +181,9 @@ class AthkarService {
       await _storage.setStringList(AthkarConstants.reminderKey, enabledIds);
       await _updateLastSyncTime();
       
-      _logger.info(
-        message: '[AthkarService] Enabled categories updated',
-        data: {'enabledIds': enabledIds, 'count': enabledIds.length},
-      );
+      debugPrint('[AthkarService] Enabled categories updated - count: ${enabledIds.length}');
     } catch (e) {
-      _logger.error(
-        message: '[AthkarService] Failed to update enabled categories',
-        error: e,
-      );
+      debugPrint('[AthkarService] Failed to update enabled categories: $e');
       rethrow;
     }
   }
@@ -233,15 +202,9 @@ class AthkarService {
       _customTimesCache.clear();
       _customTimesCache.addAll(customTimes);
       
-      _logger.debug(
-        message: '[AthkarService] Custom times saved',
-        data: {'count': customTimes.length},
-      );
+      debugPrint('[AthkarService] Custom times saved - count: ${customTimes.length}');
     } catch (e) {
-      _logger.error(
-        message: '[AthkarService] Failed to save custom times',
-        error: e,
-      );
+      debugPrint('[AthkarService] Failed to save custom times: $e');
       rethrow;
     }
   }
@@ -263,7 +226,7 @@ class AthkarService {
       final enabledIds = getEnabledReminderCategories();
       
       if (enabledIds.isEmpty) {
-        _logger.info(message: '[AthkarService] No categories enabled for reminders');
+        debugPrint('[AthkarService] No categories enabled for reminders');
         return;
       }
 
@@ -288,30 +251,15 @@ class AthkarService {
         
         scheduledCount++;
         
-        _logger.debug(
-          message: '[AthkarService] Reminder scheduled',
-          data: {
-            'categoryId': category.id,
-            'time': AthkarConstants.timeOfDayToString(time),
-          },
-        );
+        debugPrint('[AthkarService] Reminder scheduled - categoryId: ${category.id}, time: ${AthkarConstants.timeOfDayToString(time)}');
       }
       
-      _logger.info(
-        message: '[AthkarService] All reminders scheduled',
-        data: {
-          'scheduledCount': scheduledCount,
-          'totalEnabled': enabledIds.length,
-        },
-      );
+      debugPrint('[AthkarService] All reminders scheduled - scheduledCount: $scheduledCount, totalEnabled: ${enabledIds.length}');
       
       await _updateLastSyncTime();
       
     } catch (e) {
-      _logger.error(
-        message: '[AthkarService] Failed to schedule reminders',
-        error: e,
-      );
+      debugPrint('[AthkarService] Failed to schedule reminders: $e');
       rethrow;
     }
   }
@@ -335,15 +283,9 @@ class AthkarService {
 
       await scheduleCategoryReminders();
 
-      _logger.info(
-        message: '[AthkarService] Reminder settings updated successfully',
-        data: {'enabledCount': enabledIds.length},
-      );
+      debugPrint('[AthkarService] Reminder settings updated successfully - enabledCount: ${enabledIds.length}');
     } catch (e) {
-      _logger.error(
-        message: '[AthkarService] Failed to update reminder settings',
-        error: e,
-      );
+      debugPrint('[AthkarService] Failed to update reminder settings: $e');
       rethrow;
     }
   }
@@ -368,7 +310,7 @@ class AthkarService {
 
   /// تنظيف الموارد
   void dispose() {
-    _logger.debug(message: '[AthkarService] Disposing service');
+    debugPrint('[AthkarService] Disposing service');
     _progressCache.clear();
     _customTimesCache.clear();
     _categoriesCache = null;
@@ -378,7 +320,7 @@ class AthkarService {
   /// مسح جميع البيانات
   Future<void> clearAllData() async {
     try {
-      _logger.warning(message: '[AthkarService] Clearing all data');
+      debugPrint('[AthkarService] Clearing all data');
       
       await _storage.remove(AthkarConstants.categoriesKey);
       await _storage.remove(AthkarConstants.reminderKey);
@@ -399,12 +341,9 @@ class AthkarService {
       
       await NotificationManager.instance.cancelAllAthkarReminders();
       
-      _logger.info(message: '[AthkarService] All data cleared successfully');
+      debugPrint('[AthkarService] All data cleared successfully');
     } catch (e) {
-      _logger.error(
-        message: '[AthkarService] Failed to clear data',
-        error: e,
-      );
+      debugPrint('[AthkarService] Failed to clear data: $e');
       rethrow;
     }
   }

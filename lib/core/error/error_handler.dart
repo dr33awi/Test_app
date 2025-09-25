@@ -1,17 +1,15 @@
-// lib/core/error/error_handler.dart (مع إصلاح المراجع)
+// lib/core/error/error_handler.dart
 
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'exceptions.dart';
 import 'failure.dart';
-import '../infrastructure/services/logging/logger_service.dart';
 
 /// Generic error handler for the application
 class AppErrorHandler {
-  final LoggerService _logger;
   
-  AppErrorHandler(this._logger);
+  AppErrorHandler();
   
   /// Handle any type of error with appropriate error handling
   Future<T?> handleError<T>(
@@ -151,11 +149,11 @@ class AppErrorHandler {
   
   /// Log error details
   void _logError(String operation, dynamic error, StackTrace? stackTrace) {
-    _logger.error(
-      message: 'Error in operation: $operation',
-      error: error,
-      stackTrace: stackTrace,
-    );
+    debugPrint('Error in operation: $operation');
+    debugPrint('Error: $error');
+    if (stackTrace != null) {
+      debugPrint('StackTrace: $stackTrace');
+    }
   }
   
   /// Show error snackbar

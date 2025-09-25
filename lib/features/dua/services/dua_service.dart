@@ -1,13 +1,13 @@
 // lib/features/dua/services/dua_service.dart
+import 'package:flutter/material.dart';
+
 import '../../../core/infrastructure/services/storage/storage_service.dart';
-import '../../../core/infrastructure/services/logging/logger_service.dart';
 import '../models/dua_model.dart';
 import '../data/dua_data.dart';
 
 /// خدمة إدارة الأدعية
 class DuaService {
   final StorageService _storage;
-  final LoggerService _logger;
 
   // مفاتيح التخزين
   static const String _favoriteDuasKey = 'favorite_duas';
@@ -17,16 +17,14 @@ class DuaService {
 
   DuaService({
     required StorageService storage,
-    required LoggerService logger,
-  })  : _storage = storage,
-        _logger = logger;
+  }) : _storage = storage;
 
   /// الحصول على جميع فئات الأدعية
   Future<List<DuaCategory>> getCategories() async {
     try {
       return await DuaData.getCategories();
     } catch (e) {
-      _logger.error(message: 'خطأ في الحصول على فئات الأدعية', error: e);
+      debugPrint('خطأ في الحصول على فئات الأدعية: $e');
       return [];
     }
   }
@@ -50,7 +48,7 @@ class DuaService {
         );
       }).toList();
     } catch (e) {
-      _logger.error(message: 'خطأ في الحصول على الأدعية للفئة $categoryId', error: e);
+      debugPrint('خطأ في الحصول على الأدعية للفئة $categoryId: $e');
       return [];
     }
   }
@@ -73,7 +71,7 @@ class DuaService {
         );
       }).toList();
     } catch (e) {
-      _logger.error(message: 'خطأ في الحصول على جميع الأدعية', error: e);
+      debugPrint('خطأ في الحصول على جميع الأدعية: $e');
       return [];
     }
   }
@@ -93,7 +91,7 @@ class DuaService {
                dua.tags.any((tag) => tag.toLowerCase().contains(lowerQuery));
       }).toList();
     } catch (e) {
-      _logger.error(message: 'خطأ في البحث عن الأدعية', error: e);
+      debugPrint('خطأ في البحث عن الأدعية: $e');
       return [];
     }
   }
@@ -103,7 +101,7 @@ class DuaService {
     try {
       return _storage.getStringList(_favoriteDuasKey) ?? [];
     } catch (e) {
-      _logger.error(message: 'خطأ في الحصول على الأدعية المفضلة', error: e);
+      debugPrint('خطأ في الحصول على الأدعية المفضلة: $e');
       return [];
     }
   }
@@ -121,10 +119,10 @@ class DuaService {
       }
       
       await _storage.setStringList(_favoriteDuasKey, favorites);
-      _logger.info(message: 'تم تحديث حالة المفضلة للدعاء: $duaId');
+      debugPrint('تم تحديث حالة المفضلة للدعاء: $duaId');
       return !isFavorite;
     } catch (e) {
-      _logger.error(message: 'خطأ في تحديث المفضلة للدعاء $duaId', error: e);
+      debugPrint('خطأ في تحديث المفضلة للدعاء $duaId: $e');
       return false;
     }
   }
@@ -137,7 +135,7 @@ class DuaService {
       
       return allDuas.where((dua) => favoriteIds.contains(dua.id)).toList();
     } catch (e) {
-      _logger.error(message: 'خطأ في الحصول على تفاصيل الأدعية المفضلة', error: e);
+      debugPrint('خطأ في الحصول على تفاصيل الأدعية المفضلة: $e');
       return [];
     }
   }
@@ -155,9 +153,9 @@ class DuaService {
       // تحديث آخر دعاء مقروء
       await _storage.setString(_lastReadDuaKey, duaId);
       
-      _logger.info(message: 'تم تسجيل قراءة الدعاء: $duaId');
+      debugPrint('تم تسجيل قراءة الدعاء: $duaId');
     } catch (e) {
-      _logger.error(message: 'خطأ في تسجيل قراءة الدعاء $duaId', error: e);
+      debugPrint('خطأ في تسجيل قراءة الدعاء $duaId: $e');
     }
   }
 
@@ -166,7 +164,7 @@ class DuaService {
     try {
       return _storage.getInt('${_duaReadCountPrefix}$duaId') ?? 0;
     } catch (e) {
-      _logger.error(message: 'خطأ في الحصول على عدد قراءات الدعاء $duaId', error: e);
+      debugPrint('خطأ في الحصول على عدد قراءات الدعاء $duaId: $e');
       return 0;
     }
   }
@@ -177,7 +175,7 @@ class DuaService {
       final dateString = _storage.getString('last_read_$duaId');
       return dateString != null ? DateTime.parse(dateString) : null;
     } catch (e) {
-      _logger.error(message: 'خطأ في الحصول على تاريخ آخر قراءة للدعاء $duaId', error: e);
+      debugPrint('خطأ في الحصول على تاريخ آخر قراءة للدعاء $duaId: $e');
       return null;
     }
   }
@@ -191,9 +189,9 @@ class DuaService {
       // تصفير تاريخ آخر قراءة
       await _storage.remove('last_read_$duaId');
       
-      _logger.info(message: 'تم تصفير عداد الدعاء: $duaId');
+      debugPrint('تم تصفير عداد الدعاء: $duaId');
     } catch (e) {
-      _logger.error(message: 'خطأ في تصفير عداد الدعاء $duaId', error: e);
+      debugPrint('خطأ في تصفير عداد الدعاء $duaId: $e');
     }
   }
 
@@ -205,9 +203,9 @@ class DuaService {
         await resetDuaReadCount(dua.id);
       }
       
-      _logger.info(message: 'تم تصفير عداد الفئة: $categoryId');
+      debugPrint('تم تصفير عداد الفئة: $categoryId');
     } catch (e) {
-      _logger.error(message: 'خطأ في تصفير عداد الفئة $categoryId', error: e);
+      debugPrint('خطأ في تصفير عداد الفئة $categoryId: $e');
     }
   }
 
@@ -215,9 +213,9 @@ class DuaService {
   Future<void> saveFontSize(double fontSize) async {
     try {
       await _storage.setDouble(_fontSizeKey, fontSize);
-      _logger.info(message: 'تم حفظ حجم الخط: $fontSize');
+      debugPrint('تم حفظ حجم الخط: $fontSize');
     } catch (e) {
-      _logger.error(message: 'خطأ في حفظ حجم الخط', error: e);
+      debugPrint('خطأ في حفظ حجم الخط: $e');
     }
   }
 
@@ -226,7 +224,7 @@ class DuaService {
     try {
       return _storage.getDouble(_fontSizeKey) ?? 18.0; // الافتراضي متوسط
     } catch (e) {
-      _logger.error(message: 'خطأ في الحصول على حجم الخط المحفوظ', error: e);
+      debugPrint('خطأ في الحصول على حجم الخط المحفوظ: $e');
       return 18.0; // الافتراضي متوسط
     }
   }
@@ -243,7 +241,7 @@ class DuaService {
       final random = DateTime.now().millisecondsSinceEpoch % allDuas.length;
       return allDuas[random];
     } catch (e) {
-      _logger.error(message: 'خطأ في الحصول على دعاء عشوائي', error: e);
+      debugPrint('خطأ في الحصول على دعاء عشوائي: $e');
       return null;
     }
   }
@@ -257,7 +255,7 @@ class DuaService {
         orElse: () => throw Exception('الدعاء غير موجود'),
       );
     } catch (e) {
-      _logger.error(message: 'خطأ في الحصول على الدعاء $duaId', error: e);
+      debugPrint('خطأ في الحصول على الدعاء $duaId: $e');
       return null;
     }
   }
@@ -283,7 +281,7 @@ class DuaService {
         return (await getDuasByCategory('sleep')).take(3).toList();
       }
     } catch (e) {
-      _logger.error(message: 'خطأ في الحصول على التوصيات', error: e);
+      debugPrint('خطأ في الحصول على التوصيات: $e');
       return [];
     }
   }
@@ -302,9 +300,9 @@ class DuaService {
         await _storage.remove('last_read_${dua.id}');
       }
       
-      _logger.info(message: 'تم مسح جميع بيانات الأدعية');
+      debugPrint('تم مسح جميع بيانات الأدعية');
     } catch (e) {
-      _logger.error(message: 'خطأ في مسح بيانات الأدعية', error: e);
+      debugPrint('خطأ في مسح بيانات الأدعية: $e');
     }
   }
 
@@ -322,7 +320,7 @@ class DuaService {
         'exportDate': DateTime.now().toIso8601String(),
       };
     } catch (e) {
-      _logger.error(message: 'خطأ في تصدير بيانات الأدعية', error: e);
+      debugPrint('خطأ في تصدير بيانات الأدعية: $e');
       return {};
     }
   }

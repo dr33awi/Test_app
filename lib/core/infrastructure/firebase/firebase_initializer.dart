@@ -2,30 +2,29 @@
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
-import '../services/logging/logger_service.dart';
 
 /// مهيئ Firebase
 class FirebaseInitializer {
   static bool _isInitialized = false;
   
   /// تهيئة Firebase
-  static Future<void> initialize({LoggerService? logger}) async {
+  static Future<void> initialize() async {
     if (_isInitialized) {
-      logger?.info(message: 'Firebase already initialized');
+      debugPrint('Firebase already initialized');
       return;
     }
     
     try {
-      logger?.info(message: 'Initializing Firebase...');
+      debugPrint('Initializing Firebase...');
       
       // تهيئة Firebase Core
       await Firebase.initializeApp();
       
       _isInitialized = true;
-      logger?.info(message: 'Firebase initialized successfully ✓');
+      debugPrint('Firebase initialized successfully ✓');
       
-    } catch (e, stackTrace) {
-      logger?.error(message: 'Failed to initialize Firebase: $e', stackTrace: stackTrace);
+    } catch (e) {
+      debugPrint('Failed to initialize Firebase: $e');
       
       // في حالة الخطأ، نحاول المتابعة بدون Firebase
       if (kDebugMode) {
@@ -41,9 +40,9 @@ class FirebaseInitializer {
   static bool get isInitialized => _isInitialized;
   
   /// إعادة تهيئة Firebase
-  static Future<void> reinitialize({LoggerService? logger}) async {
+  static Future<void> reinitialize() async {
     _isInitialized = false;
-    await initialize(logger: logger);
+    await initialize();
   }
   
   /// تنظيف Firebase (للاستخدام في التطوير)

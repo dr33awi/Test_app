@@ -1,6 +1,7 @@
 // lib/core/infrastructure/services/permissions/permission_manager.dart
 
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -8,13 +9,11 @@ import 'permission_service.dart';
 import 'models/permission_state.dart';
 import 'widgets/permission_dialogs.dart';
 import '../storage/storage_service.dart';
-import '../logging/logger_service.dart';
 
 /// مدير الأذونات الموحد المحسن - بدون فحص دوري
 class UnifiedPermissionManager {
   final PermissionService _permissionService;
   final StorageService _storage;
-  final LoggerService _logger;
   
   // Singleton instance
   static UnifiedPermissionManager? _instance;
@@ -48,10 +47,8 @@ class UnifiedPermissionManager {
   UnifiedPermissionManager._({
     required PermissionService permissionService,
     required StorageService storage,
-    required LoggerService logger,
   }) : _permissionService = permissionService,
-       _storage = storage,
-       _logger = logger {
+       _storage = storage {
     _initialize();
   }
   
@@ -59,12 +56,10 @@ class UnifiedPermissionManager {
   factory UnifiedPermissionManager.getInstance({
     required PermissionService permissionService,
     required StorageService storage,
-    required LoggerService logger,
   }) {
     _instance ??= UnifiedPermissionManager._(
       permissionService: permissionService,
       storage: storage,
-      logger: logger,
     );
     return _instance!;
   }
@@ -73,13 +68,13 @@ class UnifiedPermissionManager {
   void _initialize() {
     _loadOnboardingState();
     _setupPermissionChangeListener();
-    _logger.info(message: '[PermissionManager] Initialized (Optimized Mode)');
+    _log('Initialized (Optimized Mode)');
   }
   
   /// تحميل حالة Onboarding
   void _loadOnboardingState() {
     _onboardingState = OnboardingState.fromStorage(_storage);
-    _logger.debug(message: '[PermissionManager] Onboarding state loaded', data: {
+    _log('Onboarding state loaded', {
       'isNewUser': _onboardingState.isNewUser,
       'isCompleted': _onboardingState.isCompleted,
       'wasSkipped': _onboardingState.wasSkipped,
@@ -97,7 +92,7 @@ class UnifiedPermissionManager {
       
       _changeController.add(event);
       
-      _logger.info(message: '[PermissionManager] Permission change detected', data: {
+      _log('Permission change detected', {
         'permission': change.permission.toString(),
         'oldStatus': change.oldStatus.toString(),
         'newStatus': change.newStatus.toString(),
@@ -118,19 +113,19 @@ class UnifiedPermissionManager {
   Future<PermissionCheckResult> performInitialCheck() async {
     // منع التكرار
     if (_hasCheckedThisSession) {
-      _logger.debug(message: '[PermissionManager] Already checked this session');
+      _log('Already checked this session');
       return _lastCheckResult ?? PermissionCheckResult.success();
     }
     
     _hasCheckedThisSession = true;
     _lastCheckTime = DateTime.now();
     
-    _logger.info(message: '[PermissionManager] Performing initial check');
+    _log('Performing initial check');
     
     try {
       // إذا كان مستخدم جديد، لا نفحص
       if (isNewUser) {
-        _logger.info(message: '[PermissionManager] New user - skipping permission check');
+        _log('New user - skipping permission check');
         return PermissionCheckResult.success();
       }
       
@@ -145,11 +140,7 @@ class UnifiedPermissionManager {
       return result;
       
     } catch (e, s) {
-      _logger.error(
-        message: '[PermissionManager] Initial check failed',
-        error: e,
-        stackTrace: s,
-      );
+      _logError('Initial check failed', e, s);
       
       final errorResult = PermissionCheckResult.error(e.toString());
       _lastCheckResult = errorResult;
@@ -165,13 +156,13 @@ class UnifiedPermissionManager {
     if (_lastCheckTime != null) {
       final timeSinceLastCheck = DateTime.now().difference(_lastCheckTime!);
       if (timeSinceLastCheck < _minCheckInterval) {
-        _logger.debug(message: '[PermissionManager] Check throttled');
+        _log('Check throttled');
         return _lastCheckResult ?? PermissionCheckResult.success();
       }
     }
     
     _lastCheckTime = DateTime.now();
-    _logger.debug(message: '[PermissionManager] Performing quick check');
+    _log('Performing quick check');
     
     try {
       final result = await _checkCriticalPermissions();
@@ -185,7 +176,7 @@ class UnifiedPermissionManager {
       
       return result;
     } catch (e) {
-      _logger.error(message: '[PermissionManager] Quick check failed', error: e);
+      _logError('Quick check failed', e);
       return _lastCheckResult ?? PermissionCheckResult.error(e.toString());
     }
   }
@@ -234,10 +225,10 @@ class UnifiedPermissionManager {
     try {
       return await _permissionService.checkPermissionStatus(permission);
     } catch (e) {
-      _logger.warning(
-        message: '[PermissionManager] Failed to check permission',
-        data: {'permission': permission.toString(), 'error': e.toString()},
-      );
+      _logWarning('Failed to check permission', {
+        'permission': permission.toString(), 
+        'error': e.toString()
+      });
       return AppPermissionStatus.unknown;
     }
   }
@@ -249,7 +240,7 @@ class UnifiedPermissionManager {
     String? customMessage,
     bool forceRequest = false,
   }) async {
-    _logger.info(message: '[PermissionManager] Requesting permission', data: {
+    _log('Requesting permission', {
       'permission': permission.toString(),
       'forceRequest': forceRequest,
     });
@@ -258,7 +249,7 @@ class UnifiedPermissionManager {
     final currentStatus = await _permissionService.checkPermissionStatus(permission);
     
     if (currentStatus == AppPermissionStatus.granted) {
-      _logger.debug(message: '[PermissionManager] Permission already granted');
+      _log('Permission already granted');
       return true;
     }
     
@@ -283,7 +274,7 @@ class UnifiedPermissionManager {
       );
       
       if (!shouldRequest) {
-        _logger.info(message: '[PermissionManager] User cancelled permission request');
+        _log('User cancelled permission request');
         return false;
       }
     }
@@ -294,7 +285,7 @@ class UnifiedPermissionManager {
     
     final granted = newStatus == AppPermissionStatus.granted;
     
-    _logger.info(message: '[PermissionManager] Permission request result', data: {
+    _log('Permission request result', {
       'permission': permission.toString(),
       'granted': granted,
       'status': newStatus.toString(),
@@ -324,7 +315,7 @@ class UnifiedPermissionManager {
     List<AppPermissionType> permissions, {
     bool showExplanation = true,
   }) async {
-    _logger.info(message: '[PermissionManager] Requesting multiple permissions', data: {
+    _log('Requesting multiple permissions', {
       'count': permissions.length,
     });
     
@@ -336,7 +327,7 @@ class UnifiedPermissionManager {
       );
       
       if (!shouldContinue) {
-        _logger.info(message: '[PermissionManager] User cancelled batch request');
+        _log('User cancelled batch request');
         return PermissionCheckResult.error('User cancelled');
       }
     }
@@ -360,10 +351,7 @@ class UnifiedPermissionManager {
         // تأخير بسيط بين الطلبات
         await Future.delayed(const Duration(milliseconds: 500));
       } catch (e) {
-        _logger.error(
-          message: '[PermissionManager] Failed to request permission',
-          error: e,
-        );
+        _logError('Failed to request permission', e);
         missing.add(permission);
       }
     }
@@ -397,7 +385,7 @@ class UnifiedPermissionManager {
     bool skipped = false,
     List<AppPermissionType>? grantedPermissions,
   }) async {
-    _logger.info(message: '[PermissionManager] Completing onboarding', data: {
+    _log('Completing onboarding', {
       'skipped': skipped,
       'grantedCount': grantedPermissions?.length ?? 0,
     });
@@ -419,13 +407,13 @@ class UnifiedPermissionManager {
   
   /// فتح إعدادات التطبيق
   Future<bool> openAppSettings() async {
-    _logger.info(message: '[PermissionManager] Opening app settings');
+    _log('Opening app settings');
     return await _permissionService.openAppSettings();
   }
   
   /// إعادة تعيين (للتطوير والاختبار)
   Future<void> reset() async {
-    _logger.warning(message: '[PermissionManager] Resetting all data');
+    _logWarning('Resetting all data');
     
     _hasCheckedThisSession = false;
     _lastCheckTime = null;
@@ -438,12 +426,12 @@ class UnifiedPermissionManager {
     await _storage.remove('onboarding_completed_at');
     await _storage.remove('granted_permissions');
     
-    _logger.info(message: '[PermissionManager] Reset completed');
+    _log('Reset completed');
   }
   
   /// التنظيف
   void dispose() {
-    _logger.debug(message: '[PermissionManager] Disposing');
+    _log('Disposing');
     _stateController.close();
     _changeController.close();
     _instance = null;
@@ -462,7 +450,7 @@ class UnifiedPermissionManager {
   
   /// تسجيل نتيجة الفحص
   void _logCheckResult(PermissionCheckResult result) {
-    _logger.info(message: '[PermissionManager] Check result', data: {
+    _log('Check result', {
       'allGranted': result.allGranted,
       'grantedCount': result.grantedCount,
       'missingCount': result.missingCount,
@@ -470,12 +458,9 @@ class UnifiedPermissionManager {
     });
     
     if (result.missingPermissions.isNotEmpty) {
-      _logger.warning(
-        message: '[PermissionManager] Missing permissions',
-        data: {
-          'missing': result.missingPermissions.map((p) => p.toString()).toList(),
-        },
-      );
+      _logWarning('Missing permissions', {
+        'missing': result.missingPermissions.map((p) => p.toString()).toList(),
+      });
     }
   }
   
@@ -484,5 +469,28 @@ class UnifiedPermissionManager {
   /// performBackgroundCheck محذوف - استخدم performQuickCheck بدلاً منه
   Future<PermissionCheckResult> performBackgroundCheck() async {
     return performQuickCheck();
+  }
+
+  // ==================== Simple Logging Methods ====================
+
+  void _log(String message, [Map<String, dynamic>? data]) {
+    if (kDebugMode) {
+      debugPrint('🔐 [PermissionManager] $message${data != null ? " - $data" : ""}');
+    }
+  }
+
+  void _logWarning(String message, [Map<String, dynamic>? data]) {
+    if (kDebugMode) {
+      debugPrint('⚠️ [PermissionManager] WARNING: $message${data != null ? " - $data" : ""}');
+    }
+  }
+
+  void _logError(String message, dynamic error, [StackTrace? stackTrace]) {
+    if (kDebugMode) {
+      debugPrint('🔴 [PermissionManager] ERROR: $message - $error');
+      if (stackTrace != null) {
+        debugPrint('Stack trace: $stackTrace');
+      }
+    }
   }
 }

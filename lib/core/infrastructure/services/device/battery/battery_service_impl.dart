@@ -1,40 +1,31 @@
-// lib/core/infrastructure/services/device/battery/battery_service_impl.dart (مبسط)
+// lib/core/infrastructure/services/device/battery/battery_service_impl.dart 
 
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:battery_plus/battery_plus.dart' as battery_plus;
-import '../../logging/logger_service.dart';
 import 'battery_service.dart';
 
-/// Implementation of battery service (مبسط)
+/// Implementation of battery service 
 class BatteryServiceImpl implements BatteryService {
   final battery_plus.Battery _battery;
-  final LoggerService? _logger;
   
   // حد أدنى افتراضي للبطارية
   static const int _defaultMinBatteryLevel = 15;
   
   BatteryServiceImpl({
     battery_plus.Battery? battery,
-    LoggerService? logger,
-  })  : _battery = battery ?? battery_plus.Battery(),
-        _logger = logger {
-    _logger?.debug(message: '[BatteryService] Initializing (simplified)...');
+  }) : _battery = battery ?? battery_plus.Battery() {
+    _log('Initializing (simplified)...');
   }
   
   @override
   Future<int> getBatteryLevel() async {
     try {
       final level = await _battery.batteryLevel;
-      _logger?.debug(
-        message: '[BatteryService] Battery level retrieved',
-        data: {'level': level},
-      );
+      _log('Battery level retrieved', {'level': level});
       return level;
     } catch (e) {
-      _logger?.error(
-        message: '[BatteryService] Error getting battery level',
-        error: e,
-      );
+      _logError('Error getting battery level', e);
       return 100; // Assume full battery on error
     }
   }
@@ -46,17 +37,11 @@ class BatteryServiceImpl implements BatteryService {
       final isCharging = state == battery_plus.BatteryState.charging || 
                         state == battery_plus.BatteryState.full;
       
-      _logger?.debug(
-        message: '[BatteryService] Charging status retrieved',
-        data: {'isCharging': isCharging, 'state': state.toString()},
-      );
+      _log('Charging status retrieved', {'isCharging': isCharging, 'state': state.toString()});
       
       return isCharging;
     } catch (e) {
-      _logger?.error(
-        message: '[BatteryService] Error checking charging status',
-        error: e,
-      );
+      _logError('Error checking charging status', e);
       return false;
     }
   }
@@ -65,16 +50,10 @@ class BatteryServiceImpl implements BatteryService {
   Future<bool> isPowerSaveMode() async {
     try {
       final isInSaveMode = await _battery.isInBatterySaveMode;
-      _logger?.debug(
-        message: '[BatteryService] Power save mode status retrieved',
-        data: {'isPowerSaveMode': isInSaveMode},
-      );
+      _log('Power save mode status retrieved', {'isPowerSaveMode': isInSaveMode});
       return isInSaveMode;
     } catch (e) {
-      _logger?.error(
-        message: '[BatteryService] Error checking power save mode',
-        error: e,
-      );
+      _logError('Error checking power save mode', e);
       return false;
     }
   }
@@ -94,29 +73,20 @@ class BatteryServiceImpl implements BatteryService {
                      (batteryLevel >= _defaultMinBatteryLevel && !powerSaveMode) ||
                      batteryLevel >= 5;
       
-      _logger?.debug(
-        message: '[BatteryService] Notification permission check',
-        data: {
-          'canSend': canSend,
-          'batteryLevel': batteryLevel,
-          'isCharging': charging,
-          'isPowerSaveMode': powerSaveMode,
-        },
-      );
+      _log('Notification permission check', {
+        'canSend': canSend,
+        'batteryLevel': batteryLevel,
+        'isCharging': charging,
+        'isPowerSaveMode': powerSaveMode,
+      });
       
       if (!canSend) {
-        _logger?.logEvent('notification_blocked_battery', parameters: {
-          'battery_level': batteryLevel,
-          'power_save_mode': powerSaveMode,
-        });
+        _log('Notification blocked - battery', {'battery_level': batteryLevel, 'power_save_mode': powerSaveMode});
       }
       
       return canSend;
     } catch (e) {
-      _logger?.error(
-        message: '[BatteryService] Error checking notification permission',
-        error: e,
-      );
+      _logError('Error checking notification permission', e);
       return true; // Allow notifications on error
     }
   }
@@ -136,6 +106,20 @@ class BatteryServiceImpl implements BatteryService {
   
   @override
   Future<void> dispose() async {
-    _logger?.debug(message: '[BatteryService] Disposed (simplified)');
+    _log('Disposed (simplified)');
+  }
+
+  // ==================== Simple Logging Methods ====================
+
+  void _log(String message, [Map<String, dynamic>? data]) {
+    if (kDebugMode) {
+      debugPrint('🔋 [BatteryService] $message${data != null ? " - $data" : ""}');
+    }
+  }
+
+  void _logError(String message, dynamic error) {
+    if (kDebugMode) {
+      debugPrint('🔴 [BatteryService] ERROR: $message - $error');
+    }
   }
 }

@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 
 import '../../../app/themes/app_theme.dart';
 import '../../../app/di/service_locator.dart';
-import '../../../core/infrastructure/services/logging/logger_service.dart';
 import '../../../core/infrastructure/services/storage/storage_service.dart';
 import '../../../core/infrastructure/services/permissions/permission_service.dart';
 import '../services/qibla_service.dart';
@@ -26,7 +25,6 @@ class _QiblaScreenState extends State<QiblaScreen>
     with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   
   late final QiblaService _qiblaService;
-  late final LoggerService _logger;
   late final AnimationController _refreshController;
   
   bool _disposed = false;
@@ -39,11 +37,8 @@ class _QiblaScreenState extends State<QiblaScreen>
   }
 
   Future<void> _initializeScreen() async {
-    try {
-      _logger = getIt<LoggerService>();
-      
+    try {      
       _qiblaService = QiblaService(
-        logger: _logger,
         storage: getIt<StorageService>(),
         permissionService: getIt<PermissionService>(),
       );
@@ -62,7 +57,7 @@ class _QiblaScreenState extends State<QiblaScreen>
         }
       });
     } catch (e) {
-      _logger.error(message: '[QiblaScreen] خطأ في تهيئة الشاشة', error: e);
+      debugPrint('[QiblaScreen] خطأ في تهيئة الشاشة: $e');
     }
   }
 
@@ -91,7 +86,7 @@ class _QiblaScreenState extends State<QiblaScreen>
         });
       }
     } catch (e) {
-      _logger.error(message: '[QiblaScreen] خطأ في تحديث البيانات', error: e);
+      debugPrint('[QiblaScreen] خطأ في تحديث البيانات: $e');
       if (mounted) {
         _showErrorSnackbar(e.toString());
       }

@@ -7,7 +7,6 @@ import 'dart:math' as math;
 
 import '../../../app/themes/app_theme.dart';
 import '../../../app/di/service_locator.dart';
-import '../../../core/infrastructure/services/logging/logger_service.dart';
 import '../services/tasbih_service.dart';
 import '../models/dhikr_model.dart';
 import '../widgets/tasbih_bead_widget.dart';
@@ -25,7 +24,6 @@ class TasbihScreen extends StatefulWidget {
 class _TasbihScreenState extends State<TasbihScreen>
     with TickerProviderStateMixin {
   late TasbihService _service;
-  late LoggerService _logger;
   late AnimationController _beadController;
   late AnimationController _rippleController;
   late AnimationController _rotationController;
@@ -47,9 +45,7 @@ class _TasbihScreenState extends State<TasbihScreen>
   void _initializeServices() {
     _service = TasbihService(
       storage: getIt<StorageService>(),
-      logger: getIt<LoggerService>(),
     );
-    _logger = getIt<LoggerService>();
     
     // بدء جلسة تسبيح
     _service.startSession(_currentDhikr.text);
@@ -560,13 +556,7 @@ class _TasbihScreenState extends State<TasbihScreen>
       _showCompletionCelebration(_currentDhikr);
     }
     
-    _logger.debug(
-      message: '[TasbihScreen] increment',
-      data: {
-        'count': service.count,
-        'dhikr': _currentDhikr.text,
-      },
-    );
+    debugPrint('[TasbihScreen] increment - count: ${service.count}, dhikr: ${_currentDhikr.text}');
   }
 
   void _showCompletionCelebration(DhikrItem dhikr) {

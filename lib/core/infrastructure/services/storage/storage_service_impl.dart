@@ -1,15 +1,14 @@
 // lib/core/infrastructure/services/storage/storage_service_impl.dart
 
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../logging/logger_service.dart';
 import 'storage_service.dart';
 
 class StorageServiceImpl implements StorageService {
   final SharedPreferences _prefs;
-  final LoggerService? logger;
 
-  StorageServiceImpl(this._prefs, {this.logger});
+  StorageServiceImpl(this._prefs);
 
   // ==================== String Operations ====================
   
@@ -17,10 +16,10 @@ class StorageServiceImpl implements StorageService {
   Future<bool> setString(String key, String value) async {
     try {
       final result = await _prefs.setString(key, value);
-      logger?.debug(message: '[Storage] Set string', data: {'key': key});
+      _log('Set string', {'key': key});
       return result;
     } catch (e) {
-      logger?.error(message: '[Storage] Failed to set string', error: e);
+      _logError('Failed to set string', e);
       return false;
     }
   }
@@ -30,7 +29,7 @@ class StorageServiceImpl implements StorageService {
     try {
       return _prefs.getString(key);
     } catch (e) {
-      logger?.error(message: '[Storage] Failed to get string', error: e);
+      _logError('Failed to get string', e);
       return null;
     }
   }
@@ -41,10 +40,10 @@ class StorageServiceImpl implements StorageService {
   Future<bool> setInt(String key, int value) async {
     try {
       final result = await _prefs.setInt(key, value);
-      logger?.debug(message: '[Storage] Set int', data: {'key': key, 'value': value});
+      _log('Set int', {'key': key, 'value': value});
       return result;
     } catch (e) {
-      logger?.error(message: '[Storage] Failed to set int', error: e);
+      _logError('Failed to set int', e);
       return false;
     }
   }
@@ -54,7 +53,7 @@ class StorageServiceImpl implements StorageService {
     try {
       return _prefs.getInt(key);
     } catch (e) {
-      logger?.error(message: '[Storage] Failed to get int', error: e);
+      _logError('Failed to get int', e);
       return null;
     }
   }
@@ -65,10 +64,10 @@ class StorageServiceImpl implements StorageService {
   Future<bool> setDouble(String key, double value) async {
     try {
       final result = await _prefs.setDouble(key, value);
-      logger?.debug(message: '[Storage] Set double', data: {'key': key, 'value': value});
+      _log('Set double', {'key': key, 'value': value});
       return result;
     } catch (e) {
-      logger?.error(message: '[Storage] Failed to set double', error: e);
+      _logError('Failed to set double', e);
       return false;
     }
   }
@@ -78,7 +77,7 @@ class StorageServiceImpl implements StorageService {
     try {
       return _prefs.getDouble(key);
     } catch (e) {
-      logger?.error(message: '[Storage] Failed to get double', error: e);
+      _logError('Failed to get double', e);
       return null;
     }
   }
@@ -89,10 +88,10 @@ class StorageServiceImpl implements StorageService {
   Future<bool> setBool(String key, bool value) async {
     try {
       final result = await _prefs.setBool(key, value);
-      logger?.debug(message: '[Storage] Set bool', data: {'key': key, 'value': value});
+      _log('Set bool', {'key': key, 'value': value});
       return result;
     } catch (e) {
-      logger?.error(message: '[Storage] Failed to set bool', error: e);
+      _logError('Failed to set bool', e);
       return false;
     }
   }
@@ -102,7 +101,7 @@ class StorageServiceImpl implements StorageService {
     try {
       return _prefs.getBool(key);
     } catch (e) {
-      logger?.error(message: '[Storage] Failed to get bool', error: e);
+      _logError('Failed to get bool', e);
       return null;
     }
   }
@@ -113,10 +112,10 @@ class StorageServiceImpl implements StorageService {
   Future<bool> setStringList(String key, List<String> value) async {
     try {
       final result = await _prefs.setStringList(key, value);
-      logger?.debug(message: '[Storage] Set string list', data: {'key': key, 'count': value.length});
+      _log('Set string list', {'key': key, 'count': value.length});
       return result;
     } catch (e) {
-      logger?.error(message: '[Storage] Failed to set string list', error: e);
+      _logError('Failed to set string list', e);
       return false;
     }
   }
@@ -126,7 +125,7 @@ class StorageServiceImpl implements StorageService {
     try {
       return _prefs.getStringList(key);
     } catch (e) {
-      logger?.error(message: '[Storage] Failed to get string list', error: e);
+      _logError('Failed to get string list', e);
       return null;
     }
   }
@@ -139,10 +138,10 @@ class StorageServiceImpl implements StorageService {
       // Convert list to JSON string for storage
       final jsonString = jsonEncode(value);
       final result = await _prefs.setString(key, jsonString);
-      logger?.debug(message: '[Storage] Set list', data: {'key': key, 'count': value.length});
+      _log('Set list', {'key': key, 'count': value.length});
       return result;
     } catch (e) {
-      logger?.error(message: '[Storage] Failed to set list', error: e);
+      _logError('Failed to set list', e);
       return false;
     }
   }
@@ -159,7 +158,7 @@ class StorageServiceImpl implements StorageService {
       }
       return null;
     } catch (e) {
-      logger?.error(message: '[Storage] Failed to get list', error: e);
+      _logError('Failed to get list', e);
       return null;
     }
   }
@@ -171,10 +170,10 @@ class StorageServiceImpl implements StorageService {
     try {
       final jsonString = jsonEncode(value);
       final result = await _prefs.setString(key, jsonString);
-      logger?.debug(message: '[Storage] Set map', data: {'key': key});
+      _log('Set map', {'key': key});
       return result;
     } catch (e) {
-      logger?.error(message: '[Storage] Failed to set map', error: e);
+      _logError('Failed to set map', e);
       return false;
     }
   }
@@ -191,7 +190,7 @@ class StorageServiceImpl implements StorageService {
       }
       return null;
     } catch (e) {
-      logger?.error(message: '[Storage] Failed to get map', error: e);
+      _logError('Failed to get map', e);
       return null;
     }
   }
@@ -202,10 +201,10 @@ class StorageServiceImpl implements StorageService {
   Future<bool> remove(String key) async {
     try {
       final result = await _prefs.remove(key);
-      logger?.debug(message: '[Storage] Removed key', data: {'key': key});
+      _log('Removed key', {'key': key});
       return result;
     } catch (e) {
-      logger?.error(message: '[Storage] Failed to remove key', error: e);
+      _logError('Failed to remove key', e);
       return false;
     }
   }
@@ -214,10 +213,10 @@ class StorageServiceImpl implements StorageService {
   Future<bool> clear() async {
     try {
       final result = await _prefs.clear();
-      logger?.warning(message: '[Storage] Cleared all data');
+      _logWarning('Cleared all data');
       return result;
     } catch (e) {
-      logger?.error(message: '[Storage] Failed to clear', error: e);
+      _logError('Failed to clear', e);
       return false;
     }
   }
@@ -227,7 +226,7 @@ class StorageServiceImpl implements StorageService {
     try {
       return _prefs.containsKey(key);
     } catch (e) {
-      logger?.error(message: '[Storage] Failed to check key', error: e);
+      _logError('Failed to check key', e);
       return false;
     }
   }
@@ -237,8 +236,28 @@ class StorageServiceImpl implements StorageService {
     try {
       return _prefs.getKeys();
     } catch (e) {
-      logger?.error(message: '[Storage] Failed to get keys', error: e);
+      _logError('Failed to get keys', e);
       return {};
+    }
+  }
+
+  // ==================== Simple Logging Methods ====================
+
+  void _log(String message, Map<String, dynamic>? data) {
+    if (kDebugMode) {
+      debugPrint('💾 [Storage] $message${data != null ? " - $data" : ""}');
+    }
+  }
+
+  void _logWarning(String message) {
+    if (kDebugMode) {
+      debugPrint('⚠️ [Storage] WARNING: $message');
+    }
+  }
+
+  void _logError(String message, dynamic error) {
+    if (kDebugMode) {
+      debugPrint('🔴 [Storage] ERROR: $message - $error');
     }
   }
 }

@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/infrastructure/services/storage/storage_service.dart';
 import '../../../core/infrastructure/services/permissions/permission_service.dart';
-import '../../../core/infrastructure/services/logging/logger_service.dart';
 import '../../../app/themes/core/theme_notifier.dart';
 import '../models/app_settings.dart';
 
@@ -12,7 +11,6 @@ import '../models/app_settings.dart';
 class SettingsServicesManager {
   final StorageService _storage;
   final PermissionService _permissionService;
-  final LoggerService _logger;
   final ThemeNotifier _themeNotifier;
 
   // مفاتيح الإعدادات
@@ -25,11 +23,9 @@ class SettingsServicesManager {
   SettingsServicesManager({
     required StorageService storage,
     required PermissionService permissionService,
-    required LoggerService logger,
     required ThemeNotifier themeNotifier,
   }) : _storage = storage,
        _permissionService = permissionService,
-       _logger = logger,
        _themeNotifier = themeNotifier {
     _loadSettings();
   }
@@ -38,7 +34,7 @@ class SettingsServicesManager {
   
   Future<void> _loadSettings() async {
     try {
-      _logger.debug(message: '[SettingsManager] Loading settings');
+      debugPrint('[SettingsManager] Loading settings');
       
       // تحميل الإعدادات من التخزين
       final settingsJson = _storage.getMap(_settingsKey);
@@ -55,18 +51,18 @@ class SettingsServicesManager {
         );
       }
       
-      _logger.info(message: '[SettingsManager] Settings loaded successfully');
+      debugPrint('[SettingsManager] Settings loaded successfully');
     } catch (e) {
-      _logger.error(message: '[SettingsManager] Error loading settings', error: e);
+      debugPrint('[SettingsManager] Error loading settings: $e');
     }
   }
 
   Future<void> _saveSettings() async {
     try {
       await _storage.setMap(_settingsKey, _currentSettings.toJson());
-      _logger.debug(message: '[SettingsManager] Settings saved');
+      debugPrint('[SettingsManager] Settings saved');
     } catch (e) {
-      _logger.error(message: '[SettingsManager] Error saving settings', error: e);
+      debugPrint('[SettingsManager] Error saving settings: $e');
     }
   }
 
@@ -90,7 +86,7 @@ class SettingsServicesManager {
   Future<void> changeTheme(ThemeMode mode) async {
     _themeNotifier.value = mode;
     await _storage.setString(_themeKey, mode.toString());
-    _logger.info(message: '[SettingsManager] Theme changed', data: {'theme': mode.toString()});
+    debugPrint('[SettingsManager] Theme changed - theme: ${mode.toString()}');
   }
 
   // ==================== إعدادات الإشعارات ====================
@@ -98,7 +94,7 @@ class SettingsServicesManager {
   Future<void> toggleVibration(bool enabled) async {
     _currentSettings = _currentSettings.copyWith(vibrationEnabled: enabled);
     await _saveSettings();
-    _logger.info(message: '[SettingsManager] Vibration toggled', data: {'enabled': enabled});
+    debugPrint('[SettingsManager] Vibration toggled - enabled: $enabled');
   }
 
   Future<void> toggleNotifications(bool enabled) async {
@@ -113,19 +109,19 @@ class SettingsServicesManager {
       }
     }
     
-    _logger.info(message: '[SettingsManager] Notifications toggled', data: {'enabled': enabled});
+    debugPrint('[SettingsManager] Notifications toggled - enabled: $enabled');
   }
 
   Future<void> togglePrayerNotifications(bool enabled) async {
     _currentSettings = _currentSettings.copyWith(prayerNotificationsEnabled: enabled);
     await _saveSettings();
-    _logger.info(message: '[SettingsManager] Prayer notifications toggled', data: {'enabled': enabled});
+    debugPrint('[SettingsManager] Prayer notifications toggled - enabled: $enabled');
   }
 
   Future<void> toggleAthkarNotifications(bool enabled) async {
     _currentSettings = _currentSettings.copyWith(athkarNotificationsEnabled: enabled);
     await _saveSettings();
-    _logger.info(message: '[SettingsManager] Athkar notifications toggled', data: {'enabled': enabled});
+    debugPrint('[SettingsManager] Athkar notifications toggled - enabled: $enabled');
   }
 
   // ==================== إعدادات إضافية ====================
@@ -133,25 +129,25 @@ class SettingsServicesManager {
   Future<void> toggleSound(bool enabled) async {
     _currentSettings = _currentSettings.copyWith(soundEnabled: enabled);
     await _saveSettings();
-    _logger.info(message: '[SettingsManager] Sound toggled', data: {'enabled': enabled});
+    debugPrint('[SettingsManager] Sound toggled - enabled: $enabled');
   }
 
   Future<void> changeLanguage(String language) async {
     _currentSettings = _currentSettings.copyWith(language: language);
     await _saveSettings();
-    _logger.info(message: '[SettingsManager] Language changed', data: {'language': language});
+    debugPrint('[SettingsManager] Language changed - language: $language');
   }
 
   Future<void> changeFontSize(double size) async {
     _currentSettings = _currentSettings.copyWith(fontSize: size);
     await _saveSettings();
-    _logger.info(message: '[SettingsManager] Font size changed', data: {'size': size});
+    debugPrint('[SettingsManager] Font size changed - size: $size');
   }
 
   // ==================== إعادة تعيين الإعدادات ====================
   
   Future<void> resetSettings() async {
-    _logger.info(message: '[SettingsManager] Resetting all settings');
+    debugPrint('[SettingsManager] Resetting all settings');
     
     // إعادة تعيين إلى القيم الافتراضية
     _currentSettings = const AppSettings();
@@ -161,12 +157,12 @@ class SettingsServicesManager {
     _themeNotifier.value = ThemeMode.system;
     await _storage.remove(_themeKey);
     
-    _logger.info(message: '[SettingsManager] Settings reset completed');
+    debugPrint('[SettingsManager] Settings reset completed');
   }
 
   // ==================== Cleanup ====================
   
   void dispose() {
-    _logger.debug(message: '[SettingsManager] Disposing settings manager');
+    debugPrint('[SettingsManager] Disposing settings manager');
   }
 }

@@ -1,9 +1,9 @@
-// lib/core/infrastructure/services/permissions/permission_service_impl.dart (منظف)
+// lib/core/infrastructure/services/permissions/permission_service_impl.dart 
 
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart' as handler;
-import '../logging/logger_service.dart';
 import '../storage/storage_service.dart';
 import 'permission_service.dart';
 import 'permission_constants.dart';
@@ -12,7 +12,6 @@ import 'handlers/permission_handler_factory.dart';
 
 /// تنفيذ مبسط لخدمة الأذونات بدون مراقبة دورية
 class PermissionServiceImpl implements PermissionService {
-  final LoggerService _logger;
   final StorageService _storage;
   final BuildContext? _context;
   
@@ -28,19 +27,16 @@ class PermissionServiceImpl implements PermissionService {
       StreamController<PermissionChange>.broadcast();
   
   PermissionServiceImpl({
-    required LoggerService logger,
     required StorageService storage,
     BuildContext? context,
-  }) : _logger = logger,
-       _storage = storage,
+  }) : _storage = storage,
        _context = context {
     _initializeService();
   }
   
   void _initializeService() {
-    _logger.debug(message: '[PermissionService] Initializing');
+    _log('Initializing');
     _loadCachedStatuses();
-    // تم حذف _startPermissionMonitoring() - لا نحتاج مراقبة دورية هنا
   }
   
   @override
@@ -57,18 +53,18 @@ class PermissionServiceImpl implements PermissionService {
   
   @override
   Future<AppPermissionStatus> requestPermission(AppPermissionType permission) async {
-    _logger.info(message: '[PermissionService] Requesting permission', data: {'type': permission.toString()});
+    _log('Requesting permission', {'type': permission.toString()});
     
     // Check throttling
     if (_shouldThrottleRequest(permission)) {
-      _logger.debug(message: '[PermissionService] Request throttled');
+      _log('Request throttled');
       return await checkPermissionStatus(permission);
     }
     
     // Check cache first
     final cachedStatus = _getCachedStatus(permission);
     if (cachedStatus != null && cachedStatus == AppPermissionStatus.granted) {
-      _logger.debug(message: '[PermissionService] Permission already granted (cached)');
+      _log('Permission already granted (cached)');
       return cachedStatus;
     }
     
@@ -78,14 +74,14 @@ class PermissionServiceImpl implements PermissionService {
     // Get appropriate handler
     final handler = PermissionHandlerFactory.getHandler(permission);
     if (handler == null) {
-      _logger.warning(message: '[PermissionService] Unsupported permission type');
+      _logWarning('Unsupported permission type');
       return AppPermissionStatus.unknown;
     }
     
     try {
       // Check availability
       if (!handler.isAvailable) {
-        _logger.warning(message: '[PermissionService] Permission not available on this platform');
+        _logWarning('Permission not available on this platform');
         return AppPermissionStatus.unknown;
       }
       
@@ -102,17 +98,14 @@ class PermissionServiceImpl implements PermissionService {
         status
       );
       
-      _logger.info(
-        message: '[PermissionService] Permission request result',
-        data: {
-          'type': permission.toString(),
-          'status': status.toString(),
-        }
-      );
+      _log('Permission request result', {
+        'type': permission.toString(),
+        'status': status.toString(),
+      });
       
       return status;
     } catch (e, s) {
-      _logger.error(message: '[PermissionService] Error requesting permission', error: e, stackTrace: s);
+      _logError('Error requesting permission', e, s);
       return AppPermissionStatus.unknown;
     }
   }
@@ -123,10 +116,9 @@ class PermissionServiceImpl implements PermissionService {
     Function(PermissionProgress)? onProgress,
     bool showExplanationDialog = true,
   }) async {
-    _logger.info(
-      message: '[PermissionService] Requesting multiple permissions',
-      data: {'permissions': permissions.map((p) => p.toString()).toList()}
-    );
+    _log('Requesting multiple permissions', {
+      'permissions': permissions.map((p) => p.toString()).toList()
+    });
     
     // Filter supported permissions
     final supportedPermissions = permissions.where((p) {
@@ -135,7 +127,7 @@ class PermissionServiceImpl implements PermissionService {
     }).toList();
     
     if (supportedPermissions.isEmpty) {
-      _logger.warning(message: '[PermissionService] No supported permissions');
+      _logWarning('No supported permissions');
       return PermissionBatchResult(
         results: {},
         allGranted: false,
@@ -151,7 +143,7 @@ class PermissionServiceImpl implements PermissionService {
       );
       
       if (!shouldContinue) {
-        _logger.info(message: '[PermissionService] User cancelled permission request');
+        _log('User cancelled permission request');
         return PermissionBatchResult.cancelled();
       }
     }
@@ -202,7 +194,7 @@ class PermissionServiceImpl implements PermissionService {
     // Get appropriate handler
     final handler = PermissionHandlerFactory.getHandler(permission);
     if (handler == null) {
-      _logger.warning(message: '[PermissionService] Unsupported permission type for check');
+      _logWarning('Unsupported permission type for check');
       return AppPermissionStatus.unknown;
     }
     
@@ -220,7 +212,7 @@ class PermissionServiceImpl implements PermissionService {
       
       return status;
     } catch (e) {
-      _logger.error(message: '[PermissionService] Error checking permission status', error: e);
+      _logError('Error checking permission status', e);
       return AppPermissionStatus.unknown;
     }
   }
@@ -230,7 +222,7 @@ class PermissionServiceImpl implements PermissionService {
     // فحص الأذونات الحرجة فقط لتحسين الأداء
     final criticalPermissions = PermissionConstants.criticalPermissions;
     
-    _logger.info(message: '[PermissionService] Checking critical permissions only');
+    _log('Checking critical permissions only');
     
     final results = <AppPermissionType, AppPermissionStatus>{};
     
@@ -251,12 +243,12 @@ class PermissionServiceImpl implements PermissionService {
   
   @override
   Future<bool> openAppSettings() async {
-    _logger.info(message: '[PermissionService] Opening app settings');
+    _log('Opening app settings');
     
     try {
       return await handler.openAppSettings();
     } catch (e) {
-      _logger.error(message: '[PermissionService] Error opening settings', error: e);
+      _logError('Error opening settings', e);
       return false;
     }
   }
@@ -279,14 +271,14 @@ class PermissionServiceImpl implements PermissionService {
     _statusCache.clear();
     _lastRequestTime.clear();
     _lastCacheUpdate = null;
-    _logger.debug(message: '[PermissionService] Permission cache cleared');
+    _log('Permission cache cleared');
   }
   
   @override
   Future<void> dispose() async {
     await _permissionChangeController.close();
     clearPermissionCache();
-    _logger.debug(message: '[PermissionService] Permission service disposed');
+    _log('Permission service disposed');
   }
   
   // ==================== Private Methods ====================
@@ -326,7 +318,7 @@ class PermissionServiceImpl implements PermissionService {
       });
       _storage.setMap('permission_cache', cacheData);
     } catch (e) {
-      _logger.warning(message: '[PermissionService] Error saving permission cache');
+      _logWarning('Error saving permission cache');
     }
   }
   
@@ -350,11 +342,9 @@ class PermissionServiceImpl implements PermissionService {
         _lastCacheUpdate = DateTime.now();
       }
     } catch (e) {
-      _logger.warning(message: '[PermissionService] Error loading permission cache');
+      _logWarning('Error loading permission cache');
     }
   }
-  
-  // تم حذف _startPermissionMonitoring() بالكامل
   
   void _notifyPermissionChange(
     AppPermissionType permission,
@@ -368,6 +358,29 @@ class PermissionServiceImpl implements PermissionService {
         newStatus: newStatus,
         timestamp: DateTime.now(),
       ));
+    }
+  }
+
+  // ==================== Simple Logging Methods ====================
+
+  void _log(String message, [Map<String, dynamic>? data]) {
+    if (kDebugMode) {
+      debugPrint('🔐 [PermissionService] $message${data != null ? " - $data" : ""}');
+    }
+  }
+
+  void _logWarning(String message) {
+    if (kDebugMode) {
+      debugPrint('⚠️ [PermissionService] WARNING: $message');
+    }
+  }
+
+  void _logError(String message, dynamic error, [StackTrace? stackTrace]) {
+    if (kDebugMode) {
+      debugPrint('🔴 [PermissionService] ERROR: $message - $error');
+      if (stackTrace != null) {
+        debugPrint('Stack trace: $stackTrace');
+      }
     }
   }
 }

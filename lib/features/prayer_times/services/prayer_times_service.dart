@@ -7,7 +7,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart' as geocoding;
 import 'package:adhan/adhan.dart' as adhan;
 
-import '../../../core/infrastructure/services/logging/logger_service.dart';
 import '../../../core/infrastructure/services/storage/storage_service.dart';
 import '../../../core/infrastructure/services/notifications/notification_manager.dart';
 import '../../../core/infrastructure/services/permissions/permission_service.dart';
@@ -17,7 +16,6 @@ import '../utils/prayer_utils.dart'; // استخدام Utils الموحد فقط
 
 /// خدمة مواقيت الصلاة المحدثة
 class PrayerTimesService {
-  final LoggerService _logger;
   final StorageService _storage;
   final PermissionService _permissionService;
   
@@ -52,11 +50,9 @@ class PrayerTimesService {
   DateTime? _lastDataUpdate;
 
   PrayerTimesService({
-    required LoggerService logger,
     required StorageService storage,
     required PermissionService permissionService,
-  }) : _logger = logger,
-       _storage = storage,
+  }) : _storage = storage,
        _permissionService = permissionService {
     _initializeControllers();
     _initialize();
@@ -72,7 +68,7 @@ class PrayerTimesService {
   Future<void> _initialize() async {
     if (_isDisposed) return;
     
-    _logger.debug(message: '[PrayerTimesService] تهيئة خدمة مواقيت الصلاة');
+    debugPrint('[PrayerTimesService] تهيئة خدمة مواقيت الصلاة');
     
     try {
       await _loadSavedSettings();
@@ -84,10 +80,7 @@ class PrayerTimesService {
         await _checkAndUpdateData();
       }
     } catch (e) {
-      _logger.error(
-        message: '[PrayerTimesService] خطأ في تهيئة الخدمة',
-        error: e,
-      );
+      debugPrint('[PrayerTimesService] خطأ في تهيئة الخدمة: $e');
     }
   }
 
@@ -104,10 +97,7 @@ class PrayerTimesService {
         _lastDataUpdate = DateTime.tryParse(lastDataStr);
       }
     } catch (e) {
-      _logger.error(
-        message: '[PrayerTimesService] خطأ في تحميل أوقات التحديث',
-        error: e,
-      );
+      debugPrint('[PrayerTimesService] خطأ في تحميل أوقات التحديث: $e');
     }
   }
 
@@ -179,12 +169,12 @@ class PrayerTimesService {
     if (!forceUpdate && _currentLocation != null && _lastLocationUpdate != null) {
       final timeSinceUpdate = DateTime.now().difference(_lastLocationUpdate!);
       if (timeSinceUpdate.inHours < 12) {
-        _logger.debug(message: '[PrayerTimesService] استخدام الموقع المحفوظ');
+        debugPrint('[PrayerTimesService] استخدام الموقع المحفوظ');
         return _currentLocation!;
       }
     }
     
-    _logger.info(message: '[PrayerTimesService] الحصول على الموقع الحالي');
+    debugPrint('[PrayerTimesService] الحصول على الموقع الحالي');
     
     // التحقق من الأذونات
     final hasPermission = await _checkLocationPermission();
@@ -207,7 +197,7 @@ class PrayerTimesService {
           timeLimit: const Duration(seconds: 20),
         );
       } on TimeoutException {
-        _logger.warning(message: 'تعذر الحصول على موقع دقيق، محاولة الحصول على موقع تقريبي');
+        debugPrint('تعذر الحصول على موقع دقيق، محاولة الحصول على موقع تقريبي');
         position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.low,
           timeLimit: const Duration(seconds: 15),
@@ -224,7 +214,7 @@ class PrayerTimesService {
         );
         
         if (distance < 5000) {
-          _logger.debug(message: '[PrayerTimesService] لم يتغير الموقع بشكل كبير ($distance متر)');
+          debugPrint('[PrayerTimesService] لم يتغير الموقع بشكل كبير ($distance متر)');
           await _saveLocationUpdateTime();
           return _currentLocation!;
         }
@@ -248,25 +238,14 @@ class PrayerTimesService {
       await _saveLocation(location);
       await _saveLocationUpdateTime();
       
-      _logger.info(
-        message: '[PrayerTimesService] تم تحديث الموقع',
-        data: {
-          'latitude': location.latitude,
-          'longitude': location.longitude,
-          'city': location.cityName,
-          'country': location.countryName,
-        },
-      );
+      debugPrint('[PrayerTimesService] تم تحديث الموقع - ${location.cityName}, ${location.countryName}');
       
       return location;
     } catch (e) {
-      _logger.error(
-        message: '[PrayerTimesService] خطأ في الحصول على الموقع',
-        error: e,
-      );
+      debugPrint('[PrayerTimesService] خطأ في الحصول على الموقع: $e');
       
       if (_currentLocation != null) {
-        _logger.warning(message: 'استخدام الموقع المحفوظ كبديل');
+        debugPrint('استخدام الموقع المحفوظ كبديل');
         return _currentLocation!;
       }
       
@@ -283,10 +262,7 @@ class PrayerTimesService {
         _lastLocationUpdate!.toIso8601String(),
       );
     } catch (e) {
-      _logger.error(
-        message: '[PrayerTimesService] فشل حفظ وقت تحديث الموقع',
-        error: e,
-      );
+      debugPrint('[PrayerTimesService] فشل حفظ وقت تحديث الموقع: $e');
     }
   }
 
@@ -297,7 +273,7 @@ class PrayerTimesService {
     }
     
     if (_isUpdating) {
-      _logger.debug(message: '[PrayerTimesService] تحديث جاري بالفعل، انتظار...');
+      debugPrint('[PrayerTimesService] تحديث جاري بالفعل، انتظار...');
       while (_isUpdating && !_isDisposed) {
         await Future.delayed(const Duration(milliseconds: 100));
       }
@@ -316,10 +292,7 @@ class PrayerTimesService {
         throw DataNotFoundException('لم يتم تحديد الموقع');
       }
       
-      _logger.info(
-        message: '[PrayerTimesService] تحديث مواقيت الصلاة',
-        data: {'date': dateKey},
-      );
+      debugPrint('[PrayerTimesService] تحديث مواقيت الصلاة - $dateKey');
       
       // تحقق من وجود المواقيت في الذاكرة المؤقتة
       if (_timesCache.containsKey(dateKey)) {
@@ -372,20 +345,11 @@ class PrayerTimesService {
       // جدولة التنبيهات
       await _scheduleNotifications(dailyTimes);
       
-      _logger.info(
-        message: '[PrayerTimesService] تم تحديث المواقيت بنجاح',
-        data: {
-          'nextPrayer': dailyTimes.nextPrayer?.nameAr,
-          'prayerCount': prayers.length,
-        },
-      );
+      debugPrint('[PrayerTimesService] تم تحديث المواقيت بنجاح - ${dailyTimes.nextPrayer?.nameAr}');
       
       return dailyTimes;
     } catch (e) {
-      _logger.error(
-        message: '[PrayerTimesService] خطأ في تحديث المواقيت',
-        error: e,
-      );
+      debugPrint('[PrayerTimesService] خطأ في تحديث المواقيت: $e');
       rethrow;
     } finally {
       _isUpdating = false;
@@ -401,10 +365,7 @@ class PrayerTimesService {
         _lastDataUpdate!.toIso8601String(),
       );
     } catch (e) {
-      _logger.error(
-        message: '[PrayerTimesService] فشل حفظ وقت تحديث البيانات',
-        error: e,
-      );
+      debugPrint('[PrayerTimesService] فشل حفظ وقت تحديث البيانات: $e');
     }
   }
 
@@ -419,13 +380,7 @@ class PrayerTimesService {
       
       if (_currentTimes!.nextPrayer?.id != updated.nextPrayer?.id) {
         hasChanges = true;
-        _logger.info(
-          message: '[PrayerTimesService] تغيرت الصلاة التالية',
-          data: {
-            'previous': _currentTimes!.nextPrayer?.nameAr,
-            'current': updated.nextPrayer?.nameAr,
-          },
-        );
+        debugPrint('[PrayerTimesService] تغيرت الصلاة التالية: ${_currentTimes!.nextPrayer?.nameAr} -> ${updated.nextPrayer?.nameAr}');
       }
       
       for (int i = 0; i < _currentTimes!.prayers.length; i++) {
@@ -447,10 +402,7 @@ class PrayerTimesService {
         }
       }
     } catch (e) {
-      _logger.error(
-        message: '[PrayerTimesService] خطأ في تحديث حالات الصلوات',
-        error: e,
-      );
+      debugPrint('[PrayerTimesService] خطأ في تحديث حالات الصلوات: $e');
     }
   }
 
@@ -477,7 +429,7 @@ class PrayerTimesService {
         _notificationSettings = PrayerNotificationSettings.fromJson(notifJson);
       }
     } catch (e) {
-      _logger.error(message: '[PrayerTimesService] خطأ في تحميل الإعدادات', error: e);
+      debugPrint('[PrayerTimesService] خطأ في تحميل الإعدادات: $e');
       _settings = const PrayerCalculationSettings();
       _notificationSettings = const PrayerNotificationSettings();
     }
@@ -491,7 +443,7 @@ class PrayerTimesService {
         _currentLocation = PrayerLocation.fromJson(locationJson);
       }
     } catch (e) {
-      _logger.error(message: '[PrayerTimesService] خطأ في تحميل الموقع', error: e);
+      debugPrint('[PrayerTimesService] خطأ في تحميل الموقع: $e');
       _currentLocation = null;
     }
   }
@@ -501,7 +453,7 @@ class PrayerTimesService {
     try {
       await _storage.setMap(_locationKey, location.toJson());
     } catch (e) {
-      _logger.error(message: '[PrayerTimesService] فشل حفظ الموقع', error: e);
+      debugPrint('[PrayerTimesService] فشل حفظ الموقع: $e');
     }
   }
 
@@ -611,7 +563,7 @@ class PrayerTimesService {
         ),
       ];
     } catch (e) {
-      _logger.error(message: '[PrayerTimesService] خطأ في حساب المواقيت', error: e);
+      debugPrint('[PrayerTimesService] خطأ في حساب المواقيت: $e');
       rethrow;
     }
   }
@@ -672,7 +624,7 @@ class PrayerTimesService {
       final key = '${_cachedTimesKey}_${times.date.toIso8601String().split('T')[0]}';
       await _storage.setMap(key, times.toJson());
     } catch (e) {
-      _logger.error(message: '[PrayerTimesService] خطأ في حفظ الكاش', error: e);
+      debugPrint('[PrayerTimesService] خطأ في حفظ الكاش: $e');
     }
   }
 
@@ -727,9 +679,9 @@ class PrayerTimesService {
         );
       }
       
-      _logger.info(message: '[PrayerTimesService] تم جدولة التنبيهات');
+      debugPrint('[PrayerTimesService] تم جدولة التنبيهات');
     } catch (e) {
-      _logger.error(message: '[PrayerTimesService] خطأ في جدولة التنبيهات', error: e);
+      debugPrint('[PrayerTimesService] خطأ في جدولة التنبيهات: $e');
     }
   }
 
@@ -743,7 +695,7 @@ class PrayerTimesService {
       try {
         return DailyPrayerTimes.fromJson(json);
       } catch (e) {
-        _logger.error(message: '[PrayerTimesService] خطأ في قراءة المواقيت المحفوظة', error: e);
+        debugPrint('[PrayerTimesService] خطأ في قراءة المواقيت المحفوظة: $e');
       }
     }
     return null;
@@ -761,7 +713,7 @@ class PrayerTimesService {
         await updatePrayerTimes();
       }
     } catch (e) {
-      _logger.error(message: '[PrayerTimesService] خطأ في تحديث إعدادات الحساب', error: e);
+      debugPrint('[PrayerTimesService] خطأ في تحديث إعدادات الحساب: $e');
     }
   }
 
@@ -776,7 +728,7 @@ class PrayerTimesService {
         await _scheduleNotifications(_currentTimes!);
       }
     } catch (e) {
-      _logger.error(message: '[PrayerTimesService] خطأ في تحديث إعدادات التنبيهات', error: e);
+      debugPrint('[PrayerTimesService] خطأ في تحديث إعدادات التنبيهات: $e');
     }
   }
 
@@ -790,7 +742,7 @@ class PrayerTimesService {
       _timesCache.clear();
       await updatePrayerTimes();
     } catch (e) {
-      _logger.error(message: '[PrayerTimesService] خطأ في تعيين الموقع المخصص', error: e);
+      debugPrint('[PrayerTimesService] خطأ في تعيين الموقع المخصص: $e');
     }
   }
 
@@ -809,7 +761,7 @@ class PrayerTimesService {
   Future<void> dispose() async {
     if (_isDisposed) return;
     
-    _logger.info(message: '[PrayerTimesService] تنظيف الموارد...');
+    debugPrint('[PrayerTimesService] تنظيف الموارد...');
     
     _isDisposed = true;
     _stopTimers();
@@ -823,6 +775,6 @@ class PrayerTimesService {
     _timesCache.clear();
     _currentTimes = null;
     
-    _logger.info(message: '[PrayerTimesService] تم تنظيف جميع الموارد');
+    debugPrint('[PrayerTimesService] تم تنظيف جميع الموارد');
   }
 }

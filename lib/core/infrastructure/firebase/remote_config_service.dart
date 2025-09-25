@@ -3,7 +3,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
-import '../services/logging/logger_service.dart';
+import 'package:flutter/foundation.dart';
 
 /// خدمة Firebase Remote Config
 class FirebaseRemoteConfigService {
@@ -12,7 +12,6 @@ class FirebaseRemoteConfigService {
   FirebaseRemoteConfigService._internal();
 
   late FirebaseRemoteConfig _remoteConfig;
-  late LoggerService _logger;
   bool _isInitialized = false;
   
   // مفاتيح الإعدادات
@@ -25,10 +24,8 @@ class FirebaseRemoteConfigService {
   static const String _keyAthkarSettings = 'athkar_settings';
 
   /// تهيئة الخدمة
-  Future<void> initialize(LoggerService logger) async {
+  Future<void> initialize() async {
     if (_isInitialized) return;
-    
-    _logger = logger;
     
     try {
       _remoteConfig = FirebaseRemoteConfig.instance;
@@ -46,10 +43,10 @@ class FirebaseRemoteConfigService {
       await _fetchAndActivate();
       
       _isInitialized = true;
-      _logger.info(message: 'FirebaseRemoteConfigService initialized successfully');
+      debugPrint('FirebaseRemoteConfigService initialized successfully');
       
     } catch (e, stackTrace) {
-      _logger.error(message: 'Error initializing Firebase Remote Config: $e', stackTrace: stackTrace);
+      debugPrint('Error initializing Firebase Remote Config: $e');
       throw Exception('Failed to initialize Firebase Remote Config: $e');
     }
   }
@@ -93,10 +90,10 @@ class FirebaseRemoteConfigService {
   Future<bool> _fetchAndActivate() async {
     try {
       final fetchResult = await _remoteConfig.fetchAndActivate();
-      _logger.info(message: 'Remote config fetch result: $fetchResult');
+      debugPrint('Remote config fetch result: $fetchResult');
       return fetchResult;
     } catch (e) {
-      _logger.error(message: 'Error fetching remote config: $e');
+      debugPrint('Error fetching remote config: $e');
       return false;
     }
   }
@@ -104,7 +101,7 @@ class FirebaseRemoteConfigService {
   /// جلب الإعدادات يدوياً
   Future<bool> refresh() async {
     if (!_isInitialized) {
-      _logger.warning(message: 'Remote config not initialized');
+      debugPrint('Remote config not initialized');
       return false;
     }
     
@@ -128,7 +125,7 @@ class FirebaseRemoteConfigService {
       final jsonString = _remoteConfig.getString(_keyFeaturesConfig);
       return jsonDecode(jsonString) as Map<String, dynamic>;
     } catch (e) {
-      _logger.error(message: 'Error parsing features config: $e');
+      debugPrint('Error parsing features config: $e');
       return {
         'prayer_times_enabled': true,
         'qibla_enabled': true,
@@ -146,7 +143,7 @@ class FirebaseRemoteConfigService {
       final jsonString = _remoteConfig.getString(_keyNotificationConfig);
       return jsonDecode(jsonString) as Map<String, dynamic>;
     } catch (e) {
-      _logger.error(message: 'Error parsing notification config: $e');
+      debugPrint('Error parsing notification config: $e');
       return {
         'prayer_notifications': true,
         'athkar_reminders': true,
@@ -162,7 +159,7 @@ class FirebaseRemoteConfigService {
       final jsonString = _remoteConfig.getString(_keyThemeConfig);
       return jsonDecode(jsonString) as Map<String, dynamic>;
     } catch (e) {
-      _logger.error(message: 'Error parsing theme config: $e');
+      debugPrint('Error parsing theme config: $e');
       return {
         'primary_color': '#2E7D32',
         'accent_color': '#4CAF50',
@@ -178,7 +175,7 @@ class FirebaseRemoteConfigService {
       final jsonString = _remoteConfig.getString(_keyAthkarSettings);
       return jsonDecode(jsonString) as Map<String, dynamic>;
     } catch (e) {
-      _logger.error(message: 'Error parsing athkar settings: $e');
+      debugPrint('Error parsing athkar settings: $e');
       return {
         'auto_scroll_enabled': true,
         'vibration_feedback': true,
@@ -226,7 +223,7 @@ class FirebaseRemoteConfigService {
       if (jsonString.isEmpty) return null;
       return jsonDecode(jsonString) as Map<String, dynamic>;
     } catch (e) {
-      _logger.error(message: 'Error parsing custom JSON for key $key: $e');
+      debugPrint('Error parsing custom JSON for key $key: $e');
       return null;
     }
   }
@@ -247,12 +244,12 @@ class FirebaseRemoteConfigService {
   /// إعادة تهيئة الخدمة
   Future<void> reinitialize() async {
     _isInitialized = false;
-    await initialize(_logger);
+    await initialize();
   }
 
   /// تنظيف الموارد
   void dispose() {
     _isInitialized = false;
-    _logger.info(message: 'FirebaseRemoteConfigService disposed');
+    debugPrint('FirebaseRemoteConfigService disposed');
   }
 }

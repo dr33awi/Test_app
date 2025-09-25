@@ -1,13 +1,11 @@
 // lib/features/tasbih/services/tasbih_service.dart
 import 'package:flutter/material.dart';
 import '../../../app/themes/constants/app_constants.dart';
-import '../../../core/infrastructure/services/logging/logger_service.dart';
 import '../../../core/infrastructure/services/storage/storage_service.dart';
 
 /// خدمة إدارة المسبحة الرقمية
 class TasbihService extends ChangeNotifier {
   final StorageService _storage;
-  final LoggerService _logger;
 
   int _count = 0;
   int _todayCount = 0;
@@ -24,9 +22,7 @@ class TasbihService extends ChangeNotifier {
 
   TasbihService({
     required StorageService storage, 
-    required LoggerService logger,
-  }) : _storage = storage,
-        _logger = logger {
+  }) : _storage = storage {
     _loadData();
   }
 
@@ -51,10 +47,7 @@ class TasbihService extends ChangeNotifier {
         try {
           _lastUsedDate = DateTime.parse(lastDateString);
         } catch (e) {
-          _logger.warning(
-            message: '[TasbihService] Invalid date format, using current date',
-            data: {'dateString': lastDateString},
-          );
+          debugPrint('[TasbihService] Invalid date format, using current date - dateString: $lastDateString');
           _lastUsedDate = DateTime.now();
         }
       }
@@ -79,23 +72,11 @@ class TasbihService extends ChangeNotifier {
       // تحميل التاريخ
       await _loadHistory();
       
-      _logger.debug(
-        message: '[TasbihService] Data loaded successfully',
-        data: {
-          'count': _count,
-          'todayCount': _todayCount,
-          'totalCount': _totalCount,
-          'dhikrStatsCount': _dhikrStats.length,
-          'historyCount': _history.length,
-        },
-      );
+      debugPrint('[TasbihService] Data loaded successfully - count: $_count, todayCount: $_todayCount, totalCount: $_totalCount');
       
       notifyListeners();
     } catch (e) {
-      _logger.error(
-        message: '[TasbihService] Error loading data',
-        error: e,
-      );
+      debugPrint('[TasbihService] Error loading data: $e');
       // في حالة الخطأ، نبدأ بقيم افتراضية
       _count = 0;
       _todayCount = 0;
@@ -120,10 +101,7 @@ class TasbihService extends ChangeNotifier {
         });
       }
     } catch (e) {
-      _logger.error(
-        message: '[TasbihService] Error loading dhikr stats',
-        error: e,
-      );
+      debugPrint('[TasbihService] Error loading dhikr stats: $e');
       _dhikrStats = {};
     }
   }
@@ -133,10 +111,7 @@ class TasbihService extends ChangeNotifier {
     _sessionStartTime = DateTime.now();
     _currentDhikrType = dhikrType;
     
-    _logger.debug(
-      message: '[TasbihService] Session started',
-      data: {'dhikrType': dhikrType},
-    );
+    debugPrint('[TasbihService] Session started - dhikrType: $dhikrType');
   }
 
   // إنهاء جلسة التسبيح
@@ -144,15 +119,9 @@ class TasbihService extends ChangeNotifier {
     if (_sessionStartTime == null || _currentDhikrType == null) return;
     
     final sessionCount = _count;
+    final duration = DateTime.now().difference(_sessionStartTime!).inSeconds;
     
-    _logger.info(
-      message: '[TasbihService] Session ended',
-      data: {
-        'dhikrType': _currentDhikrType,
-        'count': sessionCount,
-        'duration': DateTime.now().difference(_sessionStartTime!).inSeconds,
-      },
-    );
+    debugPrint('[TasbihService] Session ended - dhikrType: $_currentDhikrType, count: $sessionCount, duration: $duration');
     
     _sessionStartTime = null;
     _currentDhikrType = null;
@@ -182,19 +151,9 @@ class TasbihService extends ChangeNotifier {
         _storage.setMap('${AppConstants.tasbihCounterKey}_stats', _dhikrStats),
       ]);
       
-      _logger.debug(
-        message: '[TasbihService] Incremented',
-        data: {
-          'count': _count,
-          'dhikrType': dhikrType,
-          'todayCount': _todayCount,
-        },
-      );
+      debugPrint('[TasbihService] Incremented - count: $_count, dhikrType: $dhikrType, todayCount: $_todayCount');
     } catch (e) {
-      _logger.error(
-        message: '[TasbihService] Error incrementing',
-        error: e,
-      );
+      debugPrint('[TasbihService] Error incrementing: $e');
     }
   }
 
@@ -203,20 +162,15 @@ class TasbihService extends ChangeNotifier {
       // إنهاء الجلسة الحالية قبل التصفير
       await endSession();
       
+      final previousCount = _count;
       _count = 0;
       notifyListeners();
       
       await _storage.setInt(AppConstants.tasbihCounterKey, _count);
       
-      _logger.info(
-        message: '[TasbihService] Counter reset',
-        data: {'previousCount': _count},
-      );
+      debugPrint('[TasbihService] Counter reset - previousCount: $previousCount');
     } catch (e) {
-      _logger.error(
-        message: '[TasbihService] Error resetting',
-        error: e,
-      );
+      debugPrint('[TasbihService] Error resetting: $e');
     }
   }
 
@@ -233,14 +187,9 @@ class TasbihService extends ChangeNotifier {
       
       await _storage.setInt('${AppConstants.tasbihCounterKey}_today', _todayCount);
       
-      _logger.info(
-        message: '[TasbihService] Daily count reset',
-      );
+      debugPrint('[TasbihService] Daily count reset');
     } catch (e) {
-      _logger.error(
-        message: '[TasbihService] Error resetting daily count',
-        error: e,
-      );
+      debugPrint('[TasbihService] Error resetting daily count: $e');
     }
   }
 
@@ -265,14 +214,9 @@ class TasbihService extends ChangeNotifier {
         _storage.remove('${AppConstants.tasbihCounterKey}_history'),
       ]);
       
-      _logger.info(
-        message: '[TasbihService] All data reset',
-      );
+      debugPrint('[TasbihService] All data reset');
     } catch (e) {
-      _logger.error(
-        message: '[TasbihService] Error resetting all data',
-        error: e,
-      );
+      debugPrint('[TasbihService] Error resetting all data: $e');
     }
   }
 
@@ -300,10 +244,7 @@ class TasbihService extends ChangeNotifier {
       
       await _saveHistory();
     } catch (e) {
-      _logger.error(
-        message: '[TasbihService] Error saving daily record',
-        error: e,
-      );
+      debugPrint('[TasbihService] Error saving daily record: $e');
     }
   }
 
@@ -327,18 +268,13 @@ class TasbihService extends ChangeNotifier {
             try {
               _history.add(DailyRecord.fromMap(recordData));
             } catch (e) {
-              _logger.warning(
-                message: '[TasbihService] Invalid history record format',
-              );
+              debugPrint('[TasbihService] Invalid history record format');
             }
           }
         }
       }
     } catch (e) {
-      _logger.error(
-        message: '[TasbihService] Error loading history',
-        error: e,
-      );
+      debugPrint('[TasbihService] Error loading history: $e');
       _history = [];
     }
   }
@@ -351,10 +287,7 @@ class TasbihService extends ChangeNotifier {
       }
       await _storage.setMap('${AppConstants.tasbihCounterKey}_history', historyData);
     } catch (e) {
-      _logger.error(
-        message: '[TasbihService] Error saving history',
-        error: e,
-      );
+      debugPrint('[TasbihService] Error saving history: $e');
     }
   }
 

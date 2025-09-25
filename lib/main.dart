@@ -21,7 +21,6 @@ import 'core/infrastructure/services/permissions/screens/permission_onboarding_s
 
 // Firebase services
 import 'core/infrastructure/firebase/firebase_initializer.dart';
-import 'core/infrastructure/services/logging/logger_service.dart';
 
 // الثوابت والثيمات
 import 'app/themes/constants/app_constants.dart';
@@ -101,8 +100,7 @@ Future<void> _initializeApp() async {
     
     // 3. تهيئة Firebase services إضافية (اختياري)
     try {
-      final logger = getIt<LoggerService>();
-      await FirebaseInitializer.initialize(logger: logger);
+      await FirebaseInitializer.initialize();
       debugPrint('✅ تمت تهيئة خدمات Firebase الإضافية');
     } catch (e) {
       debugPrint('⚠️ تحذير: بعض خدمات Firebase غير متوفرة: $e');

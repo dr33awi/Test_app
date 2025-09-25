@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../app/themes/app_theme.dart';
 import '../../../app/di/service_locator.dart';
-import '../../../core/infrastructure/services/logging/logger_service.dart';
 import '../services/prayer_times_service.dart';
 import '../models/prayer_time_model.dart';
 
@@ -16,7 +15,6 @@ class PrayerSettingsScreen extends StatefulWidget {
 }
 
 class _PrayerSettingsScreenState extends State<PrayerSettingsScreen> {
-  late final LoggerService _logger;
   late final PrayerTimesService _prayerService;
   
   // إعدادات الحساب
@@ -35,7 +33,6 @@ class _PrayerSettingsScreenState extends State<PrayerSettingsScreen> {
   }
 
   void _initializeServices() {
-    _logger = getIt<LoggerService>();
     _prayerService = getIt<PrayerTimesService>();
   }
 
@@ -59,10 +56,6 @@ class _PrayerSettingsScreenState extends State<PrayerSettingsScreen> {
       // حفظ إعدادات الحساب
       await _prayerService.updateCalculationSettings(_calculationSettings);
       
-      _logger.logEvent('prayer_settings_updated', parameters: {
-        'calculation_method': _calculationSettings.method.toString(),
-      });
-      
       if (!mounted) return;
       
       context.showSuccessSnackBar('تم حفظ الإعدادات بنجاح');
@@ -73,11 +66,6 @@ class _PrayerSettingsScreenState extends State<PrayerSettingsScreen> {
       // العودة للشاشة السابقة
       Navigator.pop(context);
     } catch (e) {
-      _logger.error(
-        message: 'خطأ في حفظ الإعدادات',
-        error: e,
-      );
-      
       if (!mounted) return;
       
       context.showErrorSnackBar('فشل حفظ الإعدادات');

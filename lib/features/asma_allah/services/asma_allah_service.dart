@@ -1,7 +1,6 @@
-// lib/features/asma_allah/services/asma_allah_service.dart
+// lib/features/asma_allah/services/asma_allah_service.dart 
 import 'package:flutter/material.dart';
 import 'package:athkar_app/core/infrastructure/services/storage/storage_service.dart';
-import 'package:athkar_app/core/infrastructure/services/logging/logger_service.dart';
 import '../models/asma_allah_model.dart';
 import '../data/asma_allah_data.dart';
 
@@ -19,7 +18,6 @@ class AsmaAllahService extends ChangeNotifier {
   
   AsmaAllahService({
     required StorageService storage,
-    LoggerService? logger,
   }) : _storage = storage {
     _init();
   }

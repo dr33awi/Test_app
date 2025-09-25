@@ -9,10 +9,6 @@ import 'package:battery_plus/battery_plus.dart';
 import 'package:athkar_app/core/infrastructure/services/storage/storage_service.dart';
 import 'package:athkar_app/core/infrastructure/services/storage/storage_service_impl.dart';
 
-// خدمات السجلات
-import 'package:athkar_app/core/infrastructure/services/logging/logger_service.dart';
-import 'package:athkar_app/core/infrastructure/services/logging/logger_service_impl.dart';
-
 // خدمات الإشعارات
 import 'package:athkar_app/core/infrastructure/services/notifications/notification_manager.dart';
 import 'package:athkar_app/core/infrastructure/services/notifications/notification_service.dart';
@@ -83,8 +79,7 @@ class ServiceLocator {
       // 1. الخدمات الأساسية
       await _registerCoreServices();
 
-      // 2. خدمات التخزين والسجلات
-      _registerLoggingServices();
+      // 2. خدمات التخزين
       await _registerStorageServices();
 
       // 3. إدارة الثيم
@@ -142,17 +137,6 @@ class ServiceLocator {
     }
   }
 
-  /// تسجيل خدمات السجلات
-  void _registerLoggingServices() {
-    debugPrint('ServiceLocator: Registering logging services...');
-
-    if (!getIt.isRegistered<LoggerService>()) {
-      getIt.registerLazySingleton<LoggerService>(
-        () => LoggerServiceImpl(),
-      );
-    }
-  }
-
   /// تسجيل خدمات التخزين
   Future<void> _registerStorageServices() async {
     debugPrint('ServiceLocator: Registering storage services...');
@@ -161,7 +145,6 @@ class ServiceLocator {
       getIt.registerLazySingleton<StorageService>(
         () => StorageServiceImpl(
           getIt<SharedPreferences>(),
-          logger: getIt<LoggerService>(),
         ),
       );
     }
@@ -186,7 +169,6 @@ class ServiceLocator {
     if (!getIt.isRegistered<PermissionService>()) {
       getIt.registerLazySingleton<PermissionService>(
         () => PermissionServiceImpl(
-          logger: getIt<LoggerService>(),
           storage: getIt<StorageService>(),
         ),
       );
@@ -199,7 +181,6 @@ class ServiceLocator {
         () => UnifiedPermissionManager.getInstance(
           permissionService: getIt<PermissionService>(),
           storage: getIt<StorageService>(),
-          logger: getIt<LoggerService>(),
         ),
       );
       debugPrint('ServiceLocator: UnifiedPermissionManager registered successfully');
@@ -240,7 +221,6 @@ class ServiceLocator {
       getIt.registerLazySingleton<BatteryService>(
         () => BatteryServiceImpl(
           battery: getIt<Battery>(),
-          logger: getIt<LoggerService>(),
         ),
       );
     }
@@ -252,7 +232,7 @@ class ServiceLocator {
 
     if (!getIt.isRegistered<AppErrorHandler>()) {
       getIt.registerLazySingleton<AppErrorHandler>(
-        () => AppErrorHandler(getIt<LoggerService>()),
+        () => AppErrorHandler(),
       );
     }
   }
@@ -265,7 +245,6 @@ class ServiceLocator {
     if (!getIt.isRegistered<PrayerTimesService>()) {
       getIt.registerLazySingleton<PrayerTimesService>(
         () => PrayerTimesService(
-          logger: getIt<LoggerService>(),
           storage: getIt<StorageService>(),
           permissionService: getIt<PermissionService>(),
         ),
@@ -276,7 +255,6 @@ class ServiceLocator {
     if (!getIt.isRegistered<AthkarService>()) {
       getIt.registerLazySingleton<AthkarService>(
         () => AthkarService(
-          logger: getIt<LoggerService>(),
           storage: getIt<StorageService>(),
         ),
       );
@@ -288,7 +266,6 @@ class ServiceLocator {
       getIt.registerLazySingleton<DuaService>(
         () => DuaService(
           storage: getIt<StorageService>(),
-          logger: getIt<LoggerService>(),
         ),
       );
       debugPrint('ServiceLocator: DuaService registered successfully');
@@ -299,7 +276,6 @@ class ServiceLocator {
       getIt.registerFactory<TasbihService>(
         () => TasbihService(
           storage: getIt<StorageService>(),
-          logger: getIt<LoggerService>(),
         ),
       );
       debugPrint('ServiceLocator: TasbihService registered successfully');
@@ -319,7 +295,6 @@ class ServiceLocator {
     if (!getIt.isRegistered<QiblaService>()) {
       getIt.registerFactory<QiblaService>(
         () => QiblaService(
-          logger: getIt<LoggerService>(),
           storage: getIt<StorageService>(),
           permissionService: getIt<PermissionService>(),
         ),
@@ -335,7 +310,6 @@ class ServiceLocator {
       final settingsManager = SettingsServicesManager(
         storage: getIt<StorageService>(),
         permissionService: getIt<PermissionService>(),
-        logger: getIt<LoggerService>(),
         themeNotifier: getIt<ThemeNotifier>(),
       );
       
@@ -436,14 +410,13 @@ class ServiceLocator {
     debugPrint('ServiceLocator: Initializing Firebase services...');
     
     try {
-      final logger = getIt<LoggerService>();
       final storage = getIt<StorageService>();
       
       // تهيئة Remote Config إذا كان متوفراً
       if (getIt.isRegistered<FirebaseRemoteConfigService>()) {
         try {
           final remoteConfig = getIt<FirebaseRemoteConfigService>();
-          await remoteConfig.initialize(logger);
+          await remoteConfig.initialize();
           debugPrint('ServiceLocator: Remote Config initialized');
           
           // تهيئة Manager
@@ -452,7 +425,6 @@ class ServiceLocator {
             await configManager.initialize(
               remoteConfig: remoteConfig,
               storage: storage,
-              logger: logger,
             );
             debugPrint('ServiceLocator: Remote Config Manager initialized');
           }
@@ -466,7 +438,6 @@ class ServiceLocator {
         try {
           final messaging = getIt<FirebaseMessagingService>();
           await messaging.initialize(
-            logger: logger,
             storage: storage,
             notificationService: getIt<NotificationService>(),
           );
@@ -487,7 +458,6 @@ class ServiceLocator {
     final requiredServices = [
       // الخدمات الأساسية
       getIt.isRegistered<StorageService>(),
-      getIt.isRegistered<LoggerService>(),
       getIt.isRegistered<ThemeNotifier>(),
       
       // خدمات الأذونات
@@ -666,9 +636,6 @@ extension ServiceLocatorExtensions on BuildContext {
   
   /// الحصول على مدير الأذونات الموحد
   UnifiedPermissionManager get permissionManager => getIt<UnifiedPermissionManager>();
-  
-  /// الحصول على خدمة السجلات
-  LoggerService get loggerService => getIt<LoggerService>();
   
   /// الحصول على معالج الأخطاء
   AppErrorHandler get errorHandler => getIt<AppErrorHandler>();

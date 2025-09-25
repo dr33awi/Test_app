@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../app/themes/app_theme.dart';
 import '../../../app/di/service_locator.dart';
-import '../../../core/infrastructure/services/logging/logger_service.dart';
 import '../services/prayer_times_service.dart';
 import '../models/prayer_time_model.dart';
 
@@ -16,7 +15,6 @@ class PrayerNotificationsSettingsScreen extends StatefulWidget {
 }
 
 class _PrayerNotificationsSettingsScreenState extends State<PrayerNotificationsSettingsScreen> {
-  late final LoggerService _logger;
   late final PrayerTimesService _prayerService;
   
   late PrayerNotificationSettings _notificationSettings;
@@ -36,7 +34,6 @@ class _PrayerNotificationsSettingsScreenState extends State<PrayerNotificationsS
   }
 
   void _initializeServices() {
-    _logger = getIt<LoggerService>();
     _prayerService = getIt<PrayerTimesService>();
   }
 
@@ -59,10 +56,9 @@ class _PrayerNotificationsSettingsScreenState extends State<PrayerNotificationsS
     try {
       await _prayerService.updateNotificationSettings(_notificationSettings);
       
-      _logger.logEvent('prayer_notification_settings_updated', parameters: {
-        'enabled': _notificationSettings.enabled,
-        'enabled_prayers_count': _notificationSettings.enabledPrayers.values.where((v) => v).length,
-      });
+      debugPrint('Prayer notification settings updated - '
+          'enabled: ${_notificationSettings.enabled}, '
+          'enabled_prayers_count: ${_notificationSettings.enabledPrayers.values.where((v) => v).length}');
       
       if (!mounted) return;
       
@@ -71,10 +67,7 @@ class _PrayerNotificationsSettingsScreenState extends State<PrayerNotificationsS
         _hasChanges = false;
       });
     } catch (e) {
-      _logger.error(
-        message: 'خطأ في حفظ إعدادات الإشعارات',
-        error: e,
-      );
+      debugPrint('خطأ في حفظ إعدادات الإشعارات: $e');
       
       if (!mounted) return;
       

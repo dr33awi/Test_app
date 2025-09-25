@@ -6,14 +6,12 @@ import 'package:flutter_compass/flutter_compass.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
-import '../../../core/infrastructure/services/logging/logger_service.dart';
 import '../../../core/infrastructure/services/storage/storage_service.dart';
 import '../../../core/infrastructure/services/permissions/permission_service.dart';
 import '../models/qibla_model.dart';
 
 /// خدمة القبلة
 class QiblaService extends ChangeNotifier {
-  final LoggerService _logger;
   final StorageService _storage;
   final PermissionService _permissionService;
 
@@ -44,11 +42,9 @@ class QiblaService extends ChangeNotifier {
   final List<double> _directionHistory = [];
 
   QiblaService({
-    required LoggerService logger,
     required StorageService storage,
     required PermissionService permissionService,
-  })  : _logger = logger,
-        _storage = storage,
+  })  : _storage = storage,
         _permissionService = permissionService {
     _init();
   }
@@ -83,7 +79,7 @@ class QiblaService extends ChangeNotifier {
     if (_disposed) return;
 
     try {
-      _logger.info(message: '[QiblaService] بدء تهيئة خدمة القبلة');
+      debugPrint('[QiblaService] بدء تهيئة خدمة القبلة');
       
       await _loadCalibrationData();
       await _checkCompassAvailability();
@@ -94,10 +90,10 @@ class QiblaService extends ChangeNotifier {
 
       await _loadStoredQiblaData();
       
-      _logger.info(message: '[QiblaService] تمت التهيئة بنجاح');
+      debugPrint('[QiblaService] تمت التهيئة بنجاح');
     } catch (e) {
       _errorMessage = 'حدث خطأ أثناء التهيئة';
-      _logger.error(message: '[QiblaService] خطأ في التهيئة', error: e);
+      debugPrint('[QiblaService] خطأ في التهيئة: $e');
     }
   }
 
@@ -116,7 +112,7 @@ class QiblaService extends ChangeNotifier {
       }
     } catch (e) {
       _hasCompass = false;
-      _logger.error(message: '[QiblaService] خطأ في التحقق من البوصلة');
+      debugPrint('[QiblaService] خطأ في التحقق من البوصلة');
     }
   }
 
@@ -130,7 +126,7 @@ class QiblaService extends ChangeNotifier {
         }
       },
       onError: (error) {
-        _logger.error(message: '[QiblaService] خطأ في قراءة البوصلة');
+        debugPrint('[QiblaService] خطأ في قراءة البوصلة');
       },
     );
   }
@@ -172,7 +168,7 @@ class QiblaService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _logger.info(message: '[QiblaService] بدء تحديث بيانات القبلة');
+      debugPrint('[QiblaService] بدء تحديث بيانات القبلة');
 
       final hasPermission = await _checkLocationPermission();
       if (!hasPermission) {
@@ -199,7 +195,7 @@ class QiblaService extends ChangeNotifier {
           countryName = placemark.country;
         }
       } catch (e) {
-        _logger.error(message: '[QiblaService] لم يتم الحصول على معلومات الموقع');
+        debugPrint('[QiblaService] لم يتم الحصول على معلومات الموقع');
       }
 
       _qiblaData = QiblaModel.fromCoordinates(
@@ -212,10 +208,10 @@ class QiblaService extends ChangeNotifier {
 
       await _saveQiblaData(_qiblaData!);
       
-      _logger.info(message: '[QiblaService] تم تحديث بيانات القبلة بنجاح');
+      debugPrint('[QiblaService] تم تحديث بيانات القبلة بنجاح');
     } catch (e) {
       _errorMessage = _getErrorMessage(e);
-      _logger.error(message: '[QiblaService] خطأ في تحديث البيانات', error: e);
+      debugPrint('[QiblaService] خطأ في تحديث البيانات: $e');
     } finally {
       if (!_disposed) {
         _isLoading = false;
@@ -235,7 +231,7 @@ class QiblaService extends ChangeNotifier {
     _isCalibrated = false;
     _calibrationReadings.clear();
     
-    _logger.info(message: '[QiblaService] بدء عملية معايرة البوصلة');
+    debugPrint('[QiblaService] بدء عملية معايرة البوصلة');
     notifyListeners();
 
     Timer(const Duration(seconds: 15), () {
@@ -256,7 +252,7 @@ class QiblaService extends ChangeNotifier {
       
       if (_isCalibrated) {
         _compassAccuracy = math.max(_compassAccuracy, 0.8);
-        _logger.info(message: '[QiblaService] تمت المعايرة بنجاح');
+        debugPrint('[QiblaService] تمت المعايرة بنجاح');
       }
     }
 
@@ -283,10 +279,10 @@ class QiblaService extends ChangeNotifier {
       final qiblaJson = _storage.getMap(_qiblaDataKey);
       if (qiblaJson != null && qiblaJson.isNotEmpty) {
         _qiblaData = QiblaModel.fromJson(qiblaJson);
-        _logger.info(message: '[QiblaService] تم تحميل بيانات القبلة المخزنة');
+        debugPrint('[QiblaService] تم تحميل بيانات القبلة المخزنة');
       }
     } catch (e) {
-      _logger.error(message: '[QiblaService] خطأ في تحميل البيانات المخزنة');
+      debugPrint('[QiblaService] خطأ في تحميل البيانات المخزنة');
     }
   }
 
@@ -294,7 +290,7 @@ class QiblaService extends ChangeNotifier {
     try {
       await _storage.setMap(_qiblaDataKey, data.toJson());
     } catch (e) {
-      _logger.error(message: '[QiblaService] خطأ في حفظ البيانات');
+      debugPrint('[QiblaService] خطأ في حفظ البيانات');
     }
   }
 
@@ -305,7 +301,7 @@ class QiblaService extends ChangeNotifier {
         _isCalibrated = data['isCalibrated'] as bool? ?? false;
       }
     } catch (e) {
-      _logger.error(message: '[QiblaService] خطأ في تحميل بيانات المعايرة');
+      debugPrint('[QiblaService] خطأ في تحميل بيانات المعايرة');
     }
   }
 
@@ -317,7 +313,7 @@ class QiblaService extends ChangeNotifier {
         'accuracy': _compassAccuracy,
       });
     } catch (e) {
-      _logger.error(message: '[QiblaService] خطأ في حفظ بيانات المعايرة');
+      debugPrint('[QiblaService] خطأ في حفظ بيانات المعايرة');
     }
   }
 
@@ -387,7 +383,7 @@ class QiblaService extends ChangeNotifier {
     if (_disposed) return;
     _disposed = true;
 
-    _logger.info(message: '[QiblaService] بدء تنظيف موارد الخدمة');
+    debugPrint('[QiblaService] بدء تنظيف موارد الخدمة');
     
     _compassSubscription?.cancel();
     _directionHistory.clear();

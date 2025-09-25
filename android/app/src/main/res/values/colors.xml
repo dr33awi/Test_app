@@ -1,29 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Launcher icon background -->
+    <!-- ==================== الألوان الأساسية للتطبيق ==================== -->
+    
+    <!-- أيقونة التطبيق -->
     <color name="ic_launcher_background">#e7e8e3</color>
     
-    <!-- Firebase notification colors -->
+    <!-- ألوان الإشعارات لـ Firebase -->
     <color name="notification_color">#2E7D32</color>
     <color name="notification_accent">#4CAF50</color>
     
-    <!-- Primary brand colors -->
+    <!-- الألوان الرئيسية -->
     <color name="primary_color">#2E7D32</color>
     <color name="primary_variant">#1B5E20</color>
     <color name="primary_dark">#1B5E20</color>
     <color name="primary_light">#66BB6A</color>
     
-    <!-- Secondary brand colors -->
+    <!-- الألوان الثانوية -->
     <color name="secondary_color">#4CAF50</color>
     <color name="secondary_variant">#388E3C</color>
     <color name="secondary_dark">#388E3C</color>
     <color name="secondary_light">#81C784</color>
     
-    <!-- Accent colors -->
+    <!-- ألوان التمييز -->
     <color name="accent_color">#FF9800</color>
     <color name="accent_variant">#F57C00</color>
     
-    <!-- Status and feedback colors -->
+    <!-- ألوان الحالة والتغذية الراجعة -->
     <color name="success_color">#4CAF50</color>
     <color name="success_dark">#388E3C</color>
     <color name="success_light">#C8E6C9</color>
@@ -40,26 +42,26 @@
     <color name="info_dark">#1976D2</color>
     <color name="info_light">#BBDEFB</color>
     
-    <!-- Text colors -->
+    <!-- ألوان النص -->
     <color name="text_primary">#212121</color>
     <color name="text_secondary">#757575</color>
     <color name="text_disabled">#BDBDBD</color>
     <color name="text_inverse">#FFFFFF</color>
     
-    <!-- Background colors -->
+    <!-- ألوان الخلفيات -->
     <color name="background_primary">#FFFFFF</color>
     <color name="background_secondary">#F5F5F5</color>
     <color name="background_card">#FFFFFF</color>
     <color name="background_overlay">#80000000</color>
     
-    <!-- Dark theme colors -->
+    <!-- ألوان الوضع المظلم -->
     <color name="background_dark">#121212</color>
     <color name="background_dark_secondary">#1F1F1F</color>
     <color name="surface_dark">#2D2D2D</color>
     <color name="text_dark_primary">#FFFFFF</color>
     <color name="text_dark_secondary">#B3B3B3</color>
     
-    <!-- Prayer times colors -->
+    <!-- ألوان أوقات الصلاة -->
     <color name="prayer_fajr">#4A148C</color>
     <color name="prayer_sunrise">#FF6F00</color>
     <color name="prayer_dhuhr">#FF9800</color>
@@ -67,46 +69,46 @@
     <color name="prayer_maghrib">#E65100</color>
     <color name="prayer_isha">#263238</color>
     
-    <!-- Feature specific colors -->
+    <!-- ألوان الميزات المحددة -->
     <color name="athkar_primary">#4CAF50</color>
     <color name="qibla_primary">#2196F3</color>
     <color name="tasbih_primary">#9C27B0</color>
     <color name="dua_primary">#FF9800</color>
     
-    <!-- Notification channel colors -->
+    <!-- ألوان قنوات الإشعارات -->
     <color name="channel_prayer">#2E7D32</color>
     <color name="channel_athkar">#4CAF50</color>
     <color name="channel_general">#2196F3</color>
     <color name="channel_reminder">#FF9800</color>
     
-    <!-- Button colors -->
+    <!-- ألوان الأزرار -->
     <color name="button_primary">#2E7D32</color>
     <color name="button_secondary">#4CAF50</color>
     <color name="button_disabled">#E0E0E0</color>
     <color name="button_text">#FFFFFF</color>
     <color name="button_text_secondary">#2E7D32</color>
     
-    <!-- Border and divider colors -->
+    <!-- ألوان الحدود والفواصل -->
     <color name="border_color">#E0E0E0</color>
     <color name="divider_color">#EEEEEE</color>
     <color name="separator_color">#F5F5F5</color>
     
-    <!-- Transparent colors -->
+    <!-- الألوان الشفافة -->
     <color name="transparent">#00000000</color>
     <color name="semi_transparent_black">#80000000</color>
     <color name="semi_transparent_white">#80FFFFFF</color>
     
-    <!-- Gradient colors -->
+    <!-- ألوان التدرج -->
     <color name="gradient_start">#2E7D32</color>
     <color name="gradient_center">#4CAF50</color>
     <color name="gradient_end">#66BB6A</color>
     
-    <!-- Special purpose colors -->
+    <!-- ألوان الأغراض الخاصة -->
     <color name="splash_background">#FFFFFF</color>
     <color name="onboarding_primary">#2E7D32</color>
     <color name="settings_section">#F8F9FA</color>
     
-    <!-- Shimmer loading colors -->
+    <!-- ألوان تحميل Shimmer -->
     <color name="shimmer_base">#F0F0F0</color>
     <color name="shimmer_highlight">#FFFFFF</color>
 </resources>

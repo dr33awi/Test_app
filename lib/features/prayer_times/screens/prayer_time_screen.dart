@@ -1,12 +1,9 @@
-// lib/features/prayer_times/screens/prayer_time_screen_updated.dart
-
-
+// lib/features/prayer_times/screens/prayer_time_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import '../../../app/themes/app_theme.dart';
 import '../../../app/di/service_locator.dart';
-import '../../../core/infrastructure/services/logging/logger_service.dart';
 import '../services/prayer_times_service.dart';
 import '../models/prayer_time_model.dart'; // استخدام النموذج الأصلي
 import '../utils/prayer_utils.dart';
@@ -23,7 +20,6 @@ class PrayerTimesScreen extends StatefulWidget {
 }
 
 class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
-  late final LoggerService _logger;
   late final PrayerTimesService _prayerService;
   
   final _scrollController = ScrollController();
@@ -47,7 +43,6 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
   }
 
   void _initializeServices() {
-    _logger = getIt<LoggerService>();
     _prayerService = getIt<PrayerTimesService>();
     
     _timesSubscription = _prayerService.prayerTimesStream.listen(
@@ -114,10 +109,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
         _isLoading = false;
       });
       
-      _logger.error(
-        message: 'خطأ في تحميل مواقيت الصلاة',
-        error: e,
-      );
+      debugPrint('خطأ في تحميل مواقيت الصلاة: $e');
     }
   }
 
@@ -129,13 +121,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
     try {
       final location = await _prayerService.getCurrentLocation(forceUpdate: true);
       
-      _logger.info(
-        message: 'تم تحديد الموقع بنجاح',
-        data: {
-          'city': location.cityName,
-          'country': location.countryName,
-        },
-      );
+      debugPrint('تم تحديد الموقع بنجاح: ${location.cityName}, ${location.countryName}');
       
       await _prayerService.updatePrayerTimes();
       
@@ -146,10 +132,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
         context.showSuccessSnackBar('تم تحديد الموقع وتحميل المواقيت بنجاح');
       }
     } catch (e) {
-      _logger.error(
-        message: 'فشل الحصول على الموقع',
-        error: e,
-      );
+      debugPrint('فشل الحصول على الموقع: $e');
       
       if (mounted) {
         setState(() {
@@ -189,10 +172,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
         context.showSuccessSnackBar('تم تحديث مواقيت الصلاة بنجاح');
       }
     } catch (e) {
-      _logger.error(
-        message: 'فشل تحديث مواقيت الصلاة',
-        error: e,
-      );
+      debugPrint('فشل تحديث مواقيت الصلاة: $e');
       
       if (mounted) {
         setState(() {

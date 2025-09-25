@@ -3,7 +3,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../services/storage/storage_service.dart';
-import '../services/logging/logger_service.dart';
 import 'remote_config_service.dart';
 
 /// مدير الإعدادات عن بعد - يربط Firebase Remote Config مع باقي التطبيق
@@ -14,7 +13,6 @@ class RemoteConfigManager {
 
   late FirebaseRemoteConfigService _remoteConfig;
   late StorageService _storage;
-  late LoggerService _logger;
   
   bool _isInitialized = false;
   Timer? _periodicRefreshTimer;
@@ -39,13 +37,11 @@ class RemoteConfigManager {
   Future<void> initialize({
     required FirebaseRemoteConfigService remoteConfig,
     required StorageService storage,
-    required LoggerService logger,
   }) async {
     if (_isInitialized) return;
     
     _remoteConfig = remoteConfig;
     _storage = storage;
-    _logger = logger;
     
     try {
       // تحديث القيم الأولية
@@ -55,10 +51,10 @@ class RemoteConfigManager {
       _startPeriodicRefresh();
       
       _isInitialized = true;
-      _logger.info(message: 'RemoteConfigManager initialized successfully');
+      debugPrint('RemoteConfigManager initialized successfully');
       
     } catch (e, stackTrace) {
-      _logger.error(message: 'Error initializing RemoteConfigManager: $e', stackTrace: stackTrace);
+      debugPrint('Error initializing RemoteConfigManager: $e');
     }
   }
 
@@ -76,10 +72,10 @@ class RemoteConfigManager {
       _maintenanceMode.value = _remoteConfig.isMaintenanceModeEnabled;
       _forceUpdate.value = _remoteConfig.isForceUpdateRequired;
       
-      _logger.info(message: 'All remote config values updated');
+      debugPrint('All remote config values updated');
       
     } catch (e) {
-      _logger.error(message: 'Error updating remote config values: $e');
+      debugPrint('Error updating remote config values: $e');
     }
   }
 
@@ -97,7 +93,7 @@ class RemoteConfigManager {
   /// تحديث الإعدادات يدوياً
   Future<bool> refreshConfig() async {
     try {
-      _logger.info(message: 'Refreshing remote config...');
+      debugPrint('Refreshing remote config...');
       
       final success = await _remoteConfig.refresh();
       if (success) {
@@ -107,7 +103,7 @@ class RemoteConfigManager {
       
       return success;
     } catch (e) {
-      _logger.error(message: 'Error refreshing config: $e');
+      debugPrint('Error refreshing config: $e');
       return false;
     }
   }
@@ -198,7 +194,7 @@ class RemoteConfigManager {
         return defaultValue;
       }
     } catch (e) {
-      _logger.error(message: 'Error getting custom value for key $key: $e');
+      debugPrint('Error getting custom value for key $key: $e');
       return defaultValue;
     }
   }
@@ -295,6 +291,6 @@ class RemoteConfigManager {
     _forceUpdate.dispose();
     
     _isInitialized = false;
-    _logger.info(message: 'RemoteConfigManager disposed');
+    debugPrint('RemoteConfigManager disposed');
   }
 }
