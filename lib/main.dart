@@ -11,7 +11,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
 // Service Locator والخدمات
-import 'app/di/service_locator.dart';
+import 'core/dependency_injection.dart';
 import 'app/themes/core/theme_notifier.dart';
 import 'core/infrastructure/services/storage/storage_service.dart';
 import 'core/infrastructure/services/permissions/permission_manager.dart';
@@ -95,8 +95,8 @@ Future<void> _initializeApp() async {
     );
     debugPrint('✅ تمت تهيئة Firebase بنجاح');
     
-    // 2. تهيئة ServiceLocator
-    await ServiceLocator.init();
+    // 2. تهيئة DependencyInjection (النظام الجديد للتهيئة التدريجية)
+    await DependencyInjection.initialize();
     
     // 3. تهيئة Firebase services إضافية (اختياري)
     try {
@@ -108,7 +108,7 @@ Future<void> _initializeApp() async {
     }
     
     // 4. التحقق من جاهزية الخدمات
-    if (!ServiceLocator.areServicesReady()) {
+    if (!DependencyInjection.areServicesReady()) {
       throw Exception('فشل في تهيئة بعض الخدمات المطلوبة');
     }
     
