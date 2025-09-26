@@ -1,1 +1,21 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"athkar-app-7074e","appId":"1:627917894269:android:0a6d4b051a641d69b7b714","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"athkar-app-7074e","configurations":{"android":"1:627917894269:android:0a6d4b051a641d69b7b714","ios":"1:627917894269:ios:6fa09a4421b4288ab7b714","macos":"1:627917894269:ios:6fa09a4421b4288ab7b714","web":"1:627917894269:web:38f44ba24665ebcab7b714","windows":"1:627917894269:web:49309c6adf55f087b7b714"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "athkar-app-7074e",
+          "appId": "1:627917894269:android:0a6d4b051a641d69b7b714",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "athkar-app-7074e",
+          "configurations": {
+            "android": "1:627917894269:android:0a6d4b051a641d69b7b714"
+          }
+        }
+      }
+    }
+  }
+}

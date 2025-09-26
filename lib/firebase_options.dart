@@ -5,29 +5,33 @@ import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
-///
-/// Example:
-/// ```dart
-/// import 'firebase_options.dart';
-/// // ...
-/// await Firebase.initializeApp(
-///   options: DefaultFirebaseOptions.currentPlatform,
-/// );
-/// ```
+
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      return web;
+      throw UnsupportedError(
+        'DefaultFirebaseOptions have not been configured for web - '
+        'you can reconfigure this by running the FlutterFire CLI again.',
+      );
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        return ios;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for ios - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.macOS:
-        return macos;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for macos - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.windows:
-        return windows;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for windows - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -40,47 +44,11 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDAOzH2AgRlqj92ZhQqGlPrEpA-XDAmWc4',
-    appId: '1:627917894269:web:38f44ba24665ebcab7b714',
-    messagingSenderId: '627917894269',
-    projectId: 'athkar-app-7074e',
-    authDomain: 'athkar-app-7074e.firebaseapp.com',
-    storageBucket: 'athkar-app-7074e.firebasestorage.app',
-  );
-
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBduWVF2EBK_RG1iq8voaMzsBTbCLB1x5Y',
     appId: '1:627917894269:android:0a6d4b051a641d69b7b714',
     messagingSenderId: '627917894269',
     projectId: 'athkar-app-7074e',
-    storageBucket: 'athkar-app-7074e.firebasestorage.app',
-  );
-
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyB_iW_4x37OG2poXmkZvVqSXdIaowuU2os',
-    appId: '1:627917894269:ios:6fa09a4421b4288ab7b714',
-    messagingSenderId: '627917894269',
-    projectId: 'athkar-app-7074e',
-    storageBucket: 'athkar-app-7074e.firebasestorage.app',
-    iosBundleId: 'com.example.testAthkarApp',
-  );
-
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyB_iW_4x37OG2poXmkZvVqSXdIaowuU2os',
-    appId: '1:627917894269:ios:6fa09a4421b4288ab7b714',
-    messagingSenderId: '627917894269',
-    projectId: 'athkar-app-7074e',
-    storageBucket: 'athkar-app-7074e.firebasestorage.app',
-    iosBundleId: 'com.example.testAthkarApp',
-  );
-
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDAOzH2AgRlqj92ZhQqGlPrEpA-XDAmWc4',
-    appId: '1:627917894269:web:49309c6adf55f087b7b714',
-    messagingSenderId: '627917894269',
-    projectId: 'athkar-app-7074e',
-    authDomain: 'athkar-app-7074e.firebaseapp.com',
     storageBucket: 'athkar-app-7074e.firebasestorage.app',
   );
 }
