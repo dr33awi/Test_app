@@ -3,7 +3,6 @@
 import 'package:athkar_app/app/themes/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../app/themes/app_theme.dart';
 
 class CategoryGrid extends StatefulWidget {
   const CategoryGrid({super.key});

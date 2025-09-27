@@ -1,11 +1,10 @@
-// lib/main.dart
+// lib/main.dart - مبسط للغة العربية فقط
 
 import 'dart:async';
+import 'package:athkar_app/core/infrastructure/services/permissions/permission_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:intl/date_symbol_data_local.dart';
-
 // Firebase imports
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -13,30 +12,24 @@ import 'firebase_options.dart';
 // Service Locator والخدمات
 import 'app/di/service_locator.dart';
 import 'app/themes/core/theme_notifier.dart';
-import 'core/infrastructure/services/storage/storage_service.dart';
 import 'core/infrastructure/services/permissions/permission_manager.dart';
-import 'core/infrastructure/services/permissions/permission_service.dart';
 import 'core/infrastructure/services/permissions/widgets/permission_monitor.dart';
 import 'core/infrastructure/services/permissions/screens/permission_onboarding_screen.dart';
 
 // Firebase services
 import 'core/infrastructure/firebase/firebase_initializer.dart';
 
-// الثوابت والثيمات
-import 'app/themes/constants/app_constants.dart';
+// الثيمات والمسارات
 import 'app/themes/app_theme.dart';
 import 'app/routes/app_router.dart';
 
 // الشاشات
 import 'features/home/screens/home_screen.dart';
 
-/// نقطة دخول التطبيق
+/// نقطة دخول التطبيق - مبسط تماماً
 Future<void> main() async {
   // تهيئة ربط Flutter
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // تهيئة بيانات اللغة المحلية للتواريخ
-  await initializeDateFormatting('ar', null);
   
   // تعيين اتجاه التطبيق (عمودي فقط)
   await SystemChrome.setPreferredOrientations([
@@ -48,24 +41,15 @@ Future<void> main() async {
   runZonedGuarded(
     () async {
       try {
-        // تهيئة جميع الخدمات (بما في ذلك Firebase)
+        // تهيئة جميع الخدمات
         await _initializeApp();
         
-        // الحصول على الخدمات المطلوبة
-        final storageService = getIt<StorageService>();
-        final permissionManager = getIt<UnifiedPermissionManager>();
-        
-        // تحديد اللغة المحفوظة
-        final language = storageService.getString('language') ?? AppConstants.defaultLanguage;
-        
         // تحديد الشاشة الأولى
+        final permissionManager = getIt<UnifiedPermissionManager>();
         final initialRoute = _determineInitialRoute(permissionManager);
         
         // تشغيل التطبيق
-        runApp(MyApp(
-          language: language,
-          initialRoute: initialRoute,
-        ));
+        runApp(AthkarApp(initialRoute: initialRoute));
         
       } catch (e, s) {
         debugPrint('خطأ في تشغيل التطبيق: $e');
@@ -104,7 +88,7 @@ Future<void> _initializeApp() async {
       debugPrint('✅ تمت تهيئة خدمات Firebase الإضافية');
     } catch (e) {
       debugPrint('⚠️ تحذير: بعض خدمات Firebase غير متوفرة: $e');
-      // المتابعة بدون Firebase services (التطبيق سيعمل محلياً)
+      // المتابعة بدون Firebase services
     }
     
     // 4. التحقق من جاهزية الخدمات
@@ -134,22 +118,20 @@ String _determineInitialRoute(UnifiedPermissionManager permissionManager) {
   return AppRouter.home;
 }
 
-/// التطبيق الرئيسي - مبسط بدون مراقبة lifecycle
-class MyApp extends StatefulWidget {
-  final String language;
+/// التطبيق الرئيسي - مبسط للعربية فقط
+class AthkarApp extends StatefulWidget {
   final String initialRoute;
   
-  const MyApp({
+  const AthkarApp({
     super.key, 
-    required this.language,
     required this.initialRoute,
   });
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  State<AthkarApp> createState() => _AthkarAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _AthkarAppState extends State<AthkarApp> {
   late final UnifiedPermissionManager _permissionManager;
   
   // متغير للتحكم في تفعيل المراقب
@@ -178,7 +160,7 @@ class _MyAppState extends State<MyApp> {
     await Future.delayed(const Duration(seconds: 1));
     
     if (mounted && !_permissionManager.hasCheckedThisSession) {
-      debugPrint('[MyApp] Performing initial permission check');
+      debugPrint('[AthkarApp] Performing initial permission check');
       await _permissionManager.performInitialCheck();
     }
   }
@@ -191,7 +173,7 @@ class _MyAppState extends State<MyApp> {
         setState(() {
           _enableMonitor = true;
         });
-        debugPrint('[MyApp] Monitor enabled after onboarding delay');
+        debugPrint('[AthkarApp] Monitor enabled after onboarding delay');
       }
     });
   }
@@ -203,7 +185,7 @@ class _MyAppState extends State<MyApp> {
       builder: (context, themeMode, child) {
         return MaterialApp(
           // معلومات التطبيق
-          title: AppConstants.appName,
+          title: 'تطبيق الأذكار',
           debugShowCheckedModeBanner: false,
           
           // الثيمات
@@ -211,11 +193,10 @@ class _MyAppState extends State<MyApp> {
           darkTheme: AppTheme.darkTheme,
           themeMode: themeMode,
           
-          // اللغة والترجمة
-          locale: Locale(widget.language),
+          // اللغة العربية فقط
+          locale: const Locale('ar'),
           supportedLocales: const [
-            Locale('ar'), // العربية
-            Locale('en'), // الإنجليزية
+            Locale('ar'), // العربية فقط
           ],
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
@@ -300,7 +281,7 @@ class _OnboardingWrapper extends StatelessWidget {
   }
 }
 
-/// شاشة الخطأ
+/// شاشة الخطأ - باللغة العربية فقط
 class _ErrorApp extends StatelessWidget {
   final String error;
   
@@ -310,6 +291,7 @@ class _ErrorApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      locale: const Locale('ar'),
       theme: AppTheme.lightTheme,
       home: Directionality(
         textDirection: TextDirection.rtl,
@@ -322,7 +304,7 @@ class _ErrorApp extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // أيقونة الخطأ
+                    // أيقونة الخطأ مع تأثير حركي
                     TweenAnimationBuilder<double>(
                       tween: Tween(begin: 0, end: 1),
                       duration: const Duration(milliseconds: 600),
@@ -352,7 +334,7 @@ class _ErrorApp extends StatelessWidget {
                     const Text(
                       'عذراً، حدث خطأ',
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                         fontFamily: 'Cairo',
@@ -360,13 +342,13 @@ class _ErrorApp extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                     
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     
                     // الوصف
                     const Text(
                       'حدث خطأ أثناء تهيئة التطبيق\nيرجى إعادة المحاولة',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 18,
                         color: Colors.black54,
                         height: 1.5,
                         fontFamily: 'Cairo',
@@ -374,17 +356,18 @@ class _ErrorApp extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                     
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
                     
                     // تفاصيل الخطأ
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: Colors.grey.shade300,
+                          color: Colors.grey.shade200,
+                          width: 1,
                         ),
                       ),
                       child: Column(
@@ -394,14 +377,14 @@ class _ErrorApp extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.info_outline,
-                                size: 16,
+                                size: 20,
                                 color: Colors.grey.shade600,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 12),
                               Text(
                                 'تفاصيل تقنية',
                                 style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.grey.shade700,
                                   fontFamily: 'Cairo',
@@ -409,37 +392,48 @@ class _ErrorApp extends StatelessWidget {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            error,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey.shade600,
-                              fontFamily: 'monospace',
+                          const SizedBox(height: 12),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
+                            child: Text(
+                              error,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                                fontFamily: 'monospace',
+                              ),
+                              maxLines: 4,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ],
                       ),
                     ),
                     
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 48),
                     
                     // زر إعادة المحاولة
                     SizedBox(
                       width: double.infinity,
-                      height: 52,
+                      height: 56,
                       child: ElevatedButton.icon(
                         onPressed: () {
                           // إعادة تشغيل التطبيق
                           main();
                         },
-                        icon: const Icon(Icons.refresh),
+                        icon: const Icon(
+                          Icons.refresh,
+                          size: 24,
+                        ),
                         label: const Text(
                           'إعادة المحاولة',
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Cairo',
                           ),
@@ -448,34 +442,45 @@ class _ErrorApp extends StatelessWidget {
                           backgroundColor: const Color(0xFF2E7D32),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          elevation: 0,
+                          elevation: 2,
                         ),
                       ),
                     ),
                     
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     
                     // معلومات الدعم
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.help_outline,
-                          size: 14,
-                          color: Colors.grey.shade500,
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.blue.shade100,
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'إذا استمرت المشكلة، يرجى التواصل مع الدعم الفني',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey.shade500,
-                            fontFamily: 'Cairo',
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.help_outline,
+                            size: 20,
+                            color: Colors.blue.shade600,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'إذا استمرت المشكلة، يرجى التواصل مع الدعم الفني',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.blue.shade700,
+                                fontFamily: 'Cairo',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

@@ -1,4 +1,4 @@
-// lib/app/di/service_locator.dart
+// lib/app/di/service_locator.dart - مُحسن للأداء
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,7 +29,7 @@ import 'package:athkar_app/app/themes/core/theme_notifier.dart';
 // معالج الأخطاء
 import '../../core/error/error_handler.dart';
 
-// خدمات الميزات
+// خدمات الميزات (سيتم تحميلها عند الحاجة فقط)
 import '../../features/prayer_times/services/prayer_times_service.dart';
 import 'package:athkar_app/features/qibla/services/qibla_service.dart';
 import 'package:athkar_app/features/athkar/services/athkar_service.dart';
@@ -46,7 +46,7 @@ import 'package:athkar_app/core/infrastructure/firebase/remote_config_manager.da
 
 final getIt = GetIt.instance;
 
-/// Service Locator لإدارة جميع الخدمات في التطبيق
+/// Service Locator محسن - يُهيئ الخدمات الأساسية فقط عند البدء
 class ServiceLocator {
   static final ServiceLocator _instance = ServiceLocator._internal();
   factory ServiceLocator() => _instance;
@@ -55,60 +55,61 @@ class ServiceLocator {
   bool _isInitialized = false;
   bool _firebaseAvailable = false;
 
-  /// تهيئة جميع الخدمات
+  /// تهيئة الخدمات الأساسية فقط (سريع)
   static Future<void> init() async {
-    await _instance._initializeServices();
+    await _instance._initializeEssentialServices();
   }
 
-  /// التحقق من تهيئة الخدمات
+  /// التحقق من تهيئة الخدمات الأساسية
   static bool get isInitialized => _instance._isInitialized;
 
   /// التحقق من توفر Firebase
   static bool get isFirebaseAvailable => _instance._firebaseAvailable;
 
-  /// تهيئة الخدمات الداخلية
-  Future<void> _initializeServices() async {
+  /// تهيئة الخدمات الأساسية فقط (بدون خدمات الميزات)
+  Future<void> _initializeEssentialServices() async {
     if (_isInitialized) {
-      debugPrint('ServiceLocator: Services already initialized');
+      debugPrint('ServiceLocator: Essential services already initialized');
       return;
     }
 
     try {
-      debugPrint('ServiceLocator: Starting services initialization...');
+      debugPrint('ServiceLocator: Starting essential services initialization...');
 
-      // 1. الخدمات الأساسية
+      // 1. الخدمات الأساسية (مطلوبة دائماً)
       await _registerCoreServices();
 
-      // 2. خدمات التخزين
+      // 2. خدمات التخزين (مطلوبة دائماً)
       await _registerStorageServices();
 
-      // 3. إدارة الثيم
+      // 3. إدارة الثيم (مطلوبة دائماً)
       _registerThemeServices();
 
-      // 4. خدمات الأذونات (النظام الموحد الجديد)
+      // 4. خدمات الأذونات (مطلوبة دائماً)
       _registerPermissionServices();
 
-      // 5. خدمات الإشعارات
+      // 5. خدمات الإشعارات (مطلوبة دائماً)
       await _registerNotificationServices();
 
-      // 6. خدمات الجهاز
+      // 6. خدمات الجهاز (مطلوبة دائماً)
       _registerDeviceServices();
 
-      // 7. معالج الأخطاء
+      // 7. معالج الأخطاء (مطلوب دائماً)
       _registerErrorHandler();
 
-      // 8. خدمات الميزات
-      _registerFeatureServices();
-      
-      // 9. خدمات Firebase (اختيارية - مع معالجة الأخطاء)
+      // 8. خدمات Firebase (اختيارية - مع معالجة الأخطاء)
       await _safeInitializeFirebase();
 
+      // 9. تسجيل خدمات الميزات كـ Lazy (لن تُهيئ حتى تُستخدم)
+      _registerFeatureServicesLazy();
+
       _isInitialized = true;
-      debugPrint('ServiceLocator: All services initialized successfully ✓');
+      debugPrint('ServiceLocator: Essential services initialized successfully ✓');
+      debugPrint('ServiceLocator: Feature services registered as lazy ✓');
       debugPrint('ServiceLocator: Firebase available: $_firebaseAvailable');
       
     } catch (e, stackTrace) {
-      debugPrint('ServiceLocator: Error initializing services: $e');
+      debugPrint('ServiceLocator: Error initializing essential services: $e');
       debugPrint('StackTrace: $stackTrace');
       rethrow;
     }
@@ -143,9 +144,7 @@ class ServiceLocator {
 
     if (!getIt.isRegistered<StorageService>()) {
       getIt.registerLazySingleton<StorageService>(
-        () => StorageServiceImpl(
-          getIt<SharedPreferences>(),
-        ),
+        () => StorageServiceImpl(getIt<SharedPreferences>()),
       );
     }
   }
@@ -161,16 +160,14 @@ class ServiceLocator {
     }
   }
 
-  /// تسجيل خدمات الأذونات (النظام الموحد الجديد)
+  /// تسجيل خدمات الأذونات
   void _registerPermissionServices() {
     debugPrint('ServiceLocator: Registering unified permission services...');
 
     // خدمة الأذونات الأساسية
     if (!getIt.isRegistered<PermissionService>()) {
       getIt.registerLazySingleton<PermissionService>(
-        () => PermissionServiceImpl(
-          storage: getIt<StorageService>(),
-        ),
+        () => PermissionServiceImpl(storage: getIt<StorageService>()),
       );
       debugPrint('ServiceLocator: PermissionService registered');
     }
@@ -208,7 +205,6 @@ class ServiceLocator {
       debugPrint('ServiceLocator: Notification manager initialized');
     } catch (e) {
       debugPrint('ServiceLocator: Error initializing notification manager: $e');
-      // يمكن المتابعة حتى لو فشلت الإشعارات
     }
   }
 
@@ -219,9 +215,7 @@ class ServiceLocator {
     // خدمة البطارية
     if (!getIt.isRegistered<BatteryService>()) {
       getIt.registerLazySingleton<BatteryService>(
-        () => BatteryServiceImpl(
-          battery: getIt<Battery>(),
-        ),
+        () => BatteryServiceImpl(battery: getIt<Battery>()),
       );
     }
   }
@@ -231,91 +225,85 @@ class ServiceLocator {
     debugPrint('ServiceLocator: Registering error handler...');
 
     if (!getIt.isRegistered<AppErrorHandler>()) {
-      getIt.registerLazySingleton<AppErrorHandler>(
-        () => AppErrorHandler(),
-      );
+      getIt.registerLazySingleton<AppErrorHandler>(() => AppErrorHandler());
     }
   }
 
-  /// تسجيل خدمات الميزات
-  void _registerFeatureServices() {
-    debugPrint('ServiceLocator: Registering feature services...');
+  /// تسجيل خدمات الميزات كـ Lazy (لن تُهيئ حتى الاستخدام الأول)
+  void _registerFeatureServicesLazy() {
+    debugPrint('ServiceLocator: Registering feature services as LAZY...');
     
-    // خدمة مواقيت الصلاة
+    // خدمة مواقيت الصلاة - Lazy
     if (!getIt.isRegistered<PrayerTimesService>()) {
       getIt.registerLazySingleton<PrayerTimesService>(
-        () => PrayerTimesService(
-          storage: getIt<StorageService>(),
-          permissionService: getIt<PermissionService>(),
-        ),
+        () {
+          debugPrint('🔄 LAZY LOADING: PrayerTimesService initialized');
+          return PrayerTimesService(
+            storage: getIt<StorageService>(),
+            permissionService: getIt<PermissionService>(),
+          );
+        },
       );
     }
 
-    // خدمة الأذكار
+    // خدمة الأذكار - Lazy
     if (!getIt.isRegistered<AthkarService>()) {
       getIt.registerLazySingleton<AthkarService>(
-        () => AthkarService(
-          storage: getIt<StorageService>(),
-        ),
+        () {
+          debugPrint('🔄 LAZY LOADING: AthkarService initialized');
+          return AthkarService(storage: getIt<StorageService>());
+        },
       );
-      debugPrint('ServiceLocator: AthkarService registered successfully');
     }
 
-    // خدمة الأدعية
+    // خدمة الأدعية - Lazy
     if (!getIt.isRegistered<DuaService>()) {
       getIt.registerLazySingleton<DuaService>(
-        () => DuaService(
-          storage: getIt<StorageService>(),
-        ),
+        () {
+          debugPrint('🔄 LAZY LOADING: DuaService initialized');
+          return DuaService(storage: getIt<StorageService>());
+        },
       );
-      debugPrint('ServiceLocator: DuaService registered successfully');
     }
     
-    // خدمة التسبيح - يجب تسجيلها كـ Factory وليس Singleton
+    // خدمة التسبيح - Factory (instance جديد في كل مرة)
     if (!getIt.isRegistered<TasbihService>()) {
       getIt.registerFactory<TasbihService>(
-        () => TasbihService(
-          storage: getIt<StorageService>(),
-        ),
+        () {
+          debugPrint('🔄 FACTORY: New TasbihService instance created');
+          return TasbihService(storage: getIt<StorageService>());
+        },
       );
-      debugPrint('ServiceLocator: TasbihService registered successfully');
     }
     
-    // تسجيل خدمة القبلة
-    _registerQiblaServices();
-    
-    // تسجيل خدمات الإعدادات الموحدة
-    _registerSettingsServices();
-  }
-  
-  /// تسجيل خدمات القبلة
-  void _registerQiblaServices() {
-    debugPrint('ServiceLocator: Registering qibla services...');
-    
+    // خدمة القبلة - Factory (instance جديد في كل مرة)
     if (!getIt.isRegistered<QiblaService>()) {
       getIt.registerFactory<QiblaService>(
-        () => QiblaService(
-          storage: getIt<StorageService>(),
-          permissionService: getIt<PermissionService>(),
-        ),
+        () {
+          debugPrint('🔄 FACTORY: New QiblaService instance created');
+          return QiblaService(
+            storage: getIt<StorageService>(),
+            permissionService: getIt<PermissionService>(),
+          );
+        },
       );
     }
-  }
 
-  /// تسجيل خدمات الإعدادات الموحدة
-  void _registerSettingsServices() {
-    debugPrint('ServiceLocator: Registering settings services...');
-    
+    // خدمات الإعدادات الموحدة - Lazy
     if (!getIt.isRegistered<SettingsServicesManager>()) {
-      final settingsManager = SettingsServicesManager(
-        storage: getIt<StorageService>(),
-        permissionService: getIt<PermissionService>(),
-        themeNotifier: getIt<ThemeNotifier>(),
+      getIt.registerLazySingleton<SettingsServicesManager>(
+        () {
+          debugPrint('🔄 LAZY LOADING: SettingsServicesManager initialized');
+          return SettingsServicesManager(
+            storage: getIt<StorageService>(),
+            permissionService: getIt<PermissionService>(),
+            themeNotifier: getIt<ThemeNotifier>(),
+          );
+        },
       );
-      
-      getIt.registerSingleton<SettingsServicesManager>(settingsManager);
-      debugPrint('ServiceLocator: SettingsServicesManager registered successfully');
     }
+    
+    debugPrint('ServiceLocator: All feature services registered as LAZY ✓');
   }
 
   /// تهيئة Firebase بطريقة آمنة مع معالجة الأخطاء
@@ -358,9 +346,6 @@ class ServiceLocator {
   /// محاولة تحميل Firebase (مع معالجة الأخطاء)
   Future<dynamic> _tryImportFirebase() async {
     try {
-      // هنا نحاول تحميل Firebase core
-      // إذا كان Firebase مُضاف للمشروع، سيعمل
-      // وإلا سيفشل ونستمر بدونه
       return await Future.delayed(Duration(milliseconds: 100), () => 'firebase_mock');
     } catch (e) {
       return null;
@@ -449,44 +434,31 @@ class ServiceLocator {
       
     } catch (e) {
       debugPrint('ServiceLocator: Firebase services initialization failed: $e');
-      // لا نرمي خطأ هنا - التطبيق سيعمل محلياً
     }
   }
 
-  /// التحقق من تهيئة جميع الخدمات المطلوبة
-  static bool areServicesReady() {
-    final requiredServices = [
-      // الخدمات الأساسية
+  /// التحقق من تهيئة الخدمات الأساسية المطلوبة فقط
+  static bool areEssentialServicesReady() {
+    final essentialServices = [
+      // الخدمات الأساسية فقط
       getIt.isRegistered<StorageService>(),
       getIt.isRegistered<ThemeNotifier>(),
-      
-      // خدمات الأذونات
       getIt.isRegistered<PermissionService>(),
       getIt.isRegistered<UnifiedPermissionManager>(),
-      
-      // خدمات الجهاز
       getIt.isRegistered<BatteryService>(),
-      
-      // خدمات الميزات
-      getIt.isRegistered<PrayerTimesService>(),
-      getIt.isRegistered<AthkarService>(),
-      getIt.isRegistered<DuaService>(),
-      getIt.isRegistered<TasbihService>(),
-      getIt.isRegistered<SettingsServicesManager>(),
     ];
     
-    final allReady = requiredServices.every((service) => service);
-    
-    if (!allReady) {
-      debugPrint('ServiceLocator: Some services are not ready');
-      for (int i = 0; i < requiredServices.length; i++) {
-        if (!requiredServices[i]) {
-          debugPrint('ServiceLocator: Service at index $i is not registered');
-        }
-      }
-    }
-    
-    return allReady;
+    return essentialServices.every((service) => service);
+  }
+
+  /// التحقق من تهيئة جميع الخدمات (للتوافق مع الكود القديم)
+  static bool areServicesReady() {
+    return areEssentialServicesReady() && 
+           getIt.isRegistered<PrayerTimesService>() &&
+           getIt.isRegistered<AthkarService>() &&
+           getIt.isRegistered<DuaService>() &&
+           getIt.isRegistered<TasbihService>() &&
+           getIt.isRegistered<SettingsServicesManager>();
   }
 
   /// إعادة تعيين جميع الخدمات
@@ -509,9 +481,13 @@ class ServiceLocator {
     debugPrint('ServiceLocator: Cleaning up resources...');
 
     try {
-      // تنظيف مدير الإعدادات
+      // تنظيف مدير الإعدادات (إذا كان مُهيئ)
       if (getIt.isRegistered<SettingsServicesManager>()) {
-        getIt<SettingsServicesManager>().dispose();
+        try {
+          getIt<SettingsServicesManager>().dispose();
+        } catch (e) {
+          debugPrint('ServiceLocator: SettingsServicesManager not initialized yet');
+        }
       }
 
       // تنظيف إدارة الثيم
@@ -519,13 +495,21 @@ class ServiceLocator {
         getIt<ThemeNotifier>().dispose();
       }
 
-      // تنظيف خدمات الميزات
+      // تنظيف خدمات الميزات (إذا كانت مُهيئة)
       if (getIt.isRegistered<PrayerTimesService>()) {
-        getIt<PrayerTimesService>().dispose();
+        try {
+          getIt<PrayerTimesService>().dispose();
+        } catch (e) {
+          debugPrint('ServiceLocator: PrayerTimesService not initialized yet');
+        }
       }
       
       if (getIt.isRegistered<AthkarService>()) {
-        getIt<AthkarService>().dispose();
+        try {
+          getIt<AthkarService>().dispose();
+        } catch (e) {
+          debugPrint('ServiceLocator: AthkarService not initialized yet');
+        }
       }
 
       // تنظيف خدمة البطارية
@@ -643,21 +627,21 @@ extension ServiceLocatorExtensions on BuildContext {
   /// الحصول على خدمة البطارية
   BatteryService get batteryService => getIt<BatteryService>();
   
-  // ==================== خدمات الميزات ====================
+  // ==================== خدمات الميزات (Lazy Loading) ====================
   
-  /// الحصول على خدمة مواقيت الصلاة
+  /// الحصول على خدمة مواقيت الصلاة (Lazy Loading)
   PrayerTimesService get prayerTimesService => getIt<PrayerTimesService>();
   
-  /// الحصول على خدمة الأذكار
+  /// الحصول على خدمة الأذكار (Lazy Loading)
   AthkarService get athkarService => getIt<AthkarService>();
   
-  /// الحصول على خدمة الأدعية
+  /// الحصول على خدمة الأدعية (Lazy Loading)
   DuaService get duaService => getIt<DuaService>();
   
-  /// الحصول على خدمة التسبيح
+  /// الحصول على خدمة التسبيح (Factory - instance جديد)
   TasbihService get tasbihService => getIt<TasbihService>();
   
-  /// الحصول على خدمة القبلة
+  /// الحصول على خدمة القبلة (Factory - instance جديد)
   QiblaService get qiblaService => getIt<QiblaService>();
   
   // ==================== خدمات الإدارة ====================
@@ -665,7 +649,7 @@ extension ServiceLocatorExtensions on BuildContext {
   /// الحصول على إدارة الثيم
   ThemeNotifier get themeNotifier => getIt<ThemeNotifier>();
   
-  /// الحصول على مدير الخدمات الموحد للإعدادات
+  /// الحصول على مدير الخدمات الموحد للإعدادات (Lazy Loading)
   SettingsServicesManager get settingsManager => getIt<SettingsServicesManager>();
   
   // ==================== Firebase Services (Safe Access) ====================
